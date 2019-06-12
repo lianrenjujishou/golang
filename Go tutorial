@@ -1,12 +1,13 @@
+以下内容均是从golang官方提供的入门教程中总结的: https://tour.golang.org/welcome/1
 Packages
-1.ÿ��Go�������ɰ�(s)��ɵ�
-2.Go�����main����ʼ����
-3.ʹ��import�ؼ��ֵ����
-4.�����͵���·�������һ��Ԫ��������ͬ
-*.�ӵ�ǰ����������һ���ļ��У������кö��ļ���������Щ�ļ��ĵ�һ����Ч�ж���"package ����"
-*.import�ؼ��ֵ������Ӧ����ʽ����Go��װ·���µ�src�ļ���ΪĬ������·����������Ҳµģ���Ӧ��û���⣬��Ϊ�ӵ���İ�����"fmt", "math/rand", fmt��src�µ��ļ��У� math��src�µ��ļ��У�rand��math�µ��ļ��У�����˵�ð�װ·���µ�src�ļ�����Ϊ��·����˵����·��Ӧ��ûɶ����
+1.每个Go程序都是由包(s)组成的
+2.Go程序从main包开始运行
+3.使用import关键字导入包
+4.包名和导入路径的最后一个元素名称相同
+*.从当前看，包就是一个文件夹，里面有好多文件，并且这些文件的第一个有效行都是"package 包名"
+*.import关键字导入包名应该隐式的以Go安装路径下的src文件夹为默认搜索路径，这个是我猜的，但应该没问题，因为从导入的包名看"fmt", "math/rand", fmt是src下的文件夹， math是src下的文件夹，rand是math下的文件夹，所以说拿安装路径下的src文件夹作为基路径或说搜索路径应该没啥问题
 Imports
-1.��ʹ��import�ؼ��ֵ����ʱ������ʹ�ö��import��ÿ��import���һ��������Ҳ����ʹ��һ��import��������Ҫ����İ�������������ٷ��Ƽ�ʹ�õڶ��ַ������ٷ�����"��ʽ�ֽⷨ"
+1.在使用import关键字导入包时，可以使用多个import，每个import后跟一个包名，也可以使用一个import，将所有要导入的包都放在括号里。官方推荐使用第二种方法，官方叫它"因式分解法"
 *.pa+pb+pc=p(a+b+c)
 
   import "fmt"
@@ -16,141 +17,141 @@ Imports
   import (
           "fmt"
           "math"
-  )  //ͨ���������import�ж�"��ʽ�ֽⷨ"�ж�����ķָ���Ϊ";"��"\n"
-*.�����Ǻŵ����һ��import��д���ǹٷ���д���������ڶ�����������д��һ��Ҫ�÷ֺŸ���
+  )  //通过最后两个import判断"因式分解法"中多个包的分隔符为";"或"\n"
+*.上面星号的最后一个import的写法是官方的写法，倒数第二个如果多个包写在一行要用分号隔开
 
 Exported names
-1.ʹ��import������������Ժ󣬳���ֻ�����ð����Դ�д��ĸ��ͷ�Ķ��壬��������Ϊ��ִ��import��ʱ��Ὣ��Ӧ�����Դ�д��ĸ��ͷ�Ķ����������ǰ����Ŀռ䣬����Щ�ԷǴ�д��ĸ��ͷ�Ķ�����������ڰ��ڲ����ã��ٷ�����Щ�Դ�д��ĸ��ͷ�Ľ���"exported name",��������˼��������"����������",��ʱ���"����"�Ķ���Ӧ���ǿ�����ִ��"import ����"��ʱ�򣬻Ὣ�����Դ�д��ĸ��ͷ�Ķ����"��"�ﵼ���������Ӧ�ÿռ��С���ô���Ϳ��ܲ�̫�ԣ���Ŀǰ��ô���͵Ļ����а�������ġ�
-2.һ������ɰ��������չ��Ϊgo���ļ�������import��ʱ��Ӧ���ǽ����������ļ��е��Դ�д��ĸ��ͷ�Ķ��嶼��������ռ����ˡ����Ҳ�ǲµģ�����ͨ��Packages��һ�ڵ������е�math.Int //������ˣ�Ӧ������ɾ�ˣ�����Ӧ���� "������ӿ����ƶϳ���"
+1.使用import将包导入进来以后，程序只能引用包中以大写字母开头的定义，可以理解为当执行import的时候会将相应包中以大写字母开头的定义给导进当前程序的空间，而那些以非大写字母开头的定义仅仅可以在包内部引用，官方将这些以大写字母开头的叫做"exported name",从字面意思上理解是"导出的名称",此时这个"导出"的动作应该是看作在执行"import 包名"的时候，会将包里以大写字母开头的定义从"包"里导出到程序的应用空间中。这么解释可能不太对，但目前这么解释的话是有帮助理解的。
+2.一个包里可包含多个扩展名为go的文件，而在import的时候应该是将包里所有文件中的以大写字母开头的定义都导到程序空间中了。这个也是猜的，不过通过Packages那一节的例子中的math.Int //到这断了，应该是误删了，后面应该是 "这个例子可以推断出来"
 Functions
-1.�������Դ�����������������0��
-2.���������У��β����ͳ������βεĺ���
-3.���������﷨func func_name(arg1 type1, arg2 type2) return_type { statements }
+1.函数可以带任意多个参数，包含0个
+2.函数参数中，形参类型出现在形参的后面
+3.函数基本语法func func_name(arg1 type1, arg2 type2) return_type { statements }
 Functions continued
-1.�������������Ĳ���������ͬʱ�����Լ�д��ֻ�������һ������������
+1.当函数中连续的参数类型相同时，可以简写，只保存最后一个参数的类型
 *. x int, y int   ->  x,y int
 Multiple results
-1.������ض������������ö������ֵ�����ͣ��������ʹ��Բ������������λ���ڰ�������������Բ���ź���
-2.��������ж������ֵ�������ֱ��ʹ�÷��ؽ�����зֽ⸳ֵ
+1.如果返回多个结果可以设置多个返回值的类型，多个类型使用圆括号括起来，位置在包含函数参数的圆括号后面
+2.如果函数有多个返回值，则可以直接使用返回结果进行分解赋值
 Named return value
-1.��������ֵҲ���Ա����������Ǻ��������з������͵�λ�ã�֮ǰ�����ض��ֵ��ʱ���λ������������Ϸ������ͣ�����ֻ���ڷ�������ǰ�ټ��ϱ���������Ϊ���صı��������Ҫ�������ִ������Ƶķ���ֵʱ��return���󲻽��κβ�����
-2.��Ҫע�����������ʽ���ֻ�ڽ϶̵ĺ������ã���������ϳ��Ļ���������ʽ����ʧ����ɶ��ԡ�
-3.�����Ƶķ���ֵ������ʱ�����������ģ������ݷ���ֵ���Ƽ���֪�����صĴ����ʲô����
+1.函数返回值也可以被命名，就是函数定义中返回类型的位置，之前讲返回多个值的时候该位置是括号里放上返回类型，现在只是在返回类型前再加上变量名，作为返回的变量；如果要返回这种带有名称的返回值时，return语句后不接任何参数。
+2.需要注意的是这种形式最好只在较短的函数中用，如果函数较长的话用这种形式会损失程序可读性。
+3.带名称的返回值在命名时最好是有意义的，即根据返回值名称即可知道返回的大概是什么东西
 Variables
-1.ʹ��var�����嵥���������Ƕ����������������ʽ�ͺ��������е���ʽ���
+1.使用var来定义单个变量或是多个变量，变量的形式和函数参数中的形式差不多
 *. var a int
    var a,b,c int
-2.var�ؼ��ֿ������ڰ�����Ҳ�����ں�������˵���˾��Ǽȿ��ں�������ʹ��var���������Ҳ���ں�������ʹ��var������������ܲ�׼ȷ����Ŀǰ�����Ŀ�����������
+2.var关键字可以用在包级别，也可用在函数级别，说白了就是既可在函数里面使用var定义变量，也可在函数外面使用var定义变量。可能不准确但就目前看到的可以先这样讲
 Variables with initializers
-1.��������ʱ���԰�����ʼ������һ������һ������ν�ĳ�ʼ��˵���˾��Ǳ�����ֵ����仰˵���˾�����������ʱ���Ը�������ֵ��һ������һ��ֵ������������һЩ
+1.声明变量时可以包含初始化器，一个变量一个；所谓的初始化说中了就是变量赋值，这句话说白了就是声明变量时可以给变量赋值，一个变量一个值，这样更明了一些
 *.var i, j int = 1, 2
-2.�����������ʱ�г�ʼ�������������������Ϳ��Ժ��ԣ�����Ὣ��ʼ������������Ϊ���������͡����仰˵������������ʱ���Բ�ָ���������ͣ�����Ὣ����ֵ��������Ϊ����������
+2.如果声明变量时有初始化器，则变量后面的类型可以忽略，程序会将初始化器的类型作为变量的类型。换句话说就是声明变量时可以不指明变量类型，程序会将变量值的类型作为变量的类型
 Short variable declarations
-1.����������������ͨ��var�ؼ��֣�������ʹ��:=���ţ�ʹ��������ʽ����Ҫvar�ؼ��֣�����Ҳ������ʾ�ĸ����������͡�����:=��var��һ�㲻ͬ���ǣ�var�ȿ����ڰ������ֿ����ں������𣬶�:=ֻ�����ں�������
-2.����1���������������䶼��Ҫ�Թؼ��ִ�ͷ
-3.��Ȼ:=����Ҫ��ʾ�����������ͣ���϶����õ��ƶϹ�����(infer)
+1.变量声明不仅可以通过var关键字，还可以使用:=符号，使用这种形式不需要var关键字，而且也不用显示的给出变量类型。但是:=和var有一点不同的是，var既可用在包级别又可用在函数级别，而:=只可用在函数级别
+2.对照1来看，包级别的语句都需要以关键字打头
+3.既然:=不需要显示给出变量类型，则肯定是用到推断功能了(infer)
 Basic types
-1.Go�еĻ���������:
-������: bool
-�ַ���: string
-����: int int8 int16 int32 int64
-�޷�������: uint uint8 uint16 uint32 uint64 uintptr
-�ֽ���: byte  //unit8�ı���
-������: rune  //int32�ı�������ʾһ��Unicode���
-������: float32 float64
-������: complex64 complex128
-2.����������Ҳ����ʹ��"��ʽ�ֽ�"ʽ����ʹ��һ��var�ؼ�����ɶ������������
-3.int,uint��uintptr������������32λϵͳ�����ǵ�λ����32λ����64λϵͳ�����ǵ�λ����64λ
-4.��������һ�����int,���Ƕ���ʱ֪����ֵ�Ĵ�Сint���ܲ�����ȥ������������(�ϻ�)
+1.Go中的基本类型有:
+布尔型: bool
+字符串: string
+整型: int int8 int16 int32 int64
+无符号整型: uint uint8 uint16 uint32 uint64 uintptr
+字节型: byte  //unit8的别名
+文字型: rune  //int32的别名，表示一个Unicode码点
+符点型: float32 float64
+复合型: complex64 complex128
+2.变量的声明也可以使用"因式分解"式，即使用一个var关键字完成多个变量的声明
+3.int,uint和uintptr这三个类型在32位系统中它们的位宽是32位，在64位系统下它们的位宽是64位
+4.对于整型一般就用int,除非定义时知道数值的大小int可能不够再去考虑其它整型(废话)
 Zero values
-1.����������ʱ�����û�����ó�ʼ�������������Ĭ�ϸ�һ���ñ����������͵���ֵ:
-  ��ֵ����: 0
-  ������: false
-  �ַ���: ""
+1.当声明变量时，如果没有设置初始化器，则变量会默认赋一个该变量所属类型的零值:
+  数值类型: 0
+  布尔型: false
+  字符串: ""
 Type conversions
-1.Go�е�����ת������Ҫ��ȷָ��Ҫת����������
-��������ʵ�ʵ�д���ϼ�Ҫ����ת��ֵ��Ϊ��Ӧ���͵Ĳ���
+1.Go中的类型转换必须要精确指定要转换到的类型
+，表现在实际的写法上即要将被转换值作为相应类型的参数
   var i int = 42
   var f float64 = float64(i)
   var u unit = unit(f)
-  ������ʹ��:=��ʽ:
+  还可以使用:=形式:
     i := 42
     f := float64(i)
     u := uint(f)
-2.C�����е�����ת����ǿ��Ҫ����ϱ�ת����������(C������...)
+2.C语言中的类型转换不强制要求加上被转换到的类型(C都忘了...)
 Type inference
-1.��ĿǰΪֹ���������ļ�����ʽ:
-  var a int  //Ĭ�ϻ�Ϊa��ֵ0
-  var a int = 1  //���г�ʼ��������ʽ
-  var a = 1   //�г�ʼ����ʱ�������Ϳ�ʡ���Զ����ݳ�ʼ���������ƶ�
-  var a, b int  //ͬʱ�������������ͬ�ı���
-  var a,b int = 1, 2  //ͬʱ�������������ͬ�ı����Ҵ��г�ʼ������
-  var a,b = 1, 2  //ͬʱ�������������ͬ�ı������Ҵ��г�ʼ��������ʱ���������Ϳɺ��ԣ����Զ���ʼ���������ж�
-  a := 3  //:=���ָ�ֵ��ʽ���������;�����ʽ����Ҫ����ֵ�����жϣ����Ҳ���Ҫ�ؼ���var;��ֻ�����ں�������
-2.���֮ǰ�����˱���i, var i int,��i��Ϊһ���±�����ֵʱ��j := i , �±��������ͺ�i��������ͬ
-3.���ʹ��:=�����ı�������Ϊ��ֵ�ͳ���ʱ���ñ���������Ҫ����ֵ�ľ��ȣ��Ӷ�ȷ����int, float64, complex128����...
+1.到目前为止变量声明的几种形式:
+  var a int  //默认会为a赋值0
+  var a int = 1  //带有初始化器的形式
+  var a = 1   //有初始化器时变量类型可省，自动根据初始化器进行推断
+  var a, b int  //同时声明多个类型相同的变量
+  var a,b int = 1, 2  //同时声明多个类型相同的变量且带有初始化器的
+  var a,b = 1, 2  //同时声明多个类型相同的变量，且带有初始化器，此时变量的类型可忽略，会自动初始化器进行判断
+  a := 3  //:=这种赋值形式本来对类型就是隐式的需要根据值进行判断，并且不需要关键字var;但只能用于函数级别
+2.如果之前定义了变量i, var i int,则将i作为一个新变量的值时，j := i , 新变量的类型和i的类型相同
+3.如果使用:=声明的变量类型为数值型常量时，该变量的类型要看数值的精度，从而确定是int, float64, complex128还是...
 Constants
-1.��������ʹ�ùؼ���const
-2.����ֵ�������ַ����ַ���������ֵ������ֵ
-3.��������ʹ��:=�﷨����
-4.������Լ��µģ���������ʱ�ͱ��븳ֵ���������������򲻻��Ĭ��ֵ
+1.常量声明使用关键字const
+2.常量值可以是字符，字符串，布尔值或是数值
+3.常量不能使用:=语法声明
+4.这个是自己猜的，常量定义时就必须赋值，否则会出错，程序不会给默认值
 Numeric Constants
-1.��������Ҳ��ʹ����ʽ�ֽⷨ"factored"
-2.һ��δ��ȷд�����͵ĳ������������Ҫ�����ұߵ�ֵ��ȷ��
-*.��λ����ͬ�����������ܴ洢�����ֵ(��ˬ)
+1.常量声明也可使用因式分解法"factored"
+2.一个未明确写明类型的常量具体的类型要根据右边的值来确定
+*.移位，不同变量类型所能存储的最大值(王爽)
 For
-1.Go��ֻ��һ��ѭ���ṹ��forѭ��
-2.forѭ���Ļ����ṹΪfor�ؼ��֣�Ȼ�����������ֺŷָ��������֣���������һ�Ի����Ž�Ҫִ�е��������������Ҫע������ɷֺŷָ����������ֲ���Ҫʹ��Բ����������
-3.init���ֵı����������ڸ�forѭ������Ч
-*.���for��ÿһ���־Ͳ�����˵�ˣ������Ϻ��������Ե�forѭ��û����
+1.Go中只有一种循环结构，for循环
+2.for循环的基本结构为for关键字，然后是由两个分号分隔的三部分，接着是由一对花括号将要执行的语句括起来。需要注意的是由分号分隔的那三部分不需要使用圆括号括起来
+3.init部分的变量声明仅在该for循环中有效
+*.这个for的每一部分就不具体说了，基本上和其它语言的for循环没区别
 For continued
-1.����ǽ���һ�ڵ�For���ģ���Ҫ˵�����ɷֺŷָ������������еĵ�һ����init�͵�������post���ǿ�ѡ�ģ��������дҲ����ȷ�ġ���ʵ���ʡ�Ե�һ�͵������֣���һ������£���һ���ֻ�Ӱ�������ȥ��ȡ���������ֻ���forѭ������л�ȡ���ܵ���˵���������ģ�ֻ��λ�ò�һ������
-2.��Ȼʡ���˵�һ�͵������֣������������ֺŻ��ǽṹ�б����е�
-*.ץסforѭ���ı��ʣ��г�ʼ�㣬���ж��������н�����
+1.这个是接上一节的For讲的，主要说的是由分号分隔的那三部分中的第一部分init和第三部分post都是可选的，即如果不写也是正确的。其实如果省略第一和第三部分，则一般情况下，第一部分会从包级别中去获取，第三部分会在for循环语句中获取，总的来说还是完整的，只是位置不一样罢了
+2.虽然省略了第一和第三部分，但是那两个分号还是结构中必须有的
+*.抓住for循环的本质，有初始点，有判断条件，有结束点
 For is Go's "while"
-1.����һ�ڻ�˵�����ʡ���˳�ʼ�����ֺ�post���ֵ������ֺŻ��Ǳ����еģ���ھʹ����ˣ���ʹʡ���˵�һ�����֣������ֺ�Ҳ��ʡ�ԣ�����д�����������������������е�whileѭ���ˣ��������Ǿ仰����˵ʡ�ԣ���������������϶��������Ķ� �ǿ����ҵ���
+1.上面一节还说了如果省略了初始化部分和post部分但两个分号还是必须有的，这节就打脸了，即使省略了第一三部分，两个分号也可省略，这样写下来看起来就像其它语言中的while循环了，但还是那句话，虽说省略，但那三个基本点肯定在上下文都 是可以找到的
   *. func main() {
-         sum := 1  //�ⲿ���൱��init
+         sum := 1  //这部分相当于init
          for sum < 1000 {
-             sum += sum  //�ⲿ�ֳ䵱��post
+             sum += sum  //这部分充当了post
          }
      }
 Forever
-1.��ڻ��Ǽ�����for�ṹ�ɷֺŷָ�����������˵�����������������Ҳ��ʡ�ԣ�����ⲿ��ʡ�ԣ������ִ�������û���趨�˳������������Զ��ִ����ȥ������˵�����ˣ������ִ��������趨�˳��������ⲻ�����ǻ�������ҩ�ֻ������Ӧ��Ԫ��û��λ���ɷֺŷָ���λ�ã�ץ���ʣ�
+1.这节还是继续对for结构由分号分隔的三部分做说明，这次是条件部分也可省略，如果这部分省略，如果在执行语句中没有设定退出条件，则会永远的执行下去，话又说回来了，如果在执行语句中设定退出条件，这不是又是换汤不换药嘛，只不过相应的元素没有位于由分号分隔的位置；抓本质！
 *. func main() {
     for {
     }
    }
-*.��������ֶ�ʡ�˲²���forִ�е�ʱ��ֺŷָ��������ֶ���Ĭ����Ϊ1����Ϊ�����0���ǲ����������ˣ�1��ʾ��Զ��true,����������ɣ��л����˽�for��ʡ����ʽ�£��������ֵĲ�ȫ������������.
+*.如果三部分都省了猜测在for执行的时候分号分隔的三部分都给默认置为1，因为如果是0就是不满足条件了，1表示永远是true,先这样理解吧，有机会了将for的省略形式下，那三部分的补全机制是怎样的.
 If
-1.Go���������if���Ҳ��if�������������������ʽ��ע������for���ƣ��������ֲ���Ҫʹ��Բ��������(����for���������ֺŸ����������ֲ���Ҫʹ��Բ�������𣬵���������if����for�Ǹ�λ�ö���һ���ģ�����λ�ڹؼ��ֺ���ʼ������ǰ)��Ȼ�������Ǹ�����һ�Ի���������������ִ�����
+1.Go中最基本的if语句也是if引导，后面跟条件表达式，注意这块和for相似，条件部分不需要使用圆括号括起(对于for是由两个分号隔开的三部分不需要使用圆括号括起，但是无论是if还是for那个位置都是一样的，都是位于关键字后，起始花括号前)；然后后面就是跟着由一对花括号括括起来的执行语句
 If with a short statement
-1.��ڽ���if������Ŀǰ�Ӵ�������������û�У�����û�м�����������if����������ʽǰ��һ����䣬������for�е�init���֣��������ʼʱִ��һ��
-2.if�е�init���ֺ���������ʽ����Ҳ��ʹ�÷ֺŸ���
-3.if����е�init���������ı��������÷�ΧΪ�����ڵ�if��䣬��������Ϊif���ִ�н���
+1.这节讲的if的特性目前接触的其它语言里没有，或是没有见过，就是在if的条件表达式前加一个语句，类似于for中的init部分，仅仅在最开始时执行一次
+2.if中的init部分和条件表达式部分也是使用分号隔开
+3.if语句中的init部分声明的变量的作用范围为它所在的if语句，生命周期为if语句执行结束
 *. if v := math.Pow(x, n); v < lim {
       return v
    }
 If and else
-1.if���������õĻ���һ��else�ؼ���,�����Ҫ������if�ṹ��init��������˱������򲻽���if����������Ч������Ӧ��else������Ҳ��Ч
+1.if语句中最最常用的还有一个else关键字,这节主要讲的是if结构中init如果定义了变量，则不仅在if的语句块中有效，在相应的else语句块中也有效
 *.if v := math.Pow(x,n); v < lim {
     return v
   } else {
       fmt.Printf("%g >= %g\n", v, lim)
     }
 Exercise: Loops and Functions
-1.�����ϰ��������������Ƚ�������������
+1.这个练习本节最后再做，先将基础概念整完
 Switch
-1.Switch�����ʵ��if...else...�ĸ��̵�һ����д��ʽ����if...else...�����ʱ��ʹ��switch���ɶ��Ի��һЩ
-2.����C��һЩ������Ҳ��swtich��䣬����Щ����У�ÿ��case�µ�ִ����䶼Ҫ��һ��break����������������case���ִ�С�����Go�в���Ҫ��ÿ��case�µ�ִ������ж�����break��䣬ʵ������Go�Ѿ�Ϊ���ǿ��Ǻ��ˣ��Ǹ�break�ǳ���ִ��ʱ�Զ�����ȥ�ģ��������Ǹ�Ԥ����������˵�����е�
-3.Go��case��������Ͳ����ڳ���������Ӧ��ֵҲ��һ��Ҫ������
-*.switch��Ҫ��������ϳ���if...else...
+1.Switch语句其实是if...else...的更短的一种书写形式，但if...else...过多的时候使用switch语句可读性会好一些
+2.在像C等一些语言中也有swtich语句，在这些语句中，每个case下的执行语句都要有一个break来跳过继续对下面case检测执行。但在Go中不需要在每条case下的执行语句中都加上break语句，实际上是Go已经为我们考虑好了，那个break是程序执行时自动加上去的，不用我们干预，本质上来说还是有的
+3.Go中case后面的类型不限于常量，且相应的值也不一定要是整数
+*.switch主要用于替代较长的if...else...
 Switch evaluation order
-1.�����Ҫ���������switchҪ�ж��caseʱ����Щcase������˳����ɶ���ģ������ʵ��֪�����Ǵ������µģ�����һ�������ĸ�case�����ֵƥ��ɹ��ˣ���ִ������Ӧcase���������Ͳ��ټ�������ƥ��������case�����ֵ�ˣ���Ϊ֮ǰҲ˵��,Go�Զ�Ϊÿ��case�����ִ��������������break������switch
+1.这节主要讲的是如果switch要有多个case时，这些case的评估顺序是啥样的，这个其实都知道，是从上向下的，并且一旦遇到哪个case后面的值匹配成功了，则执行完相应case下面的语句后就不再继续向下匹配其它的case后面的值了，因为之前也说过,Go自动为每个case下面的执行语句的最后面加了break来跳出switch
 Switch with no condition
-1.��switch������������ʽʱ����������ʽ�൱��true
-2.��ʵ�ֻص�Ҫ��������ı��������ˣ���ʵ��ν����������ֻ���������ֲ���switch����������ʽ�����ˣ�����ת�Ƶ�ÿ��caseֵ�ϣ���䲻������
-*.��switch������ʱ����Ҫ�Ǵ����ϳ���if...then...else...
+1.当switch中无条件表达式时，条件表达式相当于true
+2.其实又回到要理解问题的本质上来了，其实所谓的无所件，只是条件部分不在switch的条件表达式部分了，而是转移到每个case值上，万变不离其宗
+*.当switch无条件时，主要是处理较长的if...then...else...
 *.switch {
         case t.Hour() < 12:
           fmt.Println("Good morning!")
@@ -160,22 +161,22 @@ Switch with no condition
           fmt.Println("Good evening.")
    }
 Defer
-1.����ǰ���������defer�ؼ��ֵĻ�������ú���������һ����������ʱ����ִ�е�����deferǰ׺�ĺ���ʱ�������Ὣ�ú�������Ԥ������������������ֵ����Ĳ�����������������ִ�У�ֱ�������������㺯��ִ����Ϻ󣬲Ż�ִ�иú���
+1.函数前面如果加上defer关键字的话，如果该函数在另外一个函数里面时，在执行到带有defer前缀的函数时，仅仅会将该函数进行预处理，即将变量换成值这类的操作，但并不会立刻执行，直到这个函数的外层函数执行完毕后，才会执行该函数
 Stacking defers
-1.��������д��ڶ��deferʱ������������defer�ĺ����ᱻ��ջ��ջ��ԭ���Ǻ���ȳ�����������Ӧ����㺯��ִ������������derer�ĺ����Ǳ��Ӻ���ǰִ�е�
+1.如果函数中存在多个defer时，则这多个带有defer的函数会被入栈，栈的原理是后进先出，所以在相应的外层函数执行完后，里面带有derer的函数是被从后向前执行的
 Pointers
-1.Go����Ҳ֧��ָ�룬������C��C++����˵ָ��
-2.Go�е�ָ��Ƚϼ�ֻ��һ��������ʽ����֧������
-  *T:  var p *int  //����һ��ָ��p,p�д���ǵ�ַ���õ�ַָ����ڴ���������int��ֵ(�Ҳ����intָ���Ǳ���ֵ�����ͣ������Ǳ���������ڴ��ַ������)
-3.��ָ�������ֵ��һ����ʽ��: ��ַ��&���ϱ�����
+1.Go语言也支持指针，经常在C和C++上听说指针
+2.Go中的指针比较简单只有一种声明形式，不支持运算
+  *T:  var p *int  //声明一个指针p,p中存的是地址，该地址指向的内存区域存的是int型值(我猜这个int指的是变量值的类型，而不是变量分配的内存地址的类型)
+3.给指针变量赋值的一般形式是: 地址符&加上变量名
   i := 42  p = &i
-4.ָ�����ǰ����*��ʾ���Ǹ�ָ�����ָ���ڴ������ֵ
-  *p = 21  //ָ�������ŵ�ʵ�����ڴ��ַ,�͸�����˵p��ŵ�ʵ���������ڴ���Ϊ����i����ĵ�ַ��������*֮��*p��ʾ����ָ�����p��ֵ(����i���ڴ��ַ)ָ���ֵ)
-  *.ָ����ʵ�ܼ򵥣�ֻ�Ǳ���ͨ�ı�����һ����ѣ��Ҿ���Խ˵��Խ�ң���������
+4.指针变量前加上*表示的是该指针变量指向内存区域的值
+  *p = 21  //指针变量存放的实际是内存地址,就该例来说p存放的实际上是在内存中为变量i分配的地址；而加上*之后，*p表示的是指针变量p的值(变量i的内存地址)指向的值)
+  *.指针其实很简单，只是比普通的变量多一层而已，我觉得越说多越乱，先这样吧
 Structs
-1.tutorial�н�����struct(�ṹ��)��һ���ֶεļ��ϣ�����������⣬��C�п�����struct���͵�������C����ʵҲ��һ���ֶεļ��ϣ�������Щ�ֶε����Ϳ����������,��Ŀǰ���Լ򵥵������struct������һ��û��initializer�ı�������(���ܲ�׼ȷ����Ŀǰ���������ӵ�)
+1.tutorial中讲的是struct(结构体)是一个字段的集合，这个可以理解，在C中看过对struct类型的描述，C中其实也是一堆字段的集合，而且这些字段的类型可以是任意的,就目前可以简单的理解成struct体中是一堆没有initializer的变量声明(可能不准确，但目前看是这样子的)
 Struct Fields
-1.��struct�е�field(�ֶΣ���Ա)�ķ��ʣ���ͨ�������(".")ʵ�ֵ�
+1.对struct中的field(字段，成员)的访问，是通过点符号(".")实现的
   type Vertex struct {
        X int
        Y int
@@ -185,43 +186,43 @@ Struct Fields
     v.X = 4
     fmt.Println(v.X)
   }
-*.��ͬ�����ж���ͬһ����ķ�����ܲ�ͬ����Ҫ�Ļ������ױ�����˼
+*.不同语言中对于同一概念的翻译可能不同，主要的还是明白本质意思
 Pointers to structs
-1.������ͨ��struct pointer(�ṹ��ָ��)������struct fields(�ṹ����ֶλ�г�Ա)
-2.��p������Ϊstruct pointerʱ�����������Ӧ��ʹ��(*p).X���ܹ����ʽṹ���е�field X,����Go�������������ڲ���ȷ��ʾ����*ǰ׺�������ֱ��ʹ��p.X�ķ�ʽ�����ʽṹ���е�X field(�ö��ѧ����ʵ����һЩ������������ܻ���Ժ�����Ϊ��ǰû�Ӵ�����������û�пɹ��ο��Ķ������ҵ�ʱҲ�ǣ������ٻ�ͷ������Ҫ�򵥵Ķࣻ������㿪ͷ˵��p������Ϊ�ṹ��ָ�룬��ʵҪ���ף���ʵ˵�ľ���p�д�ŵ�ֵ������Ϊ�ṹ��ָ�룬��ָ����ʵ��ָ���ǵ�ַ������֮p�д�ŵ�ֵ�ǽṹ�����ڴ��еĵ�ַ��������*��ǰ׺�ͱ�ʾ�õ�ַ�������ŵ�������)
-3.struct value����&���ţ����ص���һ��ָ��struct value��ָ��(��仰������Ҳ��Ť������struct value�Ǹ�ʲô������(�������Ͽ���ʵ�������������ʵ������ô˵��׼ȷ��׼ȷ��˵Ӧ�þ������ʵ������Ϊ�ṹ��Ҳ��һ�����ͣ���ν���;����࣬����˵struct value��ʵ�������ʵ��)Ҳ���������������Ӱ�: p=&Vertex{1,2} ��������У�Vertex{1,2}�൱�������н���struct value; ��ʱp��һ��ָ�������Ҳ����˵p�д�ŵ���Vertex{1,2}���ʵ�����ڴ��б�����ĵ�ַ��Ȼ����һ��Ҳ˵�˰���˵���Ҫ����Vertex�е�ֵ�Ļ�����Ҫ��(*p).X/Y,����Go���������Ϊ�������˴�������p��*ǰ׺����ʡ�Ե�)
+1.还可以通过struct pointer(结构体指针)来访问struct fields(结构体的字段或叫成员)
+2.当p的类型为struct pointer时，正常情况下应该使用(*p).X才能够访问结构体中的field X,但是Go语言允许我们在不明确表示废弃*前缀的情况下直接使用p.X的方式来访问结构体中的X field(好多初学者其实对于一些概念的描述可能会很迷糊，因为以前没接触过，脑子里没有可供参考的东西，我当时也是，现在再回头看，就要简单的多；比如这点开头说的p的类型为结构体指针，其实要明白，其实说的就是p中存放的值的类型为结构体指针，而指针其实又指的是地址，总言之p中存放的值是结构体在内存中的地址，而加上*号前缀就表示该地址处具体存放的内容了)
+3.struct value加上&符号，返回的是一个指向struct value的指针(这句话听起来也别扭，首先struct value是个什么东西？(从例子上看其实就是类似于类的实例，这么说不准确，准确来说应该就是类的实例，因为结构体也是一种类型，所谓类型就是类，所以说struct value其实就是类的实例)也不好描述，看例子吧: p=&Vertex{1,2} 这个例子中，Vertex{1,2}相当于描述中讲的struct value; 此时p是一个指针变量，也就是说p中存放的是Vertex{1,2}这个实例在内存中被分配的地址，然后上一节也说了按理说如果要引用Vertex中的值的话，需要用(*p).X/Y,但是Go语言在这块为我们做了处理，即p的*前缀可以省略掉)
 Struct Literals
-1.���Ȱ���struct literal������������Ĳ�֪�������ʲô����Ҫ���ǲ�֪��literal���������ô�룬�����ϵ��Ǽ�������ж������ʡ�struct literal��Ҫ����˼��:ͨ���г��ֶε�ֵ�����·���ṹ���ֵ����������仰ʱ��ȷʵ����ô���⣬���������Ӻ���Ȼ��struct literal�ĸ���ǲ���ô̫������������Ӧ��������ô���ˡ��ܽ�һ�£�struct literal����ʽ�����������ǶԽṹ����г�ʼ��(��ʼ����ʵ����һ��������ֵ�Ĺ���)������ʼ����ʱ�򣬽ṹ���е������ֶβ�����ȫ����������ֻ��һ���֣�ʣ���ǲ���û�����ģ������֮ǰ�����ģ�����Ӧ���͵�"��ֵ"ȥ��(���͵���0,�ַ������͵���""�ȵȰ�,���Ҳ��һ�������Լ��µģ�����Ӧ��ûɶ������)
-2.�Ҹо���Struct Literal�����ṹ���ʵ������д����ṹ��Ķ���ȽϺ���(���ݸ������������������)
+1.首先啊，struct literal在这里面我真的不知道翻译成什么，主要还是不知道literal在这里该怎么译，按网上的那几个翻译感都不合适。struct literal主要的意思是:通过列出字段的值来重新分配结构体的值。当看到这句话时我确实不怎么理解，但看完例子后虽然对struct literal的概念还是不怎么太清晰，但至少应该明白怎么用了。总结一下，struct literal从形式上来看就像是对结构体进行初始化(初始化其实就是一个变量赋值的过程)，而初始化的时候，结构体中的所有字段不必完全赋到，可以只赋一部分，剩余那部分没赋到的，会根据之前讲过的，按相应类型的"零值"去赋(整型的是0,字符串类型的是""等等吧,这个也有一部分是自己猜的，不过应该没啥大问题)
+2.我感觉把Struct Literal叫做结构体的实例化或叫创建结构体的对象比较合适(根据给出的例子推想出来的)
 Arrays
-1.�������͵�����: [n]T   //һ������n������ΪT������(����һ�����飬��������n������ΪT��Ԫ��)
-  var a [2]string  //����һ������2������Ϊstring������a(����һ������a,����������2������Ϊstring��Ԫ��)
-2.��������ú͸�ֵ����������һ��������ʹ�ýǱ����ʽ
+1.数组类型的声明: [n]T   //一个含有n个类型为T的数组(声明一个数组，该数组有n个类型为T的元素)
+  var a [2]string  //定义一个含有2个类型为string的数组a(声明一个数组a,该数组中有2个类型为string的元素)
+2.数组的引用和赋值与其它语言一样，都是使用角标的形式
   a[0] = "Hello"
   a[1] = "World"
-3.��������ʱ����޶��˳��ȣ����Ժ�ʹ�ø�����ʱ�����Ⱦ��ǹ̶����ˣ������Զ�����ĳ��Ƚ����ض���;�����һ�仰���Ǻ�����:This seems limiting, but don't worry; Go provides a convenient way of working with arrays.��˵����˼�����ף�ǰ��˵������ʱ���г��ȵ�������ڲ��ɸı��С������˵�������Ʋ��õ��ģ�GoΪ�����ṩ��һ�ַ���ķ�ʽ��ʹ�����飬��仰ָ����ʲô?ָ���Ǻ���Ҫ˵��������ʱ���Բ����峤�ȵ���ʽ��?
-4.��������ʱ��ֵ(���߽�����һ�����г�ʼ����������?) [n]T{value1, value2, ...}
-  var primes := [6]int{2, 3, 5, 7, 11, 13}  //���￴�������ˣ���Ϊ����������õ��Ƕ���ʽ:=,����˵��ͷ�Ĺؼ���var��û�б�Ҫ�ģ�����һ��ԭ��Ҳ���������Ȳ�ȥvar,�������������
+3.声明数组时如果限定了长度，则以后使用该数组时，长度就是固定的了，不可以对数组的长度进行重定义;但最后一句话不是很明白:This seems limiting, but don't worry; Go provides a convenient way of working with arrays.它说的意思是明白，前面说了声明时带有长度的数组后期不可改变大小，但又说这种限制不用担心，Go为我们提供了一种方便的方式来使用数组，这句话指的是什么?指的是后面要说到了声明时可以不定义长度的形式吗?
+4.声明数组时赋值(或者叫声明一个带有初始化器的数组?) [n]T{value1, value2, ...}
+  var primes := [6]int{2, 3, 5, 7, 11, 13}  //这里看出错误了，因为这里的声明用的是短形式:=,所以说打头的关键字var是没有必要的，看了一眼原文也是这样，先不去var,暂且留在这里吧
 Slices
-1.����˵��array�Ĵ�С�ǹ̶��ġ�����������Զ���slice�Ǳ仯�ģ�slice�����������о�������Ϊ��Ƭ��ͨ����������������Go���slice����Ϊ��ƬҲ�Ǻ��ʵġ�����Ƭ��ʵָ����ȡarray��һ���֣�Ҳ����˵sliceһ���Ǻ�array����;
-2.sliceҲ�����ͣ�Ϊ[]T,��δָ����С��[]��δָ����Ƭ�Ĵ�С��Ҳ����˵��С�Ƕ�̬�ģ�Tһ��Ϊ��Ӧarray������;
-3.��Ƭͨ�����÷���������һ�����飬Ȼ��ͨ��ָ����������޺�������Ϊslice��ֵ
+1.首先说了array的大小是固定的。接着引出相对而言slice是变化的，slice在其它语言中经常翻译为分片，通过看他的描述，在Go里对slice翻译为分片也是合适的。而分片其实指的是取array的一部分，也就是说slice一般是和array联用;
+2.slice也有类型，为[]T,即未指定大小，[]中未指定分片的大小，也就是说大小是动态的，T一般为相应array的类型;
+3.分片通常的用法是先声明一个数组，然后通过指定数组的上限和下限来为slice赋值
   *. primes := [6]int{2, 3, 5, 7, 11, 13}
-     var s []int = primes[1:4]   //�������[]int�ǿ���ʡ�Եģ�Ҳ��д��:
+     var s []int = primes[1:4]   //这里面的[]int是可以省略的，也可写作:
      s := primes[1:4]
-4.����3˵������ķ�Ƭһ���ǰ�ǰ������ģ���a[1,4]��ָ����a�е�1����3��Ԫ��
-*.�����������ӣ����Կ�����Ƭs��������[]T,������ھ����ǰɣ�����ķ�Ƭ(�о�����Ƭ������һЩ)(��֪����slice��array������˵׼��׼ȷ�������������ǰ�)��һ��ʼ����Ϊ[]Tֻ����Ϊ���㲻�ÿ����ȥ���ķ�Ƭ�Ĵ�С����ʵ��Go����Ҳ���������ǵģ��ҳ����Ž���Ƭs�����ͻ���[3]int,��Ϊ����ķ�Ƭ������Ԫ�������ִ��ʧ���ˡ����һ�����ȷ�����ҷ�Ƭ��������[]T(����ָ��slice����Ԫ�ص�����)
+4.接着3说，数组的分片一般是包前不包后的，即a[1,4]是指数组a中第1到第3个元素
+*.第三条的例子，可以看出分片s的类型是[]T,这个现在就死记吧，数组的分片(感觉叫切片更生动一些)(不知道将slice和array连起来说准不准确，暂且先这样记吧)，一开始我以为[]T只是因为方便不用刻意的去关心分片的大小，事实上Go可能也是这样考虑的；我尝试着将分片s的类型换成[3]int,因为后面的分片就三个元素嘛，但是执行失败了。而且回显明确告诉我分片的类型是[]T(不能指定slice包含元素的数量)
 Slices are like references to arrays
-1.slice���洢�κ����ݣ���slice������Ԫ�صĸ�����ʵ��ֱ�Ӹı��slice��Ӧ��underlying array.������˵ underlying arrayΪbase=[1,2,3,4,5,6,7,8,9,10]��10������Ȼ���ҶԸ�underlying array����һ����Ƭ������slice=base[0:5],���Ƕ�֪������������֮����ʵ�����ڴ��з�����һƬ�ռ䣬Ȼ��ʹ�ñ���ʱ����ʵ�����ñ����ĵ�ַ׼ȷ���ҵ������������ڴ��е�λ��(����������������Ҳ�ǲ�����)����˵����ķ�Ƭ����ʵҲ���ڴ��е�һ�ε�ַ��������������ַ����underlying array�ķ�Χ��ȡ������һ������ʵ�Է�Ƭ���ݵĸ��ģ���ֱ�����õ�underlying array�е����ݡ�һ��ʼ������array�ı���������slice,����������׼ȷ����Ϊ�����Ƕ�underlying array����ȫ���ö�slice������������������Ҳ�����ǻ��������һ����,���Բ��ܰ�slice�������underlying array�ı���(��ε������е�ʺ��)
-2.��Ȼslice��ֱ�Ӹı���underlying array�е����ݣ���������slice�϶�Ҳ���ܵ�Ӱ��
+1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base=[1,2,3,4,5,6,7,8,9,10]这10个数，然后我对该underlying array做了一个切片，比如slice=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名(这段的描述有点屎了)
+2.既然slice会直接改变它underlying array中的数据，则其它的slice肯定也会受到影响
 Slice literals
-1.ǰ���и�struct literal�������п���struct literal����һ���ṹ��ĳ�ʼ��(��ʵ�����Ƿ����?)
-2.��slice literal�ٷ�tour����������:"a slice������һ��û�г��ȵ�array literal"��
-��ʵ���Ǻ����⣬���ҽ�slice literal�Ľṹ����Ϊ "[]T{v1,v2,...,vn}"
-3.����һ��array literal: [3]bool{true, true, false}
-4.����һ��slice literal: []bool{true, true, false}
-*.����3��4�������ǣ�3ֻ�Ǽ򵥵�����һ����������Ϊbool���͵�array����ֵ����4��ʵ��������Ϊ2������һ���Ǵ���һ��array�ڶ����ǻ��ڵ�һ����array����һ��slice
-5.���ڽṹ��������ʱ��ʼ����ʱ����Ҫע����ǣ���Ϊ�ṹ���в�ֹһ��field������Щ���е�field����struct��˵��һ�����壬����������ʱ���ṹ��ĸ�ֵʱÿ��Ԫ�ض���һ���ɻ������������ģ���������field������
+1.前面有个struct literal从例子中看，struct literal就是一个结构体的初始化(叫实例化是否更好?)
+2.对slice literal官方tour给的描述是:"a slice就像是一个没有长度的array literal"，
+其实不是很理解，暂且将slice literal的结构定义为 "[]T{v1,v2,...,vn}"
+3.声明一个array literal: [3]bool{true, true, false}
+4.声明一个slice literal: []bool{true, true, false}
+*.其中3和4的区别是，3只是简单的声明一个含有三个为bool类型的array并赋值；而4其实可以理解为2步，第一步是创建一个array第二步是基于第一步的array创建一个slice
+5.对于结构体在声明时初始化的时候，需要注意的是，因为结构体中不止一个field，而这些所有的field对于struct来说是一个整体，所以在声明时给结构体的赋值时每个元素都是一个由花括号括起来的，含有所有field的整体
   s := []struct {
     i int
     b bool
@@ -233,89 +234,89 @@ Slice literals
     {11, false}
     {13, true}
   }
-6.�ܽ�һ�£���ν��slice literal����������������Ƭ�������ϳ�һ����(�����������)
-7.�ٶ�˵һ�䣬��֮ǰ��struct literal,��array literal, �ٵ�slice literal,��ʵͷ���������Ͼ���֮ǰ���ı���������ʱ���˳����ֵ�ˣ���slice literal��˵Ҳ��������ʱ��͸�ֵ�ˣ����ǲ�Ҫ���ˣ�slice��Ҫ����array�ģ���仰�ǹؼ�������������slice literal��ʱ���Ҫ���������⣬��һ����array�Ĵ������ڶ�����slice��build(�й���������ɶ�ģ����а�)
-8.sliceҲ�������͵ģ�����������"û�г��ȵ���������" []T
-9.��˵һ��slice literal�Ķ��壺slice literal������һ��û�г��ȵ�array literal
+6.总结一下：所谓的slice literal就是数组的声明与分片的声明合成一个了(先这样理解吧)
+7.再多说一句，从之前的struct literal,到array literal, 再到slice literal,其实头两个基本上就是之前讲的变量声明的时候就顺带赋值了，而slice literal虽说也是声明的时候就赋值了，但是不要忘了，slice是要基于array的，这句话是关键。所以再理解slice literal的时候就要分两步理解，第一步是array的创建，第二步是slice的build(叫构建，生成啥的，随便叫吧)
+8.slice也是有类型的，它的类型是"没有长度的数组类型" []T
+9.再说一下slice literal的定义：slice literal就像是一个没有长度的array literal
 Slice defaults
-1.���slice��low bound�ͻ�high boundʡ�ԵĻ�����Ĭ�ϻ������ǵ�Ĭ��ֵ������������low boundʡ������0���;���high boundʡ�ԵĻ�������len(array)���
+1.如果slice的low bound和或high bound省略的话，则默认会用它们的默认值替代，即，如果low bound省略则用0替代;如果high bound省略的话，则用len(array)替代
     var a [10]int
     a[0:10]
     a[:10]  //low bound default to 0
     a[0:]  // high bound default to 10
     a[:]  //low bound default to 0 and high 10
-2.��������ӽ����ʱ������ʵһ��ʼ�е�������ƫ�ˣ��Ұ����еĲ�������������ϵ��������ʵ���ǵ�:
-s := []int{2, 3, 5, 7, 11, 13}  //���s�Ƕ��Ҳ����������һ����Ƭ
-s = s[1:4]  //����Ǵ������Ǿ�õ���s��ȡ��1��2��3��Ԫ��(3,5,7)
-s = s[:2]   //������������Ǿ�s�Ľ��ȡ��0�͵�1��ֵ(3��5)
-s = s[1:]   //������������Ǿ��s�Ľ��ȡ��1��ֵ(5)
-*.���漸��Ҳ˵��slice��ʵ�Ƕ�array�����ã�������slice��ʵ����ǵ�ַ��������ֵ����slice[1]���޸ģ���ʵ�Ƕ���slice[1]�д洢�ĵ�ַ����ֵ�����޸ģ����ԲŻ���֮ǰ˵�Ķ�һ��slice���޸ģ����ܻ�Ӱ�쵽������slice,�����������ͬ���õĻ�
-*.������4��s,��2��3��4�ֱ�������һ��ΪԴ���н�ȡ��������һ�ڻὲ���������ǿ���չ�ģ������չ�Ļ���2��3��4��ÿһ����high bound��󶼿��Ե�6,len({2,3,5,7,11,13})����Ϊ���Ǳ����ϻ������Ǹ���������ķ�Χ�ڲ���
+2.看这节例子结果的时候我其实一开始有点理解跑偏了，我把所有的操作都和数组联系起来，其实不是的:
+s := []int{2, 3, 5, 7, 11, 13}  //这个s是对右侧无名数组的一个分片
+s = s[1:4]  //这个是从上面那句得到的s中取第1，2，3个元素(3,5,7)
+s = s[:2]   //这个是在上面那句s的结果取第0和第1个值(3，5)
+s = s[1:]   //这个是在上面那句的s的结果取第1个值(5)
+*.上面几节也说过slice其实是对array的引用，我理解slice其实存的是地址，而不是值，对slice[1]的修改，其实是对在slice[1]中存储的地址处的值进行修改，所以才会有之前说的对一个slice的修改，可能会影响到其它的slice,如果它们有相同引用的话
+*.上面那4个s,第2，3，4分别是以上一句为源进行截取，但是下一节会讲到，它们是可扩展的，如果扩展的话，2，3，4中每一个的high bound最大都可以到6,len({2,3,5,7,11,13})，因为它们本质上还是在那个无名数组的范围内操作
 Slice length and capacity
-1.ÿ��slice�����������ԣ�һ����length,һ����capacity.
-  length��ֵΪ��ǰslice�к��е�Ԫ�صĸ���
-  capacity��ֵΪ��ǰslice�����ڵ��Ǹ�array�ĳ��ȼ�ȥ��ǰslice��low bound
-2.����ͨ��len(s)���õ���Ƭs��length����ֵ
-  ����ͨ��cap(s)���õ���Ƭs��cap(s)����ֵ   //������������goroutines ��һ�ڵĴ����е�cap()������ɶ��˼��
-  *.len(s)����Ϊ��ǰslice�ĳ���; cap(s)����Ϊ��ǰslice���ܵ���󳤶�
-  *.len()����ûɶ˵�ģ�������; ��cap()�����Ҿ���Ӧ������Ϊ:"��ֵ����, ֻ����ֵ������չ"����ʱ��ȥ����cap()��ֵ��len(array)-slice(low bound)��ͨ��
-3.capacity��ʵ��������Ϊ��ǰ��Ƭ������ӵ�е�Ԫ�ظ��������������Ҫ�͵�ǰ��Ƭ�ĳ������������ǰ��Ƭ�ĳ���ָ���ǵ�ǰ��Ƭ����Ԫ�صĸ���������ǰ��Ƭ������ӵ��Ԫ�صĸ��������ڷ�Ƭ����չ�ԣ��������չ��Ҳ�ǻ����Ǹ��������array,��Ϊ����һ����Ƭ��˵��������ô����Ҳ�����������ڵ��Ǹ�array��ӵ�еķ�Χ�ڻ��������������¿�������Ϊcapacity��ֵ�����������ڵ��Ǹ�array��Ԫ�صĸ�����������˵�����ԣ���Ϊ��������ȷǿ���ˣ��Ǵ�low bound�����ֵ��ʼ������capacity�����ֵ��ʵ��len(array)-low bound
-4.������ʱ��չ��Ƭ��high bound,���ǲ��ܳ���len(array),����ᱨ"slice bounds out of range"�Ĵ���
-*.�ٴ�ǿ������Ƭ�д�ŵ�Ӧ���ǻ���array��Ԫ�صĵ�ַ�����Է�Ƭ�Ļ��Χ������array��������Ǹ���Χ
-*.��һ�ڿ�����ʵ�����е�С����ģ���Ϊ�漰���˶Է�Ƭ���з�Ƭ����ʵֻҪץס����һ�ж�������
-*.��һ��Ҫ�࿴������������
+1.每个slice都有两个属性，一个叫length,一个叫capacity.
+  length的值为当前slice中含有的元素的个数
+  capacity的值为当前slice所基于的那个array的长度减去当前slice的low bound
+2.可以通过len(s)来得到分片s的length属性值
+  可以通过cap(s)来得到分片s的cap(s)属性值   //看到这明白了goroutines 有一节的代码中的cap()函数是啥意思了
+  *.len(s)理解为当前slice的长度; cap(s)理解为当前slice可能的最大长度
+  *.len()函数没啥说的，好理解; 而cap()函数我觉得应该理解为:"左值不动, 只能右值向右扩展"，此时再去理解cap()的值是len(array)-slice(low bound)就通了
+3.capacity其实可以理解为当前分片最多可以拥有的元素个数，这个个数不要和当前分片的长度相混淆，当前分片的长度指的是当前分片已有元素的个数，而当前分片最多可以拥有元素的个数倾向于分片的扩展性，而这个扩展性也是基于那个最基础的array,因为对于一个分片来说，你再怎么折腾也是在你所基于的那个array所拥有的范围内活动。所以正常情况下可以理解为capacity的值就是其所基于的那个array中元素的个数，但这样说还不对，因为概念中明确强调了，是从low bound这个数值开始，所以capacity的最大值其实是len(array)-low bound
+4.可以随时扩展分片的high bound,但是不能超过len(array),否则会报"slice bounds out of range"的错误
+*.再次强调，分片中存放的应该是基础array中元素的地址，所以分片的活动范围最大就是array所表达的那个范围
+*.这一节看的其实还是有点小纠结的，因为涉及到了对分片进行分片，其实只要抓住本质一切都很明朗
+*.这一块要多看，多理解理解
 Nil slices
-1.֮ǰ�����������������ʱ�����û�г�ʼ������Ҳ����˵�������ʱ����ֵ����Go�ᰴ���͸���Ӧ�ı�����һ��ֵ�����ֵGo����zero value,Ҳ������ֵ�����ܽ�ɶ���������˼�ͺá�ͬ����slice�������ʱ����ֵҲ��Ĭ����һ��zero value,Ϊnil.
-2.��������������νslice����ʱ����ֵ��ָ����û���ұߵ������ǲ��֣�var s []int,������slice,����len()��cap()����0����Ϊ���sliceû��underlying array(������һ��Ǿ��÷���Ϊ���������һЩ)
+1.之前讲过如果变量声明的时候如果没有初始化器，也就是说如果声明时不赋值，则Go会按类型给相应的变量赋一个值，这个值Go叫它zero value,也就是零值。不管叫啥明白这个意思就好。同样的slice如果声明时不赋值也会默认有一个zero value,为nil.
+2.从例子来看，所谓slice声明时不赋值，指的是没有右边的数组那部分，var s []int,这样的slice,它的len()和cap()都是0，因为这个slice没有underlying array(这个词我还是觉得翻译为基础数组好一些)
 Creating a slice with make
-1.����Go�ṩ��һ���ڽ��ĺ���,make,���ķ���ֵ����һ��slice�����л���һ��"this is how you create dynamically-sized arrays"Ҳ����make������������̬����ķ�ʽ���ǵ����������е����ݵ�����Ϊ[]Tʱ�����ľ��Ƕ�̬���飬������Go�У�[]Tֻ��slice�����ͣ�����array�����ͱ�����[n]T������ָ����С�������������Ǿ�Ӣ�ģ��о��������Ӳ��Ǵ����Ķ�̬����ѽ��"a := make([]int, 5)"����ָ��������Ĵ�С�ˣ���������е㲻�����ԡ� //��鿴����������Щ���������������е��ң��뷨�Ȳ�д��
-2.�ڽ�����make�Ĳ���������������Ҳ���������������ǵ�һ��һ�㶼��slice������:
-   �������� make([]T, slice_len)
-   �������� make([]T, slice_len, slice_caps)
-   *.����������make�߼�: �ȸ���[]T�е�T��slice_len����һ�����������飬���Ҹ������鸳slice_len��0,��ʱ���������ˣ��ٸ���[]T������slice������(�о����û��caps�����Ļ���Ĭ��caps��ֵ����len��ֵ)
-   *.����������make�߼�: �ȸ���slice_capsȷ����������ĳ��ȣ�Ȼ�����[]T��slice_len����slice��ȷ��slice��Ԫ�ظ���(˵���˾���slice���м���0)
-   *.������������ȫ�ǲ²⣬�����ڽӴ��˹���make��api˵���ٺú�����һ��
-   *.�������������: 
-         1.��������ʱ��ʡ�Եĵ���������ֵ�͵ڶ���ֵ��ͬ���ҵ���������ֵ��ʾ����underylying array�ĳ��ȣ��ڶ���������ʾ����slice�ĳ���;
-         2.�����������Բ�����������������������Ϊunderylying array�ĳ��ȣ��ڶ�������Ϊslice�ĳ���
-3.�������ǿ������ˣ���Ƭ�Ŀ������ԣ�ֻҪ����underlying array������ķ�Χ�ڿ����������
+1.首先Go提供了一个内建的函数,make,它的返回值就是一个slice；文中还有一句"this is how you create dynamically-sized arrays"也就是make是用来创建动态数组的方式，记得其它语言中当数据的类型为[]T时声明的就是动态数组，但是在Go中，[]T只是slice的类型，数组array的类型必须是[n]T即必须指定大小。还接着上面那句英文，感觉给的例子不是创建的动态数组呀，"a := make([]int, 5)"还是指定了数组的大小了，哎，这块有点不明所以。 //这遍看倒是明白了些，不过现在脑子有点乱，想法先不写了
+2.内建函数make的参数可以是两个，也可以是三个，但是第一个一般都是slice的类型:
+   两个参数 make([]T, slice_len)
+   三个参数 make([]T, slice_len, slice_caps)
+   *.两个参数的make逻辑: 先根据[]T中的T和slice_len生成一个无名的数组，并且给该数组赋slice_len个0,此时数组生成了，再根据[]T来生成slice并返回(感觉如果没有caps参数的话，默认caps的值等于len的值)
+   *.三个参数的make逻辑: 先根据slice_caps确定无名数组的长度，然后根据[]T和slice_len创建slice并确定slice的元素个数(说白了就是slice中有几个0)
+   *.上面这两条完全是猜测，待后期接触了关于make的api说明再好好理解一翻
+   *.刚又悟出了两点: 
+         1.两个参数时，省略的第三个参数值和第二个值相同；且第三个参数值表示的是underylying array的长度，第二个参数表示的是slice的长度;
+         2.三个参数可以参照两个参数，第三个参数为underylying array的长度，第二个参数为slice的长度
+3.到现在是看出来了，分片的可伸缩性，只要是在underlying array所表达的范围内可以随便折腾
 Slices of slices
-1.��slices of slices����ʵ����c��java�еĶ�ά���飬ʹ�÷���һģһ��������ͨ����ά����������һ�۵�ʱ����û���һЩ����ʵ��Ȼ��
+1.叫slices of slices，其实就像c或java中的多维数组，使用方法一模一样，都是通过多维索引，看第一眼的时候觉得会难一些，其实不然。
   board := [][]string{
       []string{"-", "-", "-"}
       []string{"-", "-", "-"}
       []string{"-", "-", "-"}
   }
-2.strings�����Join()�������Խ�slice����array�е��ַ�������ƴ�Ӳ����
+2.strings包里的Join()函数可以将slice或是array中的字符串进行拼接并输出
 Appending to a slice
-1.����ܺ����⣬��python���б�׷�Ӻ�����һ����˼�������÷���һ����
-2.append�����Ķ���: func append(s []T, vs...T) []T
-3.append������ʵ���÷�: s = append(s,1)  //����s��slice;��ͬʱ׷�Ӷ��ֵ
-4.��׷�ӵ�Ԫ�ظ���������slice��ǰ���԰�����������ʱ��Go���slice���·���һ��array,���ҽ����ص�sliceָ������µ�underlying array(���Ӧ�þ���ԭ���ǿ�ز������ˣ�Ȼ����ݷ��ص�slice�ĳ���������һ��ش洢�������ҽ�sliceָ���µ�array,Ҳ����˵������غ��slice�ĳ�����������˵���undelying array�ĳ��Ⱥ�slice append֮ǰ��&slice[0]��slice append֮���&slice[0]�Ѿ�����һ��ֵ��)
+1.这个很好理解，和python的列表追加函数是一个意思，但是用法不一样；
+2.append函数的定义: func append(s []T, vs...T) []T
+3.append函数的实际用法: s = append(s,1)  //其中s是slice;可同时追加多个值
+4.当追加的元素个数超过了slice当前可以包含的最大个数时，Go会给slice重新分配一个array,并且将返回的slice指向这个新的underlying array(这个应该就是原先那块地不够存了，然后根据返回的slice的长度重新找一块地存储它，并且将slice指向新的array,也就是说如果返回后的slice的长度如果超过了当的undelying array的长度后，slice append之前的&slice[0]和slice append之后的&slice[0]已经不是一个值了)
 Range
-1.forѭ���е�range��ʽ���ڱ���һ��slice����һ��map
-2.��ʹ��range����һ��slice��ʱ��ÿ�α����᷵������ֵ��index����֮��Ӧ��value(�����ر�ǿ���Ǹ�ֵ��slice��Ӧλ�õ�һ��copy,˵���˾��Ǹ������ǣ���slice�ı���������Ӱ��ԭslice�����ݣ���������˵��0λ�õ�����ֵ���غ����ֵ�ʹ�ԭsliceɾ����)
-3.forѭ���ж�sliceʹ��range����ʽ: for i, v := range slice { statements}
-*.forѭ���ж�map�ı�����û˵����Ϊ��û����map,����Ӧ������ص�����,��ʱ�ٲ�
+1.for循环中的range形式用于遍历一个slice或是一个map
+2.当使用range遍历一个slice的时候，每次遍历会返回两个值，index和与之对应的value(文中特别强调那个值是slice相应位置的一个copy,说白了就是告诉我们，对slice的遍历并不会影响原slice的内容，即并不是说将0位置的索引值返回后，这个值就从原slice删除了)
+3.for循环中对slice使用range的形式: for i, v := range slice { statements}
+*.for循环中对map的遍历还没说，因为还没看到map,后面应该有相关的例子,到时再补
 Range continued
-1.�ղ�˵��forѭ���е�range slice��ʽ���᷵������ֵ��һ����index,����һ���Ǻ�index���Ӧ��ֵ;�������ֻ��Ҫindex,����Խ�value��λ���滻Ϊ_,��֮�����ֻ��Ҫvalue,�����ʹ��_����index:
+1.刚才说过for循环中的range slice形式，会返回两个值，一个是index,还有一个是和index相对应的值;如果我们只想要index,则可以将value的位置替换为_,反之，如果只想要value,则可以使用_代替index:
   for i, _ := range slice
   for _, value := range slice
-2.���ֻ��Ҫindexֵ������ֱ�ӽ�",value"ֱ��ʡ��,��:
+2.如果只想要index值，可以直接将",value"直接省略,即:
   for i := range slice
-3.����漰����λ�����<<����ʱ��Ҫ��һ��
+3.这节涉及了移位运算符<<，抽时间要看一下
 Exercise: Slices
-1.��ϰ���֣���һ���ٿ���
+1.练习部分，下一遍再看吧
 Maps
-1.map���ɶ����ֵ����ɣ���������������е��ֵ䣬��ϣɶ��û����
-2.���map��һ���ֵ�Զ�û�У���һ����map,�����ᱻĬ�ϸ�һ��"��ֵ"nil,�����slice����ֵ��һ����
-3.��map���������Ӽ�ֵ��
-4.make�������˿��Է���slice�⣬�����Է���map(����ָ�����͵�map,���Ҹ�map�ѱ���ʼ��������ֱ��ʹ����),������������make()��������mapʱ���ص���һ��map���󣬿���ʹ�øö�����н�һ����������map�ĸ�ֵ
-*.make�е����ͱ�����ǰ���Ѿ������ģ������m=make(T),��ǰ���Ѿ�����var m T�ˣ�����make()�����ᱨ��������ǵ�19С�ڣ�Ҫ�ٿ�������ʵ��Ҫ�����֪ʶ�������˵���ٿ�һ�£�������Щ�������ǿ��Ĳ�̫͸��
-*.�ټ�һ�㣬�����������˵�ģ��������ڵ���make����ʱʹ�ö�������ʽֱ����ɶԱ����������͸�ֵ:
+1.map是由多个键值对组成，这个和其它语言中的字典，哈希啥的没区别
+2.如果map中一组键值对都没有，即一个空map,则它会被默认给一个"零值"nil,这个和slice的零值是一样的
+3.空map不可以添加键值对
+4.make函数除了可以返回slice外，还可以返回map(返回指定类型的map,并且该map已被初始化，可以直接使用了),看例子描述，make()函数用于map时返回的是一个map对象，可以使用该对象进行进一步操作，如map的赋值
+*.make中的类型必须是前面已经声明的，即如果m=make(T),则前面已经有了var m T了，否则make()函数会报错；这块是第19小节，要再看看，其实还要将相关知识更详情的说明再看一下，否则有些东西真是看的不太透彻
+*.再加一点，补充上面这点说的，还可以在调用make函数时使用短声明形式直接完成对变量的声明和赋值:
 m := make(map[string]int)
-5.����һ��map���͵ı���ʱ����Ӧ�����ͱ�������string,int��Щ�Ը���һЩ��ͨ������������map���������Ӧ����: map[key����]value���ͣ���  map[string]Vertex //Vertex�Ǹ��ṹ������
-6.�Ұ������еĲ��ִ���д�������������������4��͵�5��
+5.声明一个map类型的变量时，相应的类型比其它如string,int这些稍复杂一些，通过例子来看，map的类型组成应该是: map[key类型]value类型，如  map[string]Vertex //Vertex是个结构体类型
+6.我把例子中的部分代码写下来，用来理解上面第4点和第5点
   type Vertex struct {
     Lat, Long float64
   }
@@ -325,55 +326,55 @@ m := make(map[string]int)
   m = make(map[string]Vertex)
 
   m["Bell Labs"] = Vertex{
-    40.68433�� -74.39967,
+    40.68433， -74.39967,
   }
-*.�������һ�£��ṹ��ĸ�ֵ��ʽ����д�Ͻṹ������ƣ����һ�Ի����ţ�Ȼ����Ӧ�ĸ�ֵд�ڻ������� Vertex{xx,xx,xxx}
+*.这块再提一下，结构体的赋值形式是先写上结构体的名称，后跟一对花括号，然后将相应的赋值写在花括号中 Vertex{xx,xx,xxx}
 Map literals
-1.����һ���ܿ϶���ν��xxx literal����������������ʱ��һ����ֵ������struct literal����һ����struct literal�õ�����������ֵ��Ӧ����һ�ڵ�struct literalָ���Ǹ�ֵ�ǿ飻�����پ�ȷһЩ��xxx literalָ�ľ��Ǳ����ĸ�ֵ?��һ��Ҫ�ٺú�����һ�£���������������ʱһ����ֵ��������������ֵ���϶��͸�ֵ��һ���ܲ��ˣ����ҳ���struct literal�⣬array literal, slice literal��map literal�����Ӻ����ǽ�����ʱ��ֵ����XXX literal
-2.��һ�ڵ�map literal������Ҳ��������ʱһ����ֵ����һ�������еĲ��ִ���:
+1.我再一次能肯定所谓的xxx literal就是在声明变量的时候一并赋值，但是struct literal好像不一样，struct literal用的是先声明后赋值，应该那一节的struct literal指的是赋值那块；所以再精确一些，xxx literal指的就是变量的赋值?这一块要再好好理解一下，反正不管是声明时一并赋值，还是先声明后赋值，肯定和赋值这一步跑不了，而且除了struct literal外，array literal, slice literal和map literal看例子好像都是将声明时赋值叫做XXX literal
+2.这一节的map literal看例子也是在声明时一并赋值，看一下例子中的部分代码:
   type Vertex struct {
     Lat, Long float64
   }
   
   var m = map[string]Vertex{
     "Bell Labs": Vertex{
-      40.68433�� -74.39967��
+      40.68433， -74.39967，
     },
     "Google": Vertex{
       37.42202, -122.08408,
     },
   }
 Map literals continued
-1.�����Ҫ������map literal��ʱ��(����ʱ��ֵ����ֵ��)�����Ԫ�ص�������top-level type,�����ʡ����������û�鵽top-level type�ĸ�����鵽��top-level class �ĸ��˵���Ƿ���Ƕ�࣬�������Ƶ�top-level type,����Ƕ���ͣ�����ɶ����Ƕ����ѽ�����ͻ�������Ƕ������ôд�ɣ���ʵ����ʽ���Ǹ�ֵʱ��Ӧ��������û��д��������ô�и�top-level type���д����⣬ת��һȦ��ת������ //�������Ƕ����kotlin������������Ƕ�������
+1.这节主要讲的是map literal的时候(定义时赋值？赋值？)，如果元素的类型是top-level type,则可以省略类型名；没查到top-level type的概念，但查到了top-level class 的概念，说的是非内嵌类，这样类推到top-level type,非内嵌类型，但是啥叫内嵌类型呀，类型还可以内嵌吗？先这么写吧，其实看形式就是赋值时相应的类型名没有写，但是怎么叫个top-level type还有待理解，转了一圈又转回来了 //类可以内嵌，如kotlin中数据类中内嵌数据类等
   type Vertex struct {
     Lat, Long float64
   }
   
   var m = map[string]Vertex{
-    "Bell Labs": Vertex��д�ɲ�д{40.68433, -744.39967},
-    "Google": Vertex��д�ɲ�д{37.42202, -122.08408},
+    "Bell Labs": Vertex可写可不写{40.68433, -744.39967},
+    "Google": Vertex可写可不写{37.42202, -122.08408},
   }
-*.���ھ͸�����˵Vertex�ܲ���ʡ���Ϳ�����������top-level type��ɶ������ˣ���������������ܻ����ĵ����� //��������top-level type�ܺ����⣬ָ�ľ��Ƕ������˵û����������ѽ������ѽ��Ԫ��������������
+*.后期就该例来说Vertex能不能省，就看你理不理解top-level type是啥玩意儿了，不理解这个概念总会提心吊胆的 //现在来看top-level type很好理解，指的就是顶级类或说没有在其它类呀，函数呀等元素里面声明的类
 Mutating Maps
-1.ǿ��һ�㣬����Ҫ��������ʹ�ã�������ʹ�õ�ʱ��ֱ���������͵ڶ�����˵������elem��ok֮ǰ��û���������������ʹ�õ�ʱ��ʹ�ö������ķ�ʽֱ������: elem, ok := m[key]
-2.�����Ҫ������map�ǿɱ����������漸����ҪΧ���ſɱ���˵:
-  a.�ı�ĳ������ֵ  m[key] = new value
-  b.����ĳ������ֵ  elem = m[key]  //ǰ����elem��ǰ���Ѿ����������ǰ��û������elem,�����ʹ�ö������ĸ�ʽ�ڸ�ֵʱ����:  elem := m[key]
-  c.ɾ����ֵ��,��ʵֻҪɾ��key���൱�ڽ�������ֵ�Զ�ɾ��: delete(m, key)
-  d.����ĳkey�Ƿ���map m��: elem, ok = m[key] //��������ʽ��ǰ����elem��ok�Ѿ���ǰ�������ˣ��͸�����˵�����key��m����ok��ֵΪtrue,elemΪ��Ӧ��ֵ�����key����m�У���okΪfalse, elemΪm��Ԫ�����͵�"��ֵ"
+1.强调一点，变量要先声明后使用，或者在使用的时候直接声明，就第二点来说，比如elem和ok之前都没有声明，则可以在使用的时候使用短声明的方式直接声明: elem, ok := m[key]
+2.这节主要讲的是map是可变的嘛，所以下面几点主要围绕着可变来说:
+  a.改变某个键的值  m[key] = new value
+  b.检索某个键的值  elem = m[key]  //前提是elem在前面已经声明，如果前面没有声明elem,则可以使用短声明的格式在赋值时声明:  elem := m[key]
+  c.删除键值对,其实只要删除key就相当于将整个键值对都删了: delete(m, key)
+  d.测试某key是否在map m中: elem, ok = m[key] //用这种形式的前提是elem和ok已经在前面声明了；就该例来说，如果key在m中则ok的值为true,elem为相应的值，如果key不在m中，则ok为false, elem为m中元素类型的"零值"
 Exercise: Maps
-1.��ϰ��һ�ֵ�ʱ���ٿ�
+1.练习下一轮的时候再看
 Function values
 0.functions are values too.
-1.��������һ�齲�ľ���python�е�decorator,������������Ϊ����������Ҳ������Ϊ�����ķ���ֵ   //Ӧ�þ���������������ν�ĸ߽׺�����?
-2.�ٿ�����һ����Ҫע��ģ����Ǻ�����Ϊ����ʱ��д�������էһ�������⣬���Ƿֿ����뻹�ǿ��������: func compute(fn func(float64, float64) float64) float64{},�ֽ⿪��һ��:
-  func�Ƕ��庯���Ĺؼ���
-  compute�Ǻ�����
-  fn��compute�еĲ���
-  func(float64, float64) float64������fn������
-  *.��������Ҫ˵�ģ����������һ���������ɺ������������ͷ���ֵ������ɵģ��������������ı�����һ���������⼸��Ҫ�ء���fn�������Ǻ���������������ȥ����"fn func(float64, float64) float64"�Ͳ���������
-  *.�ٿ����ӣ������������*˵�ľ��е㲻���ˣ�"fn func(float64, float64) float64"��������Ϊ����ʱ��fn�ǲ�����û����"func(float64, float64) float64"��Ϊfn������Ҳû��������ע�⵽һ��ϸ�ڣ���������Ϊ��������ʱ����Ӧ�Ľṹ��û�к�����������ǿ�������ģ������β�Ҳ��ֻ������û���������Ӧ��Ҳ���⣬û�ˣ������������ˣ������Ǹ�float64��func(float64, float64)�ķ�������
-3.���ǽ�tour�ϵ��Ǹ�����д����ɣ��������Ӻ�����һЩ:
+1.初看，这一块讲的就是python中的decorator,函数即可以作为函数参数，也可以作为函数的返回值   //应该就是其它语言中所谓的高阶函数吧?
+2.再看，有一点需要注意的，就是函数作为参数时的写法，这块乍一看不理解，但是分开来想还是可以理解的: func compute(fn func(float64, float64) float64) float64{},分解开看一下:
+  func是定义函数的关键字
+  compute是函数名
+  fn是compute中的参数
+  func(float64, float64) float64整体是fn的类型
+  *.这点就是我要说的，正常情况下一个函数是由函数名，参数和返回值类型组成的，上面这条完整的表现了一个函数的这几点要素。而fn的类型是函数，所以这样子去理解"fn func(float64, float64) float64"就不难理解了
+  *.再看例子，觉得上面这个*说的就有点不对了，"fn func(float64, float64) float64"当函数作为参数时，fn是参数名没错，"func(float64, float64) float64"作为fn的类型也没错，但是注意到一个细节，当函数作为参数类型时，相应的结构中没有函数名，这个是可以理解的，而且形参也是只有类型没有名，这个应该也理解，没了，都可以理解了，最后的那个float64是func(float64, float64)的返回类型
+3.还是将tour上的那个例子写在这吧，看着例子好理解一些:
   import (
     "fmt"
     "math"
@@ -389,23 +390,23 @@ Function values
     }
     fmt.Println(hypot(5, 12))
     
-    fmt.Println(compute(hypot))  //��麯������ֻ���˺���������Ҫע��һ��
+    fmt.Println(compute(hypot))  //这块函数引用只用了函数名，需要注意一下
     fmt.Println(compute(math.Pow))
   }
 Function closures
-1.����˵Go function������closure.
-2.Ȼ���������ʲô��closure?
-3.::closure��һ������ֵ���Ҹо��پ�ȷһ�㣬closure����һ����Ϊ(����)ֵ�ĺ��������ǻ���һ��Լ�������������������ֵ��body����������body��ı�����body��Ӧ��ָ�ľ��Ǻ�returnͬ����һЩ��������仰�����Ժ���һ��һ��˵�ĸ���ȷһЩ��closure��ʵ����һ����������������Ϊ�����ķ���ֵ��return�Ĳ������������ķ���ֵҲ��һ�����������ǻ���һ����Ҫ˵�����ǲ������һ�������ص�������������closure,��������������ڻ�Ҫ���ú�returnͬ���ı����ſ��ԣ��ܽ�һ��closure���ص㣺
-  a.closure��һ����������;
-  b.closure��ĳ�������ķ���ֵ;
-  c.���������������Ҫ���������������ⲿ�ı���
-  d.closureһ����Ϊreturn�Ĳ���
-  *.�������3���������ⲿ�ı���Ӧ��ָ�ľ��Ǻ͵�4����returnͬ���ı���
-*.��һС�ڵ�1��2��3��������ģ�Ҫһ��
-4.���ͨ�����ӻ�����������Ҫע��ģ�
-  a.ͬʱ�����������ֵ�������ʵҲ�����¶���:
-       pos, neg := adder(), adder()    //׼ȷ��˵Ӧ�ý�ͬʱ���������������ֵ
-  b.�ں���A�ж�ε��ú���B������B�еı���ֵΪ��һ�κ���Bִ����ɺ���Ӧ������ֵ��������һ��ִ��Bʱ���õ���B��ʼ����Щֵ(�������һ��˵����"Each closure is bound to its own sum variable",��һ���ҵ��������⣬����ͬ���ʵ����һ����ֻ����closure����һ��ģ�壬ÿ�ζ��Ὣ��ģ�帴��һ�ݣ������ڴ�Ϊ������ݷ���һ���µĿռ䣬�϶�ģ���sum��ʵ������sum���ڴ��в���һ���ض��ˣ�����ͬһ��ʵ���ڴ�ռ���һ���ģ�ÿ�����ÿ��ܶ���ı���Ӧ�����ֵ����һ�ε������õ�ֵ��Ȼ�ͻ�����һ�ε��õ�Ӱ�죻��Ҳֻ���Լ���ô�룬�����ǲ�����������˵�ɡ������ԭ���Ժ��ڵ�һЩ�������������Ǻ���Ҫ��)   //��λ�Ҫ�ǲ����׸��ݹ������ӵĽ��������һ�¾�������
+1.首先说Go function可以是closure.
+2.然后下面解释什么是closure?
+3.::closure是一个函数值，我感觉再精确一点，closure就是一个作为(返回)值的函数；但是还有一个约束，就是这个函数返回值的body部分引用了body外的变量，body外应该指的就是和return同级的一些变量；这句话还可以和上一句一样说的更精确一些，closure其实就是一个无名函数，它作为函数的返回值，return的参数。即函数的返回值也是一个函数，但是还有一点需要说明的是不是随便一个被返回的无名函数都叫closure,这个无名函数体内还要引用和return同级的变量才可以；总结一下closure的特点：
+  a.closure是一个无名函数;
+  b.closure是某个函数的返回值;
+  c.这个无名函数体中要引用无名函数体外部的变量
+  d.closure一般作为return的参数
+  *.就上面第3点所述，外部的变量应该指的就是和第4点中return同级的变量
+*.这一小节的1，2，3是相关联的，要一起看
+4.这节通过例子还是有两点需要注意的：
+  a.同时给多个变量赋值，这个其实也不算新东西:
+       pos, neg := adder(), adder()    //准确来说应该叫同时声明多个变量并赋值
+  b.在函数A中多次调用函数B，则函数B中的变量值为上一次函数B执行完成后相应变量的值，而非下一次执行B时，用的是B初始的那些值(官文最后一句说的是"Each closure is bound to its own sum variable",这一句我倒可以理解，就如同类的实例化一样，只是拿closure当作一个模板，每次都会将该模板复制一份，并且内存为这个备份分配一块新的空间，肯定模板的sum和实例化的sum在内存中不在一个地儿了；而且同一个实例内存空间是一定的，每次引用可能都会改变相应区域的值，下一次调用引用的值自然就会受上一次调用的影响；这也只是自己这么想，真正是不是这样，再说吧。计算机原理对后期的一些概念的理解真的是很重要的)   //这段话要是不明白根据官网例子的结果多推敲一下就明白了
   func adder() func(int) int {
   	sum := 0
   	return func(x int) int {
@@ -423,15 +424,15 @@ Function closures
   		)
   	}
   }
-//����˵����һ����û��״̬�ģ�����closure����������һ�����ʵ������Ϊ�����Դ洢״̬�������һ�ε��÷��ص�closure����ʱouter����ֵΪ��һ��closureִ����ɺ��ֵ
+//按理说函数一般是没有状态的，但是closure函数更像是一个类的实例，因为它可以存储状态，因此下一次调用返回的closure函数时outer变量值为上一个closure执行完成后的值
 Exercise: Fibonacci closure
-1.��ϰ������һ����˵
+1.练习部分下一轮再说
 Methods and interfaces
 Methods
-1.Go����û�����������
-2.��˵Goû����ĸ��������������Go�����з����ĸ������֪�����������һ���Ƕ����к����ĳƷ�����ȻGoû���࣬��ôGo�еķ�������ôʵ�ֵ���?����˵������ԭ�к�������Ļ����ϣ���func�ؼ����뺯����֮���һ����Go�б���Ϊreceiver�Ĳ�������ô�������Go�оͽ�������
-3.��ʵ�����������receiver������Ϊ�������ṩ�������ݣ���˵�׵����receiver�ж�������ݣ������Ӧ�ĺ����ж�����ʹ��
-4.������δ������:Abs������һ������ΪVertex����Ϊv�Ľ�����:
+1.Go语言没有类这个概念
+2.虽说Go没有类的概念，但接下来引出Go语言有方法的概念，我们知道方法这个词一般是对类中函数的称法；既然Go没有类，那么Go中的方法是怎么实现的呢?简单来说就是在原有函数定义的基础上，在func关键字与函数名之间加一个在Go中被称为receiver的参数，这么个组合在Go中就叫做方法
+3.从实例来看，这个receiver仅仅是为函数体提供引用数据，再说白点就是receiver中定义的数据，在相对应的函数中都可以使用
+4.下面这段代码叫做:Abs方法有一个类型为Vertex名称为v的接收器:
   type Vertex struct {
     X, Y float64
   }
@@ -439,40 +440,40 @@ Methods
   func (v Vertex) Abs() float64 {
     return math.Sqrt(v.X*v.X + v.Y*v.Y)
   }
-  �����õĲ���Ҳд�����ɣ�Ӧ����������:
+  将引用的部分也写下来吧，应该有助理解:
 func main() {
   v := Vertex{3, 4}
   fmt.Println(v.Abs())
-}   //�ӵ�����ʽ��������kotlin�������չ��˼��࣬���Կ�һ�����ã��ǽ�Abs()��Ϊv�����ķ���ȥ���õģ�����Abs()���������ʹ��v���еĳ�Ա
-5.��ʵ��һ��However, you can define methods on types.�е㲻�Ǻ����⣬��������������˵�������൱��types?(����˵�Ǵ���ģ��������൱��types,����types˵��classӦ�ø�������һЩ)������������Ҳû�����⣬����Ҳ˵��һ��������Ϊ��һ������������(���˵���Ǹ߽׺���������С�ڽ���֪ʶ��Ӧ��ûɶ��ϵ)����д�࿴��. //���������˵�������⣬�Ȳ�ɾ��������ʱ��˼��һ������ɾ�İ�
-*.Ҳ����˵���˵��receiver, ˵���˾���һ��"��"!
+}   //从调用形式来看，和kotlin中类的扩展意思差不多，可以看一下引用，是将Abs()作为v这个类的方法去引用的，而且Abs()函数体可以使有v类中的成员
+5.其实第一句However, you can define methods on types.有点不是很理解，结合上面的例子来说，函数相当于types?(这样说是错误的，函数不相当于types,这里types说成class应该更好理解一些)如果是这个样子也没有问题，上面也说过一个函数作为另一个函数参数的(这句说的是高阶函数，和这小节讲的知识点应该没啥关系)，多写多看吧. //这段括号外说的有问题，先不删，留这有时间思考一下再做删改吧
+*.也就是说这节说的receiver, 说白了就是一个"类"!
 Methods are functions
-1.��һ�ھ�����ǿ����: method is just a function with a receiver argument
-2.��һ��������˵���ˣ���method��receiver���ַŵ�function�Ĳ���λ�ã���function��methodʵ�ֵĹ�����һ����(��֪���Ƿ����е�method��function����������ת�����������������)
+1.这一节就着重强调了: method is just a function with a receiver argument
+2.拿一个例子来说明了，将method的receiver部分放到function的参数位置，则function和method实现的功能是一样的(不知道是否所有的method和function都可以这样转换，这个后期再讨论)
   type Vertex struct {
     X, Y float64
   }
-  ��������ʽ:
+  方法的形式:
   func (v Vertex) Abs() float64 {
     return math.Sqrt(v.X*v.X + v.Y*v.Y)
   }
-  ���õ�ʱ��:
+  引用的时候:
   v := Vertex{3, 4}
-  fmt.Println(v.Abs())   //Abs()����û�в�������ΪAbs()���������ֱ�Ӵ�v��ȡ
-                       //��鿴ͻȻ���֣����������ú��񲻶ԣ���ӡ�����в���Ӧ����v.Abs(),����ֻд��Abs()  //����Abs()ǰ����receiver v����
+  fmt.Println(v.Abs())   //Abs()里面没有参数，因为Abs()函数体可以直接从v中取
+                       //这遍看突然发现，方法的引用好像不对，打印函数中参数应该是v.Abs(),现在只写了Abs()  //已在Abs()前补上receiver v补上
   
-  ��������ʽ:
+  函数的形式:
   func Abs(v Vertex) float64 {
     return math.Sqrt(v.X*v.* + v.Y*v.Y)
   }
-  ���õ�ʱ��:
+  引用的时候:
   v := Vertex{3, 4}
-  fmt.Println(Abs(v))  //Abs()����Ҫ�Ӳ���v,�������������õ�v.X��v.Y�ͻᱨ����
-*.��������˵�ģ������ڵ�����method֮��function��˵ֻ�Ǹ�function����һ������(�û�������ʺ���̫��������ͺá�)�����������������function�п������ã����˶���(ǿ������Ŀǰ��ô����!)
+  fmt.Println(Abs(v))  //Abs()里面要加参数v,否则函数体中引用的v.X和v.Y就会报错了
+*.还是上面说的，就现在的理解method之于function来说只是给function加了一个环境(用环境这个词好像不太形象，理解就好。)，这个环境的数据在function中可以引用，仅此而已(强调：是目前这么理解!)
 Methods continued
-1.ǰ�潲�ķ�������������������struct,��ʵ���ڷ�struct����Ҳ�ǿ��Ե�
-2.receiver�����ͱ�������method���ڵİ�����������������������������(�����ڽ��İ�)������Ϊ����method��receiver������
-3.����һ�����ͣ�ʹ�ùؼ���"type,�������������������" ,��:type myfloat float64
+1.前面讲的方法，接收器的类型是struct,其实对于非struct类型也是可以的
+2.receiver的类型必须是在method所在的包内声明，在其它包中声明的类型(包括内建的包)不能作为本包method中receiver的类型
+3.定义一个类型，使用关键字"type,后接类型名，最后接类型" ,如:type myfloat float64
   type MyFloat float64
   func (f MyFloat) Abs() float64 {
     if f < 0 {
@@ -481,29 +482,29 @@ Methods continued
     return float64(f)
   }
 Pointer receivers
-1.��һ�ڵĽ�����"ָ�������"����ָ���c�е�ָ����˼��һ���ģ�����Ӧ�ûὲGo��û��ָ��֮�������
-2.��ʵ��Ҫ����Ҫ����ָ��ĸ��ָ��ĸ���Ū�����ˣ���һ����ȻҲ��ûɶ��.�����ڴ�˵���ڴ���һ����ַ�ռ䣬���԰��ڴ������һ�����ӣ�������N�����䣬ÿ�����䶼���Լ��ı��,1,2,3...,����˵�������������������һ����������ʵ�������ڴ��и������������һ��ռ䣬�ռ��С�ɱ��������;���������������ʵ������������õ�����һ���ڴ��еĵ�ַ��������ķ��������˵���ǣ�var a int,��Ӧ�������ܾ��ǽ���һ�䷿��ķ���1������a,����1��2��3��4�䷿�Ƿ����a�Ŀռ䣬�Ժ��ٸ�����a��ֵʱ��ʵ���ȶ�λ��1���λ�ã�Ȼ����1234���ĸ���������ݣ���a��ȡֵҲ�ǣ��ȶ�λ��1���λ�ã�Ȼ�������ȡ�����������˵ָ���ˣ����ָ���Ӧ�ľ������λ��1��˵���˾���ָ����ʵ�����ڴ��еĵ�ַ����ָ������ͺ������ˣ�������������д����ָ�룬�ٻ���˵�������д�����ڴ��еĵ�ַ����ָ�����ǰ����*��ָ�ľ���ָ������еĵ�ַָ���ֵ�����˵�Ĳ�̫���ף�������˵������a���ڴ��еĵ�ַ��1������a��ֵ��"abc",��һ��ָ�����b,b�д����a�ĵ�ַ����b��ֵ��1��*b��"abc"(��ָ�����b��ֵa��ָ����ڴ�ռ������)
-*.ָ�����������ʵֻҪ�������ڴ�ṹ����������������ʵ������ͺܼ򵥣���ʱ��Ҫ�ؿ�һ����ˬ��16λ��ࡣ������Щ��������̫׼ȷ��ֻ�ܰ�������һ��
-3.Go��ָ������Ҫ��һ����ǣ������������ָ�����ã�����޸�ָ�����ֵ��ָ���ʵ�����ݡ��´������ø�ָ�����ֵ��ʱ�򣬸�ָ�����ֵ��ָ����Ѿ����޸ĺ���ˣ����������������ͨ���͵ı������򷽷������øý�������������ʵ�������ȶԸ������������ݣ�Ȼ�����õ��Ǳ��ݵ����ݡ��´���ʹ�øý������ı���ʱ����ԭֵ����Ϊ֮ǰ������û�жԽ�������ԭʼֵ���޸�
-*.��һ��˵�ľͱȽϲ�̫���ˣ������л�������������ܽ�һ��
-4.��ڵ����ӣ����Scale������������ΪVertex������ֵ��5�������*Vertex����ֵ��50   //�ҵ������ǣ������ϻ��Ƕ���Ĳ��������ǿ��Խ��ʼ������������Ϊ"ģ��"�������ʵ��������Ϊ"����һ��ģ�岢�Զ�����Ӧ���޸�"��ָ�����͵Ľ������ص���:"������copy��ģ�����޸ģ�����ֱ���޸������������ݣ���ֱ���޸�ԭģ�������"������ͨ���͵��ص���"��ԭģ�帴��һ�ݣ�Ȼ���ڸ��ƺ��ģ�������޸ģ���ԭģ������ݲ��ᱻ�ı�"����ʱ��ȥ��С�ڵ����ӾͿ��������ˣ��ن���һ��:ָ���������������ڴ���������ʱ������ڴ�����ֱ�����޸ģ���ͨ�������������ǽ�������ʱ�ڴ����е����ݸ���һ�ݵ���һ���ڴ��ϣ�Ȼ���ڸ��Ƶ�����ڴ������޸ģ�������Ӱ��������ʱ������ڴ����ϵ����ݣ���ʵƽʱ˵��"���ʵ����"����ΪӦ�ú�����˵����ͨ����������Ϊһ��.
-5. receiver type�����ָ��Ļ���������*int,*float64��Щ�������� type a float64,����*a������Ϊreceiver type; �Ҳ�֪��ԭ�ļ�զ����  //Ҳ��������Ϊϵͳ���õ����Ͳ���ֱ����Ϊָ������������ͣ���Ҫ���Զ���һ�����ͣ�Ҫ������Щ���õ������ٷ�װһ�������ָ�����������
-6.func (v *Vertex) Scale(f float){}����:������*Vertex�����ϵķ���
-7.������������Ϊָ��Ļ����Ը���ָ��ָ������޸ģ��޸ĵ���ԭʼλ�ã������������ø�ָ���ʱ��ʹ�õ�ֵ��֮ǰ�޸Ĺ��ģ���������������Ϊ��ͨ���͵Ļ������޸ĵ�����Щ�����ı��ݣ�����Ӱ��ԭֵ����ͨ�����Ĳ������;���������(�޸ĵ��Ǹ���)
+1.这一节的节名叫"指针接收器"，该指针和c中的指针意思是一样的，后面应该会讲Go里没有指针之间的运算
+2.其实重要的是要理解指针的概念，指针的概念弄明白了，这一节自然也就没啥了.首先内存说起，内存是一个地址空间，可以把内存想象成一个大房子，里面有N个房间，每个房间都有自己的编号,1,2,3...,再来说变量，编程语言中声明一个变量，其实就是在内存中给这个变量分配一块空间，空间大小由变量的类型决定。变量声明其实最终这个变量得到的是一个内存中的地址，拿上面的房间举例来说就是，var a int,对应下来可能就是将第一间房间的房号1给变量a,而第1，2，3，4间房是分配给a的空间，以后再给变量a赋值时其实是先定位到1这个位置，然后向1234这四个房间记数据，从a中取值也是，先定位到1这个位置，然后把数据取出来；下面该说指针了，这个指针对应的就是这个位置1，说白了就是指针其实就是内存中的地址。而指针变量就好理解了，就是这个变量中存的是指针，再换个说法变量中存的是内存中的地址。而指针变量前加上*，指的就是指针变量中的地址指向的值，这句说的不太明白，举例来说，变量a在内存中的地址是1，变量a的值是"abc",有一个指针变量b,b中存的是a的地址，则b的值是1，*b是"abc"(即指针变量b的值a所指向的内存空间的内容)
+*.指针这个东西其实只要明白了内存结构，还有声明变量的实际情况就很简单，有时间要回看一下王爽的16位汇编。上面这些描述不是太准确，只能帮助理解一下
+3.Go中指针最重要的一点就是，接收器如果是指针引用，则会修改指针变量值所指向的实际内容。下次再引用该指针变量值的时候，该指针变量值的指向就已经是修改后的了；如果接收器就是普通类型的变量，则方法中引用该接收器变量内容实际上是先对该内容做个备份，然后引用的是备份的内容。下次再使用该接收器的变量时还是原值，因为之前根本就没有对接收器的原始值做修改
+*.这一节说的就比较不太好了，后面有机会这块用心再总结一下
+4.这节的例子，如果Scale接收器的类型为Vertex则最后的值是5，如果是*Vertex最后的值是50   //我的理解是，本质上还是对类的操作，我们可以将最开始声明的类理解为"模板"，将类的实例化理解为"复制一份模板并自定义相应的修改"，指针类型的接收器特点是:"不是在copy的模板上修改，而是直接修改类声明的数据，即直接修改原模板的数据"，而普通类型的特点是"将原模板复制一份，然后在复制后的模板上做修改，即原模板的数据不会被改变"，此时再去这小节的例子就可以理解了，再啰嗦一句:指针作接收器是在内存中声明类时分配的内存区上直接作修改；普通类型作接收器是将声明类时内存区中的数据复制一份到另一块内存上，然后在复制的这块内存上做修改，并不会影响类声明时分配的内存区上的内容；其实平时说的"类的实例化"的行为应该和这里说的普通接收器的行为一致.
+5. receiver type如果是指针的话，不能是*int,*float64这些，必须是 type a float64,这里*a可以作为receiver type; 我不知道原文件咋翻译  //也可以理解为系统内置的类型不能直接作为指针接收器的类型，即要不自定义一种类型，要不将这些内置的类型再封装一层才能做指针接收器类型
+6.func (v *Vertex) Scale(f float){}读作:定义在*Vertex类型上的方法
+7.接收器的类型为指针的话，对该针指的指向进行修改，修改的是原始位置，即后面再引用该指针的时候，使用的值是之前修改过的；但接收器的类型为普通类型的话，则修改的是这些变量的备份，不会影响原值；普通函数的参数类型就属于这种(修改的是副本)
 Pointers and functions
-1.�����Ҫ���������ӣ�method��functionʵ�֣���ʵҲ���ǽ�method��receiver���ָ��ŵ�function������λ��    //��Ҫע�����Scale()�����е�һ������ֵΪ&v,��Ϊָ��������ʵ��������һ�����͵ĵ�ַ�����������õ���&����
+1.这节主要看的是例子，method用function实现，其实也就是将method的receiver部分给放到function参数的位置    //需要注意的是Scale()函数中第一个参数值为&v,因为指针变量存的实际上是另一个类型的地址，所以这里用到了&符号
 Methods and pointer indirection
-1.function�еĲ�����ɶ���ͣ����ø�functionʱ�������;�����д��(�������receiver�е����ͣ�����������ָ�������ͨ���ͣ������õ�ʱ�����ʹ����ͨ���ͻ�ָ����е��ã�Go�Ż����ⲿ���߼�)  //��д��仰��ʵ��Ϊ��ǿ��һ��ʼ��ָ��ʱ��һ���������ӣ�����Ӧ����(*p).X,����Go��ֱ��дp.X�ͺã��������ָ����Ϊ�����������ǽ�����ʱ���ڵ��ú���ʱ���ò���һ��Ҫ��ָ����õ���ʽ����������ͨ����������ʽ(��ʵ�ؼ�������Ǹ�&���ţ�ָ������У�����ͨ���͵Ĳ���û��)
+1.function中的参数是啥类型，调用该function时参数类型绝不能写错(这个不像receiver中的类型，明明类型是指针或是普通类型，但调用的时候可以使用普通类型或指针进行调用，Go优化了这部分逻辑)  //我写这句话其实是为了强调一开始讲指针时的一个调用例子，即本应该是(*p).X,但在Go中直接写p.X就好！但是如果指针作为函数参数而非接收器时，在调用函数时，该参数一定要用指针调用的形式而不能用普通变量调用形式(其实关键点就是那个&符号，指针参数有，而普通类型的参数没有)
   var v Vertex
   ScaleFunc(v, 5)  // Compile error!
   ScaleFunc(&v, 5)  // OK
-2.����1˵�ˣ��������Ľ���������Ϊָ��ʱ�����÷�����ʱ�򣬽���������ʹ��value(��ͨ����),Ҳ����ʹ��pointer(��ַ)  //�²�Go�ڴ���ָ�����͵Ľ��������ú���ʱ�������û��ָ�����ǰ��&�Ļ���Go����ʽ�İ�����ϣ������Ϊ�²��Ǳ���׶α�������������ʱ���Զ����ϵģ������ָ����Ϊ��������ʱ���²�����Go����û���ڱ���׶μ�������߼��������ں�������ʱ�������������Ϊָ��������һ��Ҫʹ��&���ţ���ʵ�о��������������ָ������Ҳ���Դ���һ�£��޷��Ǵ���֮ǰ�ȼ��һ�������£���Ȼ�����ע����ȫ��Ϊ�˺������һ���²�.
+2.上面1说了，当方法的接收器类型为指针时，引用方法的时候，接收器可以使用value(普通类型),也可以使用pointer(地址)  //猜测Go在处理指针类型的接收器调用函数时，如果你没在指针变量前加&的话，Go会隐式的帮你加上，这个行为猜测是编译阶段编译器处理代码时给自动加上的；但如果指针作为函数参数时，猜测由于Go语言没有在编译阶段加上这个逻辑，所以在函数调用时，如果函数参数为指针类型则一定要使用&符号，其实感觉函数参数如果是指针类型也可以处理一下，无非是处理之前先检测一下类型呗，当然啊这句注释完全是为了好理解的一个猜测.
   var v Vertex
   v.Scale(5)  // OK
   p := &v
   p.Scale(10) // OK
-  *.��ΪԼ��,Go�ڽ���v.Scale(5)��ʱ����Զ�����Ϊ(&v).Scale(5)   //���Ӧ��д���˰ɣ�Ӧ���Զ�����Ϊ(*v).Scale(5)����(&v).Scale(5)?
-3.��Ҫע��ָ����&����*�ŵļ����ã����������ӿ�һ�°�:
+  *.作为约定,Go在解释v.Scale(5)的时候会自动解释为(&v).Scale(5)   //这块应该写错了吧，应该自动解释为(*v).Scale(5)而非(&v).Scale(5)?
+3.还要注意指针中&号与*号的简单作用，给个简单例子看一下吧:
     package main
     
     import (
@@ -523,81 +524,81 @@ Methods and pointer indirection
     	fmt.Println(*(&x))
     	fmt.Println(**(&p))
     }
-    ���Ϊ:
+    输出为:
     5
-    0x190004     //�⼸����ַÿ�������ֵ���ܻ᲻һ��
+    0x190004     //这几个地址每次输出的值可能会不一样
     0x190004
     0x40e128
     5
     5
     5
 Methods and pointer indirection(2)
-1.����Ҳ�����function������ɶ���͵���ʱ�͵�ʹ��ɶ����
+1.上面也提过，function参数是啥类型调用时就得使用啥类型
   var v Vertex
   fmt.Println(AbsFunc(v)) // OK
   fmt.Println(AbsFunc(&v)) // Compile error!
-2.����method��һ����method�н�����������Ϊvalueʱ�����ø�methodʱҲ�Ǽ�����ʹ��valueҲ����ʹ��pointer����
+2.但是method不一样，method中接收器的类型为value时，调用该method时也是即可以使用value也可以使用pointer类型
   var v Vertex
   fmt.Println(v.Abs())  // OK
   fmt.Println(p.Abs())  // OK
-  *.p.Abs()�ᱻ����Ϊ(*p).Abs()
-**.������С�ڵ���Ҫ�����ܽ�һ�°�:
-    1.���۷����Ľ�������value���ͻ���pointer���ͣ��ڽ��е���ʱ������ʹ��value���ͻ���pointer���ͽ��е���, �������������Ӧ��ת��
-        a.������Ϊvalue����,�����ʹ��&p���е��ã���������Ὣ&pת��Ϊ*(&p)
-        b.������Ϊpointer���ͣ������ʹ��v���е���,��������Ὣvת��Ϊ&p
-    2.��1˵�����Ƿ����еĲ��������value�����򴫲�ʱ������value���ͣ������pointer��������봫pointer����  //����Ͳ�˵�����涼������
+  *.p.Abs()会被解释为(*p).Abs()
+**.对上两小节的主要内容总结一下吧:
+    1.无论方法的接收器是value类型还是pointer类型，在进行调用时都可以使用value类型或是pointer类型进行调用, 编译器会进行相应的转换
+        a.接收器为value类型,则如果使用&p进行调用，则编译器会将&p转化为*(&p)
+        b.接收器为pointer类型，则如果使用v进行调用,则编译器会将v转化为&p
+    2.接1说，但是方法中的参数如果是value类型则传参时必须是value类型，如果是pointer类型则必须传pointer类型  //这个就不说了上面都有例子
 Choosing a value or pointer receiver
-1.��һ��˵����method�е�receiverΪpointer������ԭ��һ�ǣ�����ֱ���޸�pointerָ���ֵ�����ǣ������˺�����������ʱҪ�������ݣ�Ȼ��Ա����޸�ʱ��������ʧ
-2.receiver������ֻ����value����pointer�е�һ�֣����ܻ���
+1.这一节说出了method中的receiver为pointer的两点原因：一是，可以直接修改pointer指向的值；二是，避免了函数参数调用时要先做备份，然后对备份修改时的性能损失
+2.receiver的类型只能是value或是pointer中的一种，不能混用
 Interfaces
-1.����Interface��һ�����ͣ��ڶ���Interface���͵�ʱ��body����N�෽���ļ��ϣ���Ҫע�����:body�е���Щ����ֻ�з���������Ӧ�ķ���ֵ���ͣ���û�з����ľ���ʵ��
+1.首先Interface是一种类型，在定义Interface类型的时候，body中是N多方法的集合，需要注意的是:body中的这些方法只有方法名及相应的返回值类型，并没有方法的具体实现
   type Abser interface { Abs() float64 }
-2.��������������interface���͵��÷�һ���ǣ�����Ҫ��ȷһ�㣬interface����body�еĲ���function,����method(������receiver��function);��κ�interface���û��ϵ��Ҫ˵����method�ĳ��õ��÷����� "receiver.method_name()",������õ���ʽ�����"���ͬ����ͬreceiver���͵ķ���"����˵���õ���ʽ������ͬ��,�������������receiver�Ĳ�ͬ���Ӷ�ѡ����Ӧ��methodִ�У�����������ڵ����Ӻܺ�����
-3*.��������Ƚ���Ҫ��һ�仰��:"A value of interface type can hold any value that implements those methods"�����������"���ӿ����͸���ֵ��������ʵ�ֽӿ��з������κ�ֵ"�����ǰ��method����½���û�кúÿ����ú�����Ļ������ÿ��ܻ���Щ�������ԣ�����֪����ν�ķ���(method)�����Ǵ��н�����(receiver)�ĺ���(function)����������һЩ���������Ļ��������˼��"������(receiver)����ʵ�ֵķ���(method)"; Ȼ���ٿ�������Ǿ仰��Ӧ�þ��������ˣ��ٸ�����:
-  a.���������һ���ӿ�����Abser,����ķ���������: Abs() float64,����һ������
-  b.����һ��Abser���͵ı���a  "var a Abser"
-  c.��ʱ����a�ĺϷ���ֵ��Ҫ������Abs()����ʵ�ֵ�ʱ�򣬽���������ɶ���͵ģ���������������������һ����"func (v *Vertex) Abs() float64 {}",��һ����"func (f MyFloat) Abs() float64 {}"�����ڸ�a��ֵʱ��ֻ��������*Vertex��MyFloat�ĲźϷ�������Ϊʲô�أ���Ϊ�����Ҫʹ��a.Abs()���е��ã����a�ǳ�*Vertex��MyFloat֮����������ͣ����ڵ���ʱ�ǻ�����ģ���Ϊ��û�ж�����������������͵ķ���(����ڱ����ʱ�����������aֵ�����ͣ��Ƿ��и�����ʵ����Abs()�������������ͨ�������û���򱨴�)
-*.��ʵ���룬�϶������߼�������ģ�����interface������������N���(N���ڵ���1)��������(�����Ͼ��Ƿ����������з���ֵ����)����������interface�������˷����󣬺���϶���Ҫʵ�ֵģ���ʵ�ֵĻ���interface�����ж���ķ���������û�����ˣ������㷽��ʵ���˵Ļ����϶�����Ҫ���õģ������õĻ�����ʵ�ֵķ�����û�����ˣ�������������һ����"���������͵ı���.������"������interface���͵ı�����ֵ��飬���������������������ɶ�أ���ʵ���������Щ���أ�interface���͵ı�������ֵ��������ʵ�ֽӿ��ж���ķ����Ľ�����������������ġ�(���һ�仰�����������Ҫ)
+2.根据例子来看，interface类型的用法一般是：首先要明确一点，interface类型body中的不是function,而是method(即带有receiver的function);其次和interface这节没关系，要说的是method的常用调用方法是 "receiver.method_name()",方法最常用的形式大概是"多个同名不同receiver类型的方法"，虽说调用的形式都是相同的,但编译器会根据receiver的不同，从而选择相应的method执行，这个看看本节的例子很好明白
+3*.对于理解比较重要的一句话是:"A value of interface type can hold any value that implements those methods"，翻译过来是"给接口类型赋的值，可以是实现接口中方法的任何值"，如果前面method相关章节中没有好好看，好好理解的话，这句好可能会有些不明所以；我们知道所谓的方法(method)，就是带有接收器(receiver)的函数(function)，而其中有一些描述方法的话，大概意思是"接收器(receiver)类型实现的方法(method)"; 然后再看上面的那句话，应该就能明白了，举个例子:
+  a.如果定义了一个接口类型Abser,里面的方法特征是: Abs() float64,就这一个方法
+  b.定义一个Abser类型的变量a  "var a Abser"
+  c.此时变量a的合法赋值，要看具体Abs()方法实现的时候，接收器都是啥类型的，假如声明了两个方法，一个是"func (v *Vertex) Abs() float64 {}",另一个是"func (f MyFloat) Abs() float64 {}"，则在给a赋值时，只有类型是*Vertex和MyFloat的才合法。这是为什么呢？因为你后面要使用a.Abs()进行调用，如果a是除*Vertex和MyFloat之外的其它类型，则在调用时是会出错的，因为你没有定义接收器是其它类型的方法(这个在编译的时候编译器会检测a值的类型，是否有该类型实现了Abs()方法，如果有则通过，如果没有则报错)
+*.其实想想，肯定是有逻辑在里面的，首先interface类型中声明了N多个(N大于等于1)方法特征(基本上就是方法名，还有返回值类型)；再者你在interface中声明了方法后，后面肯定是要实现的，不实现的话，interface类型中定义的方法特征就没意义了；再者你方法实现了的话，肯定又是要引用的，不引用的话，你实现的方法又没意义了；而方法的引用一般是"接收器类型的变量.方法名"；而给interface类型的变量赋值这块，你想想这个变量的类型是啥呢？其实结合上面这些因素，interface类型的变量被赋值的类型是实现接口中定义的方法的接收器类型是最合理的。(最后一句话对于理解很重要)
 Interfaces and implemented implicitly
-1.����ƽʱ��˵��"����ʵ�ֽӿ�"��ָ"����ʵ�ֽӿ��ж���ķ���"
-2.��"����ʵ�ֽӿڷ���"ʱ������ʽ�ģ�û����ʾ�Ĺؼ�����˵��"����ʵ�ֽӿڷ���"
-3.���ͶԽӿڵ���ʽʵ�֣��ô����ڽ�������ʵ�ַ����ˣ�Ҳ����˵���ڽӿڵĶ�������Է����κΰ��У�Ȼ���ڲ�ͬ�İ�������ԶԽӿ��в�ͬ��ʵ��(��黹��Ҫ�ن���һ�£�һ��Ҫע��ӽӿڵ���������ʹ�õĲ���:1.�϶����ȶ���ӿ�;2.ʵ�ֽӿ��еķ�������ʱҪע��Go�еķ�����ʵ���Ǻ����Ӹ���������������������ʽ��"�������� ����������"��3.����ӿ����͵ı���������Ҫ����ע�⣬�����"�ӿ�����"ָ����ʵ�ֽӿ��еķ���ʱ��"����������"�������������������int,���ڶ���ӿڱ���ʱ����һ��float���ͣ�����ʱ�ǻᱨ���ģ�4.��ʵ�ӿ���黹����һ����Ƶģ��ӿ��е�һ����������ʵ��ʱ�����Ը���"receiver����"�Ĳ�ͬ�ж��ʵ�ַ��������ڸ��ӿڱ�����ֵʱ��������ֵһ��ҪҪ���Ѿ�������ķ����ж����"receiver����"������������������Բο���һ�ڡ�Interfaces��������������һ��
-*.��Ϊ�ӿ��õĻ��٣�Ŀǰ�����о��ӿھ���"����һ���������������ǲ�û��ʵ��"���ô�������Խ�����ӿڷ����κΰ����Ϊ����Ҳ����ʵ�ִ��룬�������ĸ�������Ŷ�һ�����ô���������ڲ�ͬ�İ���Խӿ���ķ����в�ͬ�ľ���ʵ�֣��ұ�ʵ�ֵķ�����"receiver����"Ҳ�����ǲ�һ���ģ�˵���˾����������ǿ�ˡ�������Ȼ˵��ǿ���ýӿ��ˣ�������Ϊʵ�ֵĴ����٣������������ò�������������Ļ�����͸����
+1.我们平时所说的"类型实现接口"是指"类型实现接口中定义的方法"
+2.在"类型实现接口方法"时，是隐式的，没有显示的关键字来说明"类型实现接口方法"
+3.类型对接口的隐式实现，好处在于将定义与实现分离了，也就是说对于接口的定义你可以放在任何包中，然后在不同的包中你可以对接口有不同的实现(这块还是要再啰嗦一下，一定要注意从接口的声明，到使用的步骤:1.肯定是先定义接口;2.实现接口中的方法，这时要注意Go中的方法其实就是函数加个接收器，而接收器的形式是"接收器名 接收器类型"；3.定义接口类型的变量，这里要尤其注意，这里的"接口类型"指的是实现接口中的方法时的"接收器类型"，即如果接收器类型是int,你在定义接口变量时给了一个float类型，编译时是会报错的；4.其实接口这块还是有一点点绕的，接口中的一个方法，在实现时，可以根据"receiver类型"的不同有多个实现方法，而在给接口变量赋值时，变量的值一定要要是已经定义过的方法中定义的"receiver类型"，否则会出错，这个可以参考上一节“Interfaces”的例子来理解一下
+*.因为接口用的还少，目前看来感觉接口就是"定义一个或多个方法，但是并没有实现"，好处是你可以将这个接口放在任何包里，因为本来也不带实现代码，所以在哪个包里放着都一样；好处是你可以在不同的包里对接口里的方法有不同的具体实现，且被实现的方法中"receiver类型"也可以是不一样的；说白了就是灵活性增强了。现在虽然说勉强会用接口了，但是因为实现的代码少，总是隐隐觉得不安，觉得理解的还不够透彻。
 Interface values
-1.��ڵı����"Interface values"����Ӧԭ�Ĵ��Ҫ�������˼:a.interface value���Ա���Ϊ��һ����"ֵ"��"ֵ���Ӧ��ʵ������"��ɵ�"Ԫ��"�� ˵���˾���(value, type)
-2.�����滹��һ���ַ�����"underlying concrete type"�� ����������������ӿ������е�����ȥ���⣬���ӿ���ֻ�����˷�����������Ҫʵ�ָ÷��������������н�����(receiver)�ģ�һ������ʵ���ˣ��ٸ���Ӧ�ӿ����͵ı�����ֵʱ��ֻ�ܸ�ʵ�ַ���ʱ��ʹ�õĽ����������͵�ֵ�����������͵�ֵ�ͻᱨ���������￪ͷ˵��"underlying concrete type"ָ�ľ������ʵ�ֽӿ��з����Ľ�����(receiver)����
-3.���һ�λ���������ʵ�������⣬˵������"interface value"�ϵ���һ������������"interface value"���Ӧ��"underlying type"��ִ����ͬ���������������Ͽ�����ʵ����Ϊ�˱�����������һ�����������������ǽӿ����ͣ��򴫲ε�ʱ�򣬴��ݵ��������������ʵ�ֽӿ��з����Ľ�����(receiver)������(���ڸý��Ҳ��������˵��Ӧ��"i"��"interface value", ��"*T"��F��"underlying type")
-*.��ڽ������ݴ����ϻ����ˣ����������˵�����ݺ��Ҳ�����ӻ����ǺܶԵ���
+1.这节的标题叫"Interface values"，相应原文大概要表达的意思:a.interface value可以被认为是一个由"值"和"值相对应的实体类型"组成的"元组"， 说白了就是(value, type)
+2.这里面还有一个字符串叫"underlying concrete type"， 这个玩意可以用上面接口例子中的内容去理解，即接口中只定义了方法名，下面要实现该方法，而方法是有接收器(receiver)的，一旦方法实现了，再给相应接口类型的变量赋值时，只能赋实现方法时所使用的接收器的类型的值，用其它类型的值就会报错，而这里开头说的"underlying concrete type"指的就是这个实现接口中方法的接收器(receiver)类型
+3.最后一段话初看者其实不好理解，说的是在"interface value"上调用一个方法，会在"interface value"相对应的"underlying type"上执行相同方法名。从例子上看，其实就是为了表达，如果定义了一个函数，函数参数是接口类型，则传参的时候，传递的这个参数必须是实现接口中方法的接收器(receiver)的类型(对于该节右侧的例子来说，应该"i"是"interface value", 而"*T"和F是"underlying type")
+*.这节讲的内容大体上会用了，但对于左侧说的内容和右侧的例子还不是很对的上
 Interface values with nil underlying values
-1.��Ҫ���ױ���ָ����ʲô������������˵��������һ���ӿ�����I type I interface{ M() }��Ȼ���ֶ�����һ���ṹ������T type T struct{ S string}, ����ʹ��T��Ϊ����������ʵ�ֽӿ�I�еķ���M()   func (i T) M() {}�� ����һ������Ϊ�ӿ�����var p I�������棬���������p�ӵľ��Ǳ���ͷ��������"Interface value"�� �������������"underlying values",��Ȼ��"underlying values"����"underlying type",��������"underlying type"ָ�ľ���ʵ�ֽӿ�I�з���M()�Ľ���������T,����ȥ����"underlying value"ָ�ľ��ǽṹ��T�е�ֵ�����ٿ�����"nil underlying values"˵���˾���ʹ��T���͵���M()֮ǰû��ΪT����ṹ�帳ֵ��������ν��"nil underlying values"(˵���˽���nil underlying values��ʵ����java�������Ŀ�ָ�룬Ҳ����˵��֮ǰû�и�������ֵ�ͻᵼ�¿�ָ�롣Go������֮ǰû�г�ʼ��ֵ��������������java�еĿ�ָ�룬����˵�����ŵĴ���ʹ��nil������(receiver)����/ʵ�ֵķ���)
-2.interface value��������ʵ�����͵�ֵ��nil,�����interface valueҲ���ǿյġ�����仰��������Ҫ����ǰ��ȥ��interface value��������Ϊ(value, type)�������type����ʵ�� ����ʱʹ�õĽ��������ͣ�"interface value" ���仰���Խ���"concrete type value" ��"receiver type value"
+1.先要明白标题指的是什么东西，举例来说，【定义一个接口类型I type I interface{ M() }，然后又定义了一个结构体类型T type T struct{ S string}, 接着使用T作为接收器类型实现接口I中的方法M()   func (i T) M() {}。 声明一个变量为接口类型var p I】这里面，最后声明的p接的就是标题头两个单词"Interface value"， 最后两个单词是"underlying values",即然有"underlying values"就有"underlying type",在这里面"underlying type"指的就是实现接口I中方法M()的接收器类型T,翻回去看，"underlying value"指的就是结构体T中的值，而再看标题"nil underlying values"说白了就是使用T类型调用M()之前没有为T这个结构体赋值，就是所谓的"nil underlying values"(说白了讲的nil underlying values其实就是java中所讲的空指针，也就是说用之前没有给变量赋值就会导致空指针。Go对于用之前没有初始化值的情况不会产生像java中的空指针，官文说会优雅的处理使用nil接收器(receiver)调用/实现的方法)
+2.interface value如果保存的实体类型的值是nil,则这个interface value也不是空的。对这句话的理解又要翻到前面去了interface value可以理解为(value, type)，而这个type是在实现 方法时使用的接收器类型，"interface value" 换句话可以叫做"concrete type value" 或"receiver type value"
 Nil interface values
-1.������ν��"nil interface values"˵���˾���û�жԽӿ���ķ�������ʵ�֣���ֱ�ӵ��ò����ǽӿ����͵ı��������������һ��run-time���󡣽���˵֮ǰ˵��"interface value"��ʵ����һ��tuple (value, type)�������type��ͨ��ʵ�ֽӿ��еķ������õ��ģ����û��ʵ�ֽӿ��еķ�������interface values������ν��nil
+1.标题所谓的"nil interface values"说白了就是没有对接口里的方法进行实现，就直接调用参数是接口类型的变量，这样会产生一个run-time错误。接着说之前说过"interface value"其实就是一个tuple (value, type)，而这个type是通过实现接口中的方法来得到的，如果没有实现接口中的方法，则interface values就是所谓的nil
 The empty interface
-1.�սӿڱȽϺ����⣬ָ���ǰ�������û�ж��巽����������һ��type I interface{ }, �սӿڿ��Ա����κ����͵�ֵ����Ϊ�κ����Ͷ�����ʵ����0������
-2.�սӿڳ����ڱ��봦��һЩδ֪���͵�ֵ������fmt.Print�����Ϳ��Դ�������Ϊinterface{}���κ������Ĳ���
-3.�����䶼���Բ����ˣ�˵���˾������֮ǰ������һ������IΪ�սӿ����ͣ� type I interface{}�� ���Ҷ�����һ������Ϊ�սӿ����͵ĺ�����������������ʱ������ʹ���κ�ֵ��Ϊ��������Ĳ������������ֵ��ʲô���ͣ���Ϊǰ��˵�ˣ��κ����Ͷ�����ʵ����0������  
+1.空接口比较好理解，指的是按口里面没有定义方法，即就是一个type I interface{ }, 空接口可以保存任何类型的值，因为任何类型都至少实现了0个方法
+2.空接口常用于编码处理一些未知类型的值，例如fmt.Print函数就可以带有类型为interface{}的任何数量的参数
+3.上两句都可以不看了，说白了就是如果之前定义了一个变量I为空接口类型， type I interface{}， 而且定义了一个参数为空接口类型的函数，则调用这个函数时，可以使用任何值作为这个函数的参数，无论这个值是什么类型，因为前面说了，任何类型都至少实现了0个方法  
 ***
-�ӿ���һ����Ҫ��ҪŪ�弸�����ʵ�����:
+接口这一节主要是要弄清几个单词的内容:
 1.Interface values      // (value, type)
-2.nil underlying values   //��underlying˵���Ѿ�ʵ���˷�����ֻ���������еĽ���������û�г�ʼ��(˵���˾��ǽ���������û�б���ֵ)
-3.nil interface values   //���˵���ӿ��еķ���û�б�ʵ��
-4.empty interface   //���ûɶ˵�ľ��ǽӿڶ���ʱû�ж��巽��
+2.nil underlying values   //有underlying说明已经实现了方法，只不过方法中的接收器类型没有初始化(说白了就是接收器类型没有被赋值)
+3.nil interface values   //这个说明接口中的方法没有被实现
+4.empty interface   //这个没啥说的就是接口定义时没有定义方法
 ***
 Type assertions
-1.�����"���Ͷ���"������˵����ʵ��Ҫ���÷����ڣ�ĳ�������Ƿ�ʵ���˽ӿ�(��ʵʵ�ֵ��ǽӿ��еķ���)����ô��ô�ж�ĳ�������Ƿ�ʵ���˽ӿ��أ��Ǹ���Go��Ƶı���ʽ�ķ���ֵ."���Ͷ���"��С����Ҫ����������ʽ:
+1.标题叫"类型断言"，根据说明其实主要的用法在于，某种类型是否实现了接口(其实实现的是接口中的方法)，那么怎么判断某种类型是否实现了接口呢？是根据Go设计的表达式的返回值."类型断言"这小节主要讲了两种形式:
     t := i.(T)
     t, ok := i.(T)
-��������ʽ��֮ǰ��Ҫע��һ�£�iָ����interface value,������˵�������һ���ӿ�I,Ȼ�����ֶ�����һ���ӿ����͵ı���p var p I,�����pָ�ľ��������i����p���Ա�����ֵҪ��ʵ�ֽӿ�I������ʱ�������(receiver)���Ͷ���ɶ
-�ã�������˵��һ��  t := i.(T):
-    ���T����ʵ���˽ӿ�I(�ӿ�I�еķ���),��T���͵�ֵ��������t,���Tû��ʵ�ֽӿ�I(�ӿ�I�еķ���),�����һ��panic����
-�ڶ��� t, ok := i.(T):
-  �������Tʵ���˽ӿ�I(�ӿ�I�еķ���)��������T��ֵ��������t,��true��������ok;   �������Tû��ʵ�� �ӿ�I(�ӿ�I�еķ���), �򲻻����һ�����ʱ�����panic,���ǽ���������T��Ӧ����ֵ(������0���ַ�������"",�ȵ�)��������t,��false��������ok
+这两种形式讲之前需要注意一下，i指的是interface value,具体来说，如果有一个接口I,然后我又定义了一个接口类型的变量p var p I,则这个p指的就是这里的i，而p可以被赋的值要看实现接口I方法的时候接收器(receiver)类型都有啥
+好，接下来说第一种  t := i.(T):
+    如果T类型实现了接口I(接口I中的方法),则将T类型的值赋给变量t,如果T没有实现接口I(接口I中的方法),则会有一个panic发生
+第二种 t, ok := i.(T):
+  如果类型T实现了接口I(接口I中的方法)，则将类型T的值赋给变量t,将true赋给变量ok;   如果类型T没有实现 接口I(接口I中的方法), 则不会像第一种情况时会产生panic,而是将给定类型T对应的零值(整型是0，字符串型是"",等等)赋给变量t,将false赋给变量ok
 Type switches
-1.�����Ƿ���Ϊ"����ת��"?����"���Ϳ���"?
-2.��c�����е�switch���ƣ�ֻ����c�е�swtich����У�case����ӵ���value,��Go��case����ӵ���type; ����˵�������Ҫ������һ��Go��switch��һ�������ṹ����������ô���أ�switch���﷨Ϊ switch v := i.(type){case type: statements, ...},���Կ������﷨��ǰ��v := i.(type)����һ�ڽ���"type assertion"�е��﷨�����ƣ���ʵҲ�������ģ�ֻ����"type assertion"һ����������Ǿ��������T,�������õ���һ���������β���ô������type; һ��ýṹ���ں����У��ӿ����ͱ���iͨ���������εķ�ʽ����ֵ��Ȼ�󿴿����εĽӿ����������ĸ�case��������ͣ���ִ����Ӧcase�����䣬һ��case����һ��ͬ����default��β�����ú����������������﷨��һ���ģ����Ǵ������Ĳ���ǰ���ĸ�caseҲ�����㣬��ִ��default�µ���䣻����һ��Ƚ���Ҫ�ľ��Ǵ����ı���i��ֵ�����ͻḳ������v
+1.标题是翻译为"类型转换"?还是"类型开关"?
+2.和c语言中的switch类似，只不过c中的swtich语句中，case后面接的是value,而Go中case后面接的是type; 上面说的这句主要是理解一下Go中switch的一个基本结构，但具体怎么用呢？switch的语法为 switch v := i.(type){case type: statements, ...},可以看出来语法的前面v := i.(type)和上一节讲的"type assertion"中的语法很相似，其实也是这样的，只不过"type assertion"一节括号里的是具体的类型T,而这里用的是一个类似于形参这么个参数type; 一般该结构用在函数中，接口类型变量i通过函数传参的方式接收值，然后看看传参的接口类型满足哪个case后面的类型，就执行相应case相的语句，一般case后都有一个同级的default收尾，作用和其它语言中类似语法是一样的，就是传过来的参数前面哪个case也不满足，则执行default下的语句；还有一点比较重要的就是传来的变量i的值和类型会赋给变量v
 Stringers
-1.�������swift��/��kotlin��ͬ�����Ƶ��÷���Stringer��fmt���ж����һ���ӿ�����(˵���˾�����fmt����������type Stringer interface{ xxx }�Ķ���),����ӿ����Ͱ����Լ�����Ϊһ���ַ���(fmt������ʵ��stringer�Ľӿ�����Ϊ: type Stringer interface { String() string })������˵���������Լ���ʵ������Ҳ���ⲻ�ˣ���ͨ�����������ܼ򵥣�����fmt���⣬���������İ���ӡֵ��ͨ��fmt�е�Stringer�ӿ���ʵ�ֵġ�����fmt.Printf()���������ӡֵ���õľ���fmt���е�Stringer�ӿ��е�string()�������������Ӱɣ���˵�е㲻������
+1.这节我在swift和/或kotlin中同过类似的用法，Stringer是fmt包中定义的一个接口类型(说白了就是在fmt包中有类似type Stringer interface{ xxx }的定义),这个接口类型把它自己描述为一个字符串(fmt包中真实对stringer的接口声明为: type Stringer interface { String() string })，这里说的描述它自己其实我现在也理解不了，但通过例子来看很简单，除了fmt包外，还有其它的包打印值是通过fmt中的Stringer接口来实现的。其中fmt.Printf()这个函数打印值利用的就是fmt包中的Stringer接口中的string()函数，看个例子吧，干说有点不好理解
     type Person struct { Name string, Age int }
     func (p Person) String() string { return fmt.Sprintf("%v (%v years)", p.Name, p.Age) }   //complements String() method within Stringer interface
     func main() {
@@ -605,103 +606,103 @@ Stringers
         z := Person{"Zaphod Beeblebrox", 9001}
         fmt.Println(a, z)  //involving Stringer interface to output formated a and z
 Exercise: Stringers
-1. ��һ��ͳһ��Exercise
+1. 下一轮统一看Exercise
 Errors
-1.Go����ʹ�ô��������������
-2.��fmt���е�Stringer�ӿ�һ����error����Ҳ��һ���ڽ��Ľӿ�(��fmt���ڽ�������������?)������ĳ�����������¶���:
+1.Go程序使用错误码来表达错误
+2.和fmt包中的Stringer接口一样，error类型也是一个内建的接口(是fmt包内建还是其它包的?)，即在某个包中有如下定义:
     type error interface { Error() string }
-3.��fmt����Stringer�ӿ����ƣ���Ҫ��ӡ������Ϣʱ��fmt����Ѱ��error�ӿ�����ӡ����ֵ(��ʵ�����Ǵ�ӡ����ֵ�����Ǵ�ӡʱ���ȸ��ݲ���������ȥ�ȵ���fmt�ڽ�����Ӧ�ӿ��ȴ���һ�£�Ȼ�󽫷���ֵ�ټ�����Ϊ��ӡ�Ĳ��������Ժ��������Ǵ�ӡ���󣬶��Ǽ�⵽������������error�ӿ�������)
-4.����ͨ�����˻᷵�������ķ���ֵ�����᷵��һ������ֵ(��仰˵��80%���ԣ�����ֻ�ǵ�����ȫ��ִ����ɺ�᷵��һ������ֵ������ִ�й����г�������һ������ֵ�������Ƿ�������ֵ�����ڻ���Щ������(�Ӻ�����仰�е�����������Ӧ�û����Ƿ�������ֵ))�����������ֵ��nil��ʱ��˵������������������û�д��󣬷�֮�������صĴ���ֵ����nilʱ��˵���д���������һ�㳣�÷�����i, err := strconv.Atoi("42"),�������ķ���ֵ������������һ���������ķ���ֵ������һ���Ǵ���ֵ��ͨ���ں�����ִ����ɺ󣬻��һ��if������������err��ֵ(�Ƿ�Ϊnil?����nilִ��ɶ��������nilִ��ɶ)�Ӷ������д�����(4��λ��󵼱��ˣ�����Ū�����)
-*.��4��ε�˵����ͻȻ�������ˣ���ʵ�������Է���������ֵ�������Ͼ���һ��ֵ������ͨ��ָ�������ķ���ֵ������ָ���������ֵ,��(int, float),��������������ֵӦ���Ǻ��������ʱ����ʾ��ָ���˷�������ֵ(��仰ֵ����ȶ�������п����Ƕ�������������ֵ��������������Ƿ��ؼ�����?Ҫ�Ͻ�����һ��)
-5.errΪnil��ʾ����ִ�гɹ�����nil��ʾ����ִ��ʧ��(����ֻ˵�ǳɹ���ʧ�ܣ���û��˵�Ǻ����ĳɹ���ʧ�ܣ�������黹Ҫ������ϰ�ļ�ǿ��ȷ���ɹ���ʧ���Ƿ�ָ���Ǻ���)
-6.��ΪerrorҲ��һ���ӿ�(����)�������������ǵ�������ӿ�(�����Ǵ���������������ӿڣ����Ǳ�����������error�ӿ����ͻ����error�ӿ�)���������ǿ����Զ���error�ӿ��е�Error()���������Զ������������������ʽ
-7.�������������ˣ��ؼ������ڣ�run()�����ķ���������error,������fmt.Println(err)��ʱ�򣬼�⵽err��error���ͣ���ȥ��������Error()������ʵ��(��������)
-8.ͨ�����鷢�֣���ʹ��fmt.Println����ʱ�����Ȼ��⺯���в��������ͣ�Ȼ��ȥ����fmt�ڽ���Stringer()�ӿ��еķ�����������ֵ�����������ټ���������ֵ��Ϊ������ӡ��error()�ӿ�Ӧ��Ҳ��һ���ģ���fmt.Println������⵽���������ǽӿ�����ʱ�����ȵ�����Ӧ�Ľӿڷ���һ��ֵ�����������ֵ����Ϊfmt.Println�Ĳ�����������fmt.Println�Ĵ�ӡ(���Բμ�18��"Exercise: Stringers"һ�ڵ����ӿ�һ�£�����һ��func (ip IPAddr) String() string { return "1234" }, Ȼ�������һ���ip�ĸ�ʽ�����������123����fmt.Printf("%v: %v123\n", name, ip),ִ�к��㷢�ֶ�ip�����Ĵ�ӡ��"1234123",���������Ϳ��Կ������������һ��fmt.Printf������ӡ֮ǰ�����ȶ�ip�������ڽ���Stringer�ӿڣ�Ȼ����Ӧ�ķ��ؽ�����ظ�fmt.Printf��Ϊ����������ӡ�����ܵõ�"1234123"�����Ľ��)
+3.和fmt包的Stringer接口类似，当要打印错误信息时，fmt包会寻找error接口来打印错误值(其实并不是打印错误值，而是打印时会先根据参数的类型去先调用fmt内建的相应接口先处理一下，然后将返回值再继续作为打印的参数，所以函数并不是打印错误，而是检测到参数的类型是error接口类型了)
+4.函数通常除了会返回正常的返回值，还会返回一个错误值(这句话说的80%不对，可能只是当函数全部执行完成后会返回一个正常值，或是执行过程中出错返回一个错误值，并不是返回两个值，现在还有些理不清(从后面这句话中的例子来看，应该还真是返回两个值))，当这个错误值是nil的时候说明函数返回是正常的没有错误，反之，当返回的错误值不是nil时，说明有错误发生。而一般常用方法是i, err := strconv.Atoi("42"),即函数的返回值可以是两个，一个是正常的返回值，还有一个是错误值，通常在函数在执行完成后，会跟一个if条件语句来检测err的值(是否为nil?等于nil执行啥？不等于nil执行啥)从而来进行错误处理(4这段会误导别人，尽快弄清改正)
+*.对4这段的说明：突然想起来了，其实函数可以返回任意多个值，基本上就是一个值，可以通过指定返数的返回值类型来指定多个返回值,如(int, float),文中有两个返回值应该是函数定义的时候显示的指定了返回两个值(这句话值得商榷，例子中可能是定义了两个返回值，但正常情况下是返回几个呢?要严谨的试一下)
+5.err为nil表示函数执行成功，非nil表示函数执行失败(官文只说是成功和失败，并没有说是函数的成功和失败，所以这块还要随着练习的加强来确定成功与失败是否指的是函数)
+6.因为error也是一个接口(方法)，而错误的输出是调用这个接口(并不是错误的输出调用这个接口，而是变量的类型是error接口类型会调用error接口)，所以我们可以自定义error接口中的Error()方法，来自定义错误输出的内容与格式
+7.好像现在明白了，关键点在于，run()函数的返回类型是error,所以在fmt.Println(err)的时候，检测到err是error类型，则去调用上面Error()方法的实现(继续观望)
+8.通过试验发现：在使用fmt.Println函数时，首先会检测函数中参数的类型，然后去调用fmt内建的Stringer()接口中的方法，将返回值返传回来，再继续将返回值作为参数打印，error()接口应该也是一样的，当fmt.Println函数检测到参数类型是接口类型时，会先调用相应的接口返回一个值，将这个返回值再作为fmt.Println的参数继续参与fmt.Println的打印(可以参见18节"Exercise: Stringers"一节的例子看一下，补充一个func (ip IPAddr) String() string { return "1234" }, 然后在最后一句对ip的格式化参数后加上123，即fmt.Printf("%v: %v123\n", name, ip),执行后你发现对ip参数的打印是"1234123",从这个结果就可以看出来，在最后一句fmt.Printf函数打印之前，是先对ip调用了内建的Stringer接口，然后将相应的返回结果返回给fmt.Printf作为参数继续打印，才能得到"1234123"这样的结果)
 Exercise: Errors
-1.��һ��������ϰ
+1.下一轮做该练习
 Readers
-1.С�ڱ���Ϊ"Readers"��������Ϊ��ȡ��
-2.io���У���һ����ΪReader�Ľӿڣ�������io���жԸ�Reader�ӿ�����ʵ��: func (T) Read(b []byte) (n int, err error) {}; (����˵Go�ı�׼���а��������������ӿڵ�ʵ�֣�˵���˾��ǰ���������Ӧ�ķ���(methods), ��νʵ�ֲ�����ʵ�ֽӿ��еķ�����)����Read()�����⣺���ķ���ֵ��2����һ���ǽ���[]byte��Ԫ�صĸ���(����)����һ���Ǵ���ֵ(error�ӿ�����)������˵Read������λ�ڴ������ݵ�byte��Ƭ��([]byte),Ȼ����ÿ�ν���[]byte��Ԫ�ظ���������ʱ�����ν���[]byte�е�Ԫ�ظ��������ͷ��أ����ҷ���һ������Ϊerror�ӿ����͵Ĵ���ֵ�����û�д��󷵻�nil,���û��Ԫ�ؽ��룬�򷵻ص�����ֵ��һ����0��һ����EOF��ͨ����ڴ����������������:
+1.小节标题为"Readers"可以理解为读取器
+2.io包中，有一个名为Reader的接口，并且在io包中对该Reader接口作了实现: func (T) Read(b []byte) (n int, err error) {}; (官文说Go的标准库中包含了许多对这类接口的实现，说白了就是包含许多相应的方法(methods), 所谓实现不就是实现接口中的方法嘛)。该Read()的理解：它的返回值有2个，一个是进入[]byte中元素的个数(整型)，另一个是错误值(error接口类型)。官文说Read方法是位于带有数据的byte分片中([]byte),然后监控每次进入[]byte的元素个数，返回时将本次进入[]byte中的元素个数以整型返回，并且返回一个类型为error接口类型的错误值，如果没有错误返回nil,如果没有元素进入，则返回的两个值，一个是0，一个是EOF。通过这节带的例子最好理解了:
 import ("fmt"; "io"; "strings")
 func main() {
     r := strings.NewReader("Hello, Reader!")
     
-    b := make([]byte, 8)    //����һ������Ϊ8���ֽڵ�����b  //Ӧ�ò������飬��slice��?
-    for {     //ѭ����ȡr�е����ݣ�ÿ�����8���ֽڣ�ֱ����ȡ���
-        n, err := r.Read(b) //ע��Read()�������÷�
+    b := make([]byte, 8)    //定义一个长度为8个字节的数组b  //应该不是数组，是slice吧?
+    for {     //循环读取r中的数据，每次最多8个字节，直到读取完毕
+        n, err := r.Read(b) //注意Read()方法的用法
         fmt.Printf("n = %v err = %v b = %v\n", n, err, b)
         fmt.Printf("b[:n] = %q\n", b[:n])
-        if err == io.EOF {   //�������β��ִ��break�˳�ѭ��
+        if err == io.EOF {   //当到达结尾则执行break退出循环
             break
         }
     }
 }
-ִ�н��:
+执行结果:
 n = 8 err = <nil> b = [72 101 108 108 111 44 32 82]
 b[:n] = "Hello, R"
 n = 6 err = <nil> b = [101 97 100 101 114 33 32 82]
 b[:n] = "eader!"
 n = 0 err = EOF b = [101 97 100 101 114 33 32 82]
 b[:n] = ""
-�ӽ���н��:ѭ����һ��ִ�У�n, err := Read(b)���ִ����ɺ�b�б�����8���ֽڣ���Ϊû���κδ���Ҳû�е����ַ����Ľ�β������n = 8 err = <nil>��b�е��ֽ�Ϊ"Hello, R"��8���ַ���asciiֵ�����˵�һ��ѭ�����µ�ͷ�������Ӧ��ûɶ����; ��������ʱ"Hello, Reader!"����ַ����е��ַ���ʣ��"eader!"��6���ַ��ˣ����ڶ���ѭ��ִ����n, err := Read(b)���ַ���ʣ���6���ַ�����������b����ǰ�����и�����䣬������ῴ�����������ֽ����������һ���ģ���Ϊ�ڶ��ζ�ȡֻʣ��6���ַ��ˣ���������ʱ��ֻ�ܸ�������b��ͷ6���ֽڣ�����������е����Ӧ��Ҳûɶ���ʵ��ˣ���������ʱ�ַ���Ϊ���ˣ�������ִ��ѭ������n, err := r.Read(b)ִ����ɺ���Ϊû���ַ���������b,����Read()��Ȼ��������b�Ľ����ַ�����0����n = 0,��Ϊ�Ѿ������ַ����Ľ�β������err = EOF,��ʱ�ֽ�����b�л��ǵڶ���ѭ���е����ݣ����Դ�ӡ������asciiֵ�͵ڶ���ѭ����һ���ġ�
-*.�о���һ����Ҫע��һ�£����ǵڶ��������ͽ��ַ����е��ַ�����ȡ���ˣ����ǵõ��Ĵ���ֵ����<nil>������EOF,�������Ҳ²⣬һ�ζ�ȡʱ��ֻҪ���ܶ�ȡ�����ݣ���Ȼ�ѽ��ַ��������ˣ�����ʱ��err����ֵ��Ȼ��<nil>,ֻ����ĳһ��ѭ���У���ָ��������һ���ַ�Ҳ����������ʱ�򣬲Ż᷵��errΪEOF
+从结果中解读:循环第一次执行，n, err := Read(b)这句执行完成后，b中被读入8个字节，因为没有任何错误，也没有到达字符串的结尾，所以n = 8 err = <nil>，b中的字节为"Hello, R"这8个字符的ascii值；到此第一次循环导致的头两行输出应该没啥疑问; 继续，此时"Hello, Reader!"这个字符串中的字符仅剩下"eader!"这6个字符了；当第二次循环执行完n, err := Read(b)后，字符串剩余的6个字符被读入数组b，从前向后进行覆盖填充，所以你会看到结果输出的字节最后两个是一样的，因为第二次读取只剩下6个字符了，覆盖填充的时候，只能覆盖数组b的头6个字节；到这第三四行的输出应该也没啥疑问的了；继续，此时字符串为空了，第三次执行循环，当n, err := r.Read(b)执行完成后，因为没有字符进入数组b,所以Read()自然监听数组b的进入字符数是0，则n = 0,因为已经到了字符串的结尾，所以err = EOF,此时字节数组b中还是第二个循环中的内容，所以打印出来的ascii值和第二次循环是一样的。
+*.感觉有一点需要注意一下，就是第二次明明就将字符串中的字符给读取尽了，但是得到的错误值还是<nil>而不是EOF,所以暂且猜测，一次读取时，只要还能读取到数据，虽然已将字符串读空了，但此时的err返回值依然是<nil>,只有在某一次循环中，从指定对象中一个字符也读不出来的时候，才会返回err为EOF
 Exercise: Readers
-1.��һ��
+1.下一轮
 Exercise: rot13Reader
-1.��һ��
+1.下一轮
 Images
-1.û��̫���ף�Ҳ�Ƶ���һ�ְ�
+1.没看太明白，也推到下一轮吧
 Exercise: Images
-1.��һ��
+1.下一轮
 Goroutines
-1.����������
-2.Э�̵��������ο�����һ������
-3.Э�̵��������ں���ǰ����go
-4.Э�����������µ�Э����  //�ο�kotlin,�²�go fun()���ǽ�Э�̷Ž�����
-5.���Э��������ͬһ����ַ�ռ䣬���Է�������ʱע��synchronous����
-6.sync��
-7. youtube�п�������ʹ��delve����go,����֪���ܷ����goroutines, kotlin���ṩ�ĵ��Ծͺܺ��ã������һĿ��Ȼ
-8.������ִ�й��̿�������. ȫ��ֻ��һ�����߳���ִ�У���time.Sleep()���߳�������
+1.轻量级进程
+2.协程的声明外形看就是一个函数
+3.协程的运行是在函数前加上go
+4.协程运行是在新的协程中  //参考kotlin,猜测go fun()就是将协程放进队列
+5.多个协程运行在同一个地址空间，所以访问数据时注意synchronous问题
+6.sync包
+7. youtube中看到可以使用delve调试go,但不知道能否调试goroutines, kotlin中提供的调试就很好用，看输出一目了然
+8.看例子执行过程可以明白. 全程只有一个主线程在执行，且time.Sleep()是线程阻塞的
 Channels
-1.ͨ������һ�����ӣ����Խ��ջ�������
-2.ͨ�������� "<-"
-3.ʹ��make(����?��?)����һ��ͨ�� ch := make(chan int)
-4.���ͽ������ݵ�һ����ʽ: a.����������ͨ��: ch <- v;
-                          b.��ͨ����ȡ����: v:= <-ch;
-5.Ĭ������£����ͺͽ������ݶ��������ģ�ֱ����һ��׼����
-6.ò��Go�����ǲ������Լ������߳�, զ���ö��?
+1.通道就像一根管子，可以接收或发送数据
+2.通道符号是 "<-"
+3.使用make(函数?类?)声明一个通道 ch := make(chan int)
+4.发送接收数据的一般形式: a.将数据送入通道: ch <- v;
+                          b.从通道读取数据: v:= <-ch;
+5.默认情况下，发送和接收数据都是阻塞的，直到另一方准备好
+6.貌似Go中我们不可以自己管理线程, 咋利用多核?
 Buffered Channels
-1.ͨ������ʱ��������make�ڶ�������Ϊͨ����buffer: c := make(chan int, 2)
-2.һֱ��ͨ���з������ݣ�ֱ�Ӵﵽͨ�����õ�buffer��
-3.��ͨ���������ݣ�ֱ��ͨ��������Ϊ��
-4.��һ������������:   ch := makee(chan int, 1)
+1.通道声明时可以设置make第二个参数为通道的buffer: c := make(chan int, 2)
+2.一直向通道中发送内容，直接达到通道设置的buffer数
+3.从通道接收内容，直接通道中内容为空
+4.看一个死锁的例子:   ch := makee(chan int, 1)
                       ch <- 1
                       ch <- 2
-                      *.��ʱ1�ȴ������գ�����һֱ��������ţ���2�ȴ��ŷ���ch,����Ϊû�б�������1�����ԾͿ��������ˣ���������ǽ�make�еĻ��������Ϊ2
+                      *.此时1等待被接收，所以一直在这阻断着，而2等待着发往ch,但因为没有变量接收1，所以就卡死在这了，解决方法是将make中的缓冲参数改为2
 Range and Close
-1.��ͨ����û�������Ժ�Ҫ��ʹ��close()������ͨ���ر�: close(channel)
-2.ֻ��sender���Թر�ͨ����receiver������
-3.receiver����ʹ��"v,ok := <-ch"��ʽ��ͨ��ok��ֵ��true����false�ж�ͨ���Ƿ�ر�
-4.����ʹ��"for i := range c"����ʽ�������Ĵ�ͨ������ֵ
-5.�������ѹرյ�ͨ��(after close(channel))�������� //������ص㣬ʵ�ʲ��Ի������������Ϊһ��channel�ȴ��������ݣ���һ��û�����ݣ�������һֱ����.��ʵ��û��̫����
-6.ƽʱ��Ҫʹ��close()�����ر�ͨ����ֻ�е�senderû��������Ҫ����receiver��ʱ����ܵ���,�����for i := range c��û�����ˣ��Ӷ���ֹ/���ѭ����ִ��
+1.当通道中没有数据以后要将使用close()函数将通道关闭: close(channel)
+2.只有sender可以关闭通道，receiver不可以
+3.receiver可以使用"v,ok := <-ch"形式，通过ok的值是true还是false判断通道是否关闭
+4.可以使用"for i := range c"的形式来连续的从通道接收值
+5.不向向已关闭的通道(after close(channel))发送数据 //这个是重点，实际测试会出现死锁，因为一方channel等待接收数据，另一方没有数据，就这样一直耗着.其实还没有太理解
+6.平时不要使用close()函数关闭通道，只有当sender没数据了需要告诉receiver的时候才能调用,如告诉for i := range c已没数据了，从而终止/完成循环的执行
 Select
-1.select�����ж��case,���caseͬʱ��ÿ��case�е�channel���м������ĸ��Ƚ�����ִ���ĸ�case�µ����, ����߳�ִ�е���Э����ʱ�ж��case�е�channel������������������ѡ��һ������������caseִ����Ӧ����� //��Ҫע���������Ϊʲôcͨ��ִ����ɺ���ִ��close()����
-2.ע��for{select{}}�����ã�ע�⵽select��һ��case���������return��䣬���Բ²����return����˳��˺�����ִ�У�����˵�������ͨ���Ķ�ȡ����ˣ����ʡ����close()���
+1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句 //需要注意的是这里为什么c通道执行完成后不用执行close()函数
+2.注意for{select{}}的连用，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句
 Default Selection
-1.����򵥣�������switch�е�default,��������䶼������������ִ��default�µ���䣬����ִ����ÿ���߳�ִ�е���Э��ʱ����������case��������Ļ�����ִ��һ��default�µ����  // ���������˵��select���������ڶ�������֧���switch
+1.这个简单，类似于switch中的default,即其它语句都不满足的情况下执行default下的语句，具体执行是每次线程执行到该协程时如果如果其它case都不满足的话都会执行一遍default下的语句  // 大机制上来说，select本就类似于多条件分支语句switch
 2.time.Tick()
 3.time.After()
 Exercise: Equivalent Binary Trees
 Exercise: Equivalent Binary Trees
 sync.Mutex
-1.������sync���е�Mutexģ������������������Lock��Unlock����������sync����
-2. Inc��Value����
+1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题
+2. Inc和Value方法
 3. defer
 Exercise: Web Crawler
 ===================================
-Go�г��õİ�: fmt,os,net
-Stringer��fmt���������Ľӿ�,�ڶ����˷���String()
-Error���ڽ��Ľӿ�,�ڶ����˷���Error()
-ʹ��print,println�ȴ�ӡֵʱ�����Stringer�е�String()����������ӡʱ��⵽����Ϊerrorʱ��������ڽ��ӿ�Error��Error()����
-�ĵ���ÿ�������м������ӣ�ѧһ����һ��ʼ���ȴ���Щ���ӿ�ʼӦ���Ǹ��÷���
+Go中常用的包: fmt,os,net
+Stringer是fmt包中声明的接口,内定义了方法String()
+Error是内建的接口,内定义了方法Error()
+使用print,println等打印值时会调用Stringer中的String()方法，当打印时检测到类型为error时，会调用内建接口Error的Error()方法
+文档中每个包都有几个例子，学一个包一开始，先从这些例子开始应该是个好方法
