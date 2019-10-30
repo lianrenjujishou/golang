@@ -73,7 +73,7 @@ Type conversions
 ，表现在实际的写法上即要将被转换值作为相应类型的参数
   var i int = 42
   var f float64 = float64(i)
-  var u unit = unit(f)
+  var u uint = uint(f)
   还可以使用:=形式:
     i := 42
     f := float64(i)
