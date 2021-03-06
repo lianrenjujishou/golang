@@ -77,7 +77,7 @@ Type conversions
   还可以使用:=形式:
     i := 42
     f := float64(i)
-    u := uint(f)
+    u := uint(f)        //对于数值和字符串相转换,如var a int = 97 , var b string = string(a) 这种写法得到的b是ascii码,小写字母"a",而不是我们想要的"97", 想要得到"97"要使用strconv包的Itoa函数, var b string = strconv.Itoa(a), 得到b为"97" (https://yourbasic.org/golang/convert-int-to-string/)
 2.C语言中的类型转换不强制要求加上被转换到的类型(C都忘了...)
 Type inference
 1.到目前为止变量声明的几种形式:
