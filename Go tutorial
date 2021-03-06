@@ -59,7 +59,7 @@ Basic types
 字节型: byte  //unit8的别名
 文字型: rune  //int32的别名，表示一个Unicode码点
 符点型: float32 float64
-复合型: complex64 complex128
+复合型: complex64 complex128   //complex64用来描述float32类型的实数和虚数,complex128用来描述float64类型的实数和虚数,详述:https://www.cloudhadoop.com/2018/12/golang-tutorials-complex-types-numbers.html
 2.变量的声明也可以使用"因式分解"式，即使用一个var关键字完成多个变量的声明
 3.int,uint和uintptr这三个类型在32位系统中它们的位宽是32位，在64位系统下它们的位宽是64位
 4.对于整型一般就用int,除非定义时知道数值的大小int可能不够再去考虑其它整型(废话)
