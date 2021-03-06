@@ -26,7 +26,7 @@ Exported names
 Functions
 1.函数可以带任意多个参数，包含0个
 2.函数参数中，形参类型出现在形参的后面
-3.函数基本语法func func_name(arg1 type1, arg2 type2) return_type { statements }
+3.函数基本语法func func_name(arg1 type1, arg2 type2) return_type { statements }  //这块要注意函数如果有形参,则形参的类型一定不能少,即func f(a)是错误的,要写成func f(a type).
 Functions continued
 1.当函数中连续的参数类型相同时，可以简写，只保存最后一个参数的类型
 *. x int, y int   ->  x,y int
