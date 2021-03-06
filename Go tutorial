@@ -55,7 +55,7 @@ Basic types
 布尔型: bool
 字符串: string
 整型: int int8 int16 int32 int64
-无符号整型: uint uint8 uint16 uint32 uint64 uintptr
+无符号整型: uint uint8 uint16 uint32 uint64 uintptr          //int uint unitptr默认是自适应的,即虽然看起来int有好几种,unit也有好好种,但如果你是在32位系统上运行则,编译器会动将int精确为int32,也就是说我们用的时候只需要使用int和uint就行,不用人为的去写后面的位数; 但是如果你明确知道你想存储的是16位的,则你就用int16,这样即使你在32或64位系统上运行,用的也是int16,这样可以减少内存的占用. 至于uintptr还不会用,它的作用见:https://stackoverflow.com/questions/59042646/whats-the-difference-between-uint-and-uintptr-in-golang
 字节型: byte  //unit8的别名
 文字型: rune  //int32的别名，表示一个Unicode码点
 符点型: float32 float64
