@@ -1,7 +1,7 @@
 以下内容均是从golang官方提供的入门教程中总结的: https://tour.golang.org/welcome/1
 Packages
 1.每个Go程序都是由包(s)组成的
-2.Go程序从main包开始运行
+2.Go程序从main包(的main函数)开始运行
 3.使用import关键字导入包
 4.包名和导入路径的最后一个元素名称相同
 *.从当前看，包就是一个文件夹，里面有好多文件，并且这些文件的第一个有效行都是"package 包名"
