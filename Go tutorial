@@ -234,7 +234,7 @@ Slices are like references to arrays
 1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base=[1,2,3,4,5,6,7,8,9,10]这10个数，然后我对该underlying array做了一个切片，比如slice=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名(这段的描述有点屎了)
 2.既然slice会直接改变它underlying array中的数据，则其它的slice肯定也会受到影响
 Slice literals
-1.前面有个struct literal从例子中看，struct literal就是一个结构体的初始化(叫实例化是否更好?)
+1.前面有个struct literal从例子中看，struct literal就是一个创建结构体实例或是对象的方法或叫手段,即通过给结构体中字段进行赋值的方法来得到struture value(也就是所谓的结构体实例或对象)
 2.对slice literal官方tour给的描述是:"a slice就像是一个没有长度的array literal"，
 其实不是很理解，暂且将slice literal的结构定义为 "[]T{v1,v2,...,vn}"
 3.声明一个array literal: [3]bool{true, true, false}
@@ -252,7 +252,7 @@ Slice literals
     {11, false}
     {13, true}
   }
-6.总结一下：所谓的slice literal就是数组的声明与分片的声明合成一个了(先这样理解吧)
+6.总结一下：所谓的slice literal就是数组的声明与分片的声明合成一个了(先这样理解吧) //或者参照structure literal,slice literal就是使用[]T{x,...}的方式得到slice的一种方法
 7.再多说一句，从之前的struct literal,到array literal, 再到slice literal,其实头两个基本上就是之前讲的变量声明的时候就顺带赋值了，而slice literal虽说也是声明的时候就赋值了，但是不要忘了，slice是要基于array的，这句话是关键。所以再理解slice literal的时候就要分两步理解，第一步是array的创建，第二步是slice的build(叫构建，生成啥的，随便叫吧)
 8.slice也是有类型的，它的类型是"没有长度的数组类型" []T
 9.再说一下slice literal的定义：slice literal就像是一个没有长度的array literal
