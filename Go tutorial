@@ -349,28 +349,42 @@ Exercise: Slices
 1.练习部分，下一遍再看吧
 Maps
 1.map是由多个键值对组成，这个和其它语言中的字典，哈希啥的没区别
-2.如果map中一组键值对都没有，即一个空map,则它会被默认给一个"零值"nil,这个和slice的零值是一样的
-3.空map不可以添加键值对
-4.make函数除了可以返回slice外，还可以返回map(返回指定类型的map,并且该map已被初始化，可以直接使用了),看例子描述，make()函数用于map时返回的是一个map对象，可以使用该对象进行进一步操作，如map的赋值
-*.make中的类型必须是前面已经声明的，即如果m=make(T),则前面已经有了var m T了，否则make()函数会报错；这块是第19小节，要再看看，其实还要将相关知识更详情的说明再看一下，否则有些东西真是看的不太透彻
-*.再加一点，补充上面这点说的，还可以在调用make函数时使用短声明形式直接完成对变量的声明和赋值:
-m := make(map[string]int)
-5.声明一个map类型的变量时，相应的类型比其它如string,int这些稍复杂一些，通过例子来看，map的类型组成应该是: map[key类型]value类型，如  map[string]Vertex //Vertex是个结构体类型
-6.我把例子中的部分代码写下来，用来理解上面第4点和第5点
-  type Vertex struct {
-    Lat, Long float64
-  }
-
-  var m map[string]Vertex
-
-  m = make(map[string]Vertex)
-
-  m["Bell Labs"] = Vertex{
-    40.68433， -74.39967,
-  }
-*.这块再提一下，结构体的赋值形式是先写上结构体的名称，后跟一对花括号，然后将相应的赋值写在花括号中 Vertex{xx,xx,xxx}
+2.map使用的时候有以下几种情况:
+ a.声明但未初始化的map,其值为nil,最关键的是未初始化的map不能被赋值:
+    m := map[string]int
+    m["age"] = 18     //上面这两句是不正确的写法,因为上句m声明时未被赋值,m的值为nil,此时不能直接给m赋值
+   当m值为nil的时候,通常的用法和slice是一样的,即放在if语句中判断其值为nil:
+    if m == nil { fmt.Println("nil!")}
+ b.声明但未初始化的map,如果也想被赋值,其中一种方法是使用make方法返回一个同样类型的map对象:
+    m := map[string]int
+    m = make(map[string]int)
+    m["age"] = 16   //经过上句make函数这么一折腾,此时的写法就是正确的,我经常忽略的一点就是第一句声明的时候m后的符号是海象符":=",第二句赋值时m后的是等号"=".
+ c.可以直接使用make函数返回一个可被赋值的map对象
+    m := make(map[string]int)
+    m["age"] = 16  //此时的写法是正确的,因为make函数的参数为map类型时,返回的就是一个可直接操作的map.
+ d.声明的时候直接将map进行初始化则后面可以直接给这个map赋值:
+   *.声明的时候直接初始化,应该说的就是后面所说的map literal, 它是得到可操作map对象的一种手段.
+    m := map[string]int{"zhangsan":19}
+    m["liSi"] = 20  //这种写法是正确的,因为上句m在声明时赋了值,m的值不再是nil,故后面可以直接向m赋值
+ e.还需要注意的就是当map的数据类型是稍复杂一点,如结构体的时候,初始化和后面赋值时的写法:
+  type Vertex struct { Lat, Long float64 }
+  初始化:
+    var m = map[string]Vertex{
+       "zhangsan":Vertex{80.6,-90.9},
+       "lisi":Vertex{90.6,-80.9},
+    }
+  未初始化但使用make函数得到了可操作的map对象:
+    var m map[string]Vertex
+    m = make(map[string]Vertex)
+    m["Bell Labs"] = Vertex{ 40.68433， -74.39967, }   //重要关注的是这句,即Vertex作为值时的写法
+  同样,复杂的结构也可作为map中的键:
+    type Vertex struct { X,Y int }
+    var m  map[Vertex]int
+    m = make(map[Vertex]int)   //上两句也可写为一句 m := make(map[Vertex]int) 或写为 m:= map[Vertx]int{Vertex{2,3}:4}
+    m[Vertex{1,2}] = 3
+    fmt.Println(m[Vertex{1,2}])  
 Map literals
-1.我再一次能肯定所谓的xxx literal就是在声明变量的时候一并赋值，但是struct literal好像不一样，struct literal用的是先声明后赋值，应该那一节的struct literal指的是赋值那块；所以再精确一些，xxx literal指的就是变量的赋值?这一块要再好好理解一下，反正不管是声明时一并赋值，还是先声明后赋值，肯定和赋值这一步跑不了，而且除了struct literal外，array literal, slice literal和map literal看例子好像都是将声明时赋值叫做XXX literal
+1.map literals指的同上边一样,即在声明时赋值从而得到相应的map对象.之前说的是上面讲的struct literals不同于其它的literals,当时的想法是看代码中先有type Vertex struct {X,Y int},然后下面才是var x := Vertex{1,2}就觉得struct literals和其它类型的literals不同了, 但其实是我想错了, 重要的一点是,所谓T literals的前提是你得先有T才行啊,你有了T下面才能谈T的literals,而之前的错误想法来源于,像slice,array这些都是内置的类型,可以直接用,而Vertex是我们自定义的一个类型.
 2.这一节的map literal看例子也是在声明时一并赋值，看一下例子中的部分代码:
   type Vertex struct {
     Lat, Long float64
@@ -385,23 +399,87 @@ Map literals
     },
   }
 Map literals continued
-1.这节主要讲的是map literal的时候(定义时赋值？赋值？)，如果元素的类型是top-level type,则可以省略类型名；没查到top-level type的概念，但查到了top-level class 的概念，说的是非内嵌类，这样类推到top-level type,非内嵌类型，但是啥叫内嵌类型呀，类型还可以内嵌吗？先这么写吧，其实看形式就是赋值时相应的类型名没有写，但是怎么叫个top-level type还有待理解，转了一圈又转回来了 //类可以内嵌，如kotlin中数据类中内嵌数据类等
+1.下面的例子是官文给的,map实例化的时候top-level type可省时的代码:
   type Vertex struct {
     Lat, Long float64
   }
   
   var m = map[string]Vertex{
-    "Bell Labs": Vertex可写可不写{40.68433, -744.39967},
+    "Bell Labs": Vertex可写可不写{40.68433, -744.39967},   // "Bell Labs":[Vertex]{40.68433,-744.39967}本来想写这种形式,用[]表示是可选的,但[]在编程语言里又比较敏感怕引起混淆,所以干脆就用大白话表示了
     "Google": Vertex可写可不写{37.42202, -122.08408},
   }
-*.后期就该例来说Vertex能不能省，就看你理不理解top-level type是啥玩意儿了，不理解这个概念总会提心吊胆的 //现在来看top-level type很好理解，指的就是顶级类或说没有在其它类呀，函数呀等元素里面声明的类
+*.这里其实主要就是搞不清楚top-level type是个啥玩意儿,一开始认为是在函数外声明的类型就是top-level type,因为go中没有类的概念,所以也谈不到在某个类内部声明.但是通过测试无论是在main函数里面还是外面声明Vertex,m在实例化的时候,相应键值中Vertex关键字都能省.所以之前想的肯定不对,结果上网上搜了搜,有个人还专门为弄不懂这个东西去开了个issue,后面他也是在stackoverflow上提问得到了相对满意的答案,这个答案链接为: https://stackoverflow.com/questions/47579004/what-can-be-used-in-a-map-literal-instead-of-a-type-name-in-go  大概意思是:
+基本上讲的是当定义了一个接口I时,如果后面类型A实现了I(中的方法),类型B也实现了I(中的方法),则当给一个为[int]I的字典实例化的时候,就要明确的在键值处写为A{},还是B{},因为如果就一个A类实现了接口I(中的方法),则你在实例化的时候写作3:{},则go编译器会根据你声明的定型直接将{}处理为A{},但现在有两个类都实现了接口I,此时就得你显式的给出来这个类型了:
+    type I interface {ok() string}
+    
+    type A struct{}
+    type B struct{}
+    
+    func (a A) ok() string {
+    	return  "a"
+    }
+    
+    func (b B) ok() string {
+    	return  "b"
+    }
+    
+    func main() {
+    m := map[int]I{
+    	3: A{},
+    	4: B{},  //注意这样写的话末尾的逗号要有,否则会报错
+    }
+    
+    fmt.Println(m[3].ok())
+    fmt.Println(m[4].ok())
+    }
+
+但是按照stackoverflow上的逻辑来看, 如果我只定义了一个实现了I的类型,则m中实例化的时候,键值部分就能写{}而不用前缀个A或B了,但实际情况不是这样的:
+    type I interface {ok() string}
+    
+    type A struct{}
+    //type B struct{}
+    
+    func (a A) ok() string {
+    	return  "a"
+    }
+    
+    //func (b B) ok() string {
+    //	return  "b"
+    //}
+    
+    func main() {
+    m := map[int]I{
+    	3: {},
+    //	4: B{},  //注意这样写的话末尾的逗号要有,否则会报错
+    }
+    
+    fmt.Println(m[3].ok())
+    }
+上面的代码是报错的,说"missing type in composite literal",而将 3:{} 改为3:A{}后,执行就正常了.
+通过上面这两段代码我觉得stackoverflow中说的和主题不符.我现在又有了新的理解,也是通过stackoverflow上的这个例子和官文中定义的Vertex结构体类型共同找到的灵感,即因为I是一个接口,可以被很多类型实现,所以在给它传值时,就一定要明确指定哪个实现了I的类,即使当前只有一个类实现了I中的方法.但像之前定义的Vertex类,因为go中没有继承的概念,所以一说到Vertex就只有一个,唯一的一个,它没有子类啥的,因此即使没有明确在{}前给出类型名,golang编译器也能推断出来.这可能就是所谓的top-level type吧,当然这是猜的.而在给字典赋值时又出现了问题:
+
+func main() {
+	type Person struct {
+		Age int
+	}
+	var d map[string]Person = map[string]Person{
+		"zhangsan":{18},
+		"lisi":{19},
+	}
+	delete(d,"zhangsan")
+	fmt.Println(d)
+	d["zhangsan"] = Person{20}  //这句
+	fmt.Println(d)
+}
+上面代码备注那句在给"zhangsan"赋值时,后面一定要写成Person{20},而不能写成{20}, 对于这个例子我的理解是,在给字典d初始化赋值时,会考虑到字典的键或值的实际类型,然后看这些类型是否为top-level type(按照上面最后一句我自己的理解走),去判断赋值时这个类型关键字是否可省. 而一旦初始化完成了,后面使用得到的对象进行赋值时,就不会考虑那么多了,就直接是拿你写的类型值去和d定义中的比较,正确则执行,不正确则报错,即使用初始化后的对象对字典进行更改时,就没有了推断的过程,只有比较的过程,因此此时的Person必须要写.
+
 Mutating Maps
 1.强调一点，变量要先声明后使用，或者在使用的时候直接声明，就第二点来说，比如elem和ok之前都没有声明，则可以在使用的时候使用短声明的方式直接声明: elem, ok := m[key]
 2.这节主要讲的是map是可变的嘛，所以下面几点主要围绕着可变来说:
   a.改变某个键的值  m[key] = new value
   b.检索某个键的值  elem = m[key]  //前提是elem在前面已经声明，如果前面没有声明elem,则可以使用短声明的格式在赋值时声明:  elem := m[key]
   c.删除键值对,其实只要删除key就相当于将整个键值对都删了: delete(m, key)
-  d.测试某key是否在map m中: elem, ok = m[key] //用这种形式的前提是elem和ok已经在前面声明了；就该例来说，如果key在m中则ok的值为true,elem为相应的值，如果key不在m中，则ok为false, elem为m中元素类型的"零值"
+  d.测试某key是否在map m中: elem, ok = m[key] //用这种形式的前提是elem和ok已经在前面声明了(如果前面没声明,要写成elem,ok := m[key])；就该例来说，如果key在m中则ok的值为true,elem为相应的值，如果key不在m中，则ok为false, elem为m中元素类型的"零值"
 Exercise: Maps
 1.练习下一轮的时候再看
 Function values
