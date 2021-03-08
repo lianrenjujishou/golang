@@ -408,7 +408,7 @@ Map literals continued
     "Bell Labs": Vertex可写可不写{40.68433, -744.39967},   // "Bell Labs":[Vertex]{40.68433,-744.39967}本来想写这种形式,用[]表示是可选的,但[]在编程语言里又比较敏感怕引起混淆,所以干脆就用大白话表示了
     "Google": Vertex可写可不写{37.42202, -122.08408},
   }
-*.这里其实主要就是搞不清楚top-level type是个啥玩意儿,一开始认为是在函数外声明的类型就是top-level type,因为go中没有类的概念,所以也谈不到在某个类内部声明.但是通过测试无论是在main函数里面还是外面声明Vertex,m在实例化的时候,相应键值中Vertex关键字都能省.所以之前想的肯定不对,结果上网上搜了搜,有个人还专门为弄不懂这个东西去开了个issue,后面他也是在stackoverflow上提问得到了相对满意的答案,这个答案链接为: https://stackoverflow.com/questions/47579004/what-can-be-used-in-a-map-literal-instead-of-a-type-name-in-go  大概意思是:
+*.这里其实主要就是搞不清楚top-level type是个啥玩意儿,一开始认为是在函数外声明的类型就是top-level type,因为go中没有类的概念,所以也谈不到在某个类内部声明.但是通过测试无论是在main函数里面还是外面声明Vertex,m在实例化的时候,相应键值中Vertex关键字都能省.所以之前想的肯定不对,结果上网上搜了搜,有个人还专门为弄不懂这个东西去开了个issue,后面他也是在stackoverflow上提问得到了相对满意的答案(另外该链接还给出了另一个字典值可省略类型名的情况,即在声明字典类型时,map[int]struct{x,y string},这样直接将类型声明嵌到另一个类型声明中,因为该struct结构体没名,故实例化的时候键值处直接{}即可),这个答案链接为: https://stackoverflow.com/questions/47579004/what-can-be-used-in-a-map-literal-instead-of-a-type-name-in-go  大概意思是:
 基本上讲的是当定义了一个接口I时,如果后面类型A实现了I(中的方法),类型B也实现了I(中的方法),则当给一个为[int]I的字典实例化的时候,就要明确的在键值处写为A{},还是B{},因为如果就一个A类实现了接口I(中的方法),则你在实例化的时候写作3:{},则go编译器会根据你声明的定型直接将{}处理为A{},但现在有两个类都实现了接口I,此时就得你显式的给出来这个类型了:
     type I interface {ok() string}
     
