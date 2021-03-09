@@ -546,7 +546,7 @@ Function closures
 4.这节通过例子还是有两点需要注意的：
   a.同时给多个变量赋值，这个其实也不算新东西:
        pos, neg := adder(), adder()    //准确来说应该叫同时声明多个变量并赋值
-  b.下面这个例子讲到了精髓,在下面的例子中,所谓的function closure并不是adder()这个函数, 而是它的返回值"func(x int) int",而重点在于返回值中的函数引用了outer的变量sum,而closure function的作用可以理解为: 将closing函数adder函数理解为一个adder类,将返回值函数func(x int) int理解为内部类, 这个内部类引用了closing类的静态变量sum, 这样每次执行adder()函数后相当于得到了内部类的一个实例, 由于这个内部类的实例引用的是静态变量, 所以下一次内部类执行时,静态变量sum会受上一次内部类执行时静态变量sum结果的影响   //这段话要是不明白根据官网例子的结果多推敲一下就明白了
+  b.下面这个例子讲到了精髓,在下面的例子中,所谓的function closure并不是adder()这个函数, 而是它的返回值"func(x int) int",而重点在于返回值中的函数引用了outer的变量sum,而closure function的作用可以理解为: 将外部函数adder理解为一个类,将每次adder()理解为得到一个实例, 类的实例说白了就是在将这个类复制到另外一块内存上嘛.使用adder()多次赋值就会得到多个实例,这些实例之间没有交集,是在不同的内存区域上, 但对相同实例的多次调用时,上一次的调用会影响下一次,因为下一次调用时会引用上一次得到的sum;(这么说可能不是真正的设计逻辑,但是对于前期理解还是有一点帮助的)//这段话要是不明白根据官网例子的结果多推敲一下就明白了
   func adder() func(int) int {
   	sum := 0
   	return func(x int) int {
@@ -563,8 +563,7 @@ Function closures
   			neg(-2*i),
   		)
   	}
-  }   //本节说的是function value is closure,而function value就是所说的高阶函数中的两个要点: 函数类型的参数 和 函数类型的返回值.这么这个例子只讲了 函数类型的返回值中引用了outer的变量sum. 有没有可能函数类型的参数引用outer变量呢?即,非return后面的函数引用sum,而是在sum和return中间的函数引用sum
-//按理说函数一般是没有状态的，但是closure函数更像是一个类的实例，因为它可以存储状态，因此下一次调用返回的closure函数时outer变量值为上一个closure执行完成后的值
+  }   
 Exercise: Fibonacci closure
 1.练习部分下一轮再说
 Methods and interfaces
