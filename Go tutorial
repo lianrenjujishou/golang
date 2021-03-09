@@ -584,7 +584,35 @@ func main() {
   v := Vertex{3, 4}
   fmt.Println(v.Abs())
 }   //从调用形式来看，和kotlin中类的扩展意思差不多，可以看一下引用，是将Abs()作为v这个类的方法去引用的，而且Abs()函数体可以使有v类中的成员
-5.其实第一句However, you can define methods on types.有点不是很理解，结合上面的例子来说，函数相当于types?(这样说是错误的，函数不相当于types,这里types说成class应该更好理解一些)如果是这个样子也没有问题，上面也说过一个函数作为另一个函数参数的(这句说的是高阶函数，和这小节讲的知识点应该没啥关系)，多写多看吧. //这段括号外说的有问题，先不删，留这有时间思考一下再做删改吧
+5.一个简单的例子:
+    package main
+    import "fmt"
+
+    type Person struct {
+    	name string
+    	age int
+    }
+    
+    type Car interface {
+    	drive() string
+    	stop() int
+    }
+    
+    func (p Person) drive() string {
+    	return p.name
+    } 
+    
+    func (p Person) stop() int {
+    	return p.age
+    }
+    
+    func main() {
+    	var YQ Person = Person{"YangQiang",30}
+    	var baoshijie Car = YQ
+    	fmt.Println(baoshijie.drive())
+    	fmt.Println(baoshijie.stop())
+    }
+上面这个例子就是接interface也给带出来了, 如果要说interface的常用方法,上面这个例子还不够,如果再定义一个type Alien struct{}类型,然后Alien类型再实现drive()和stop()方法,这样,"var baoshijie Car = "后面的值就即可以是YQ,也可以是Alien了,因为这两个类型都实现了Car这个接口的方法,而具体baoshijie的值是YQ还是Alien,就根据实际需求了.
 *.也就是说这节说的receiver, 说白了就是一个"类"!
 Methods are functions
 1.这一节就着重强调了: method is just a function with a receiver argument
@@ -611,7 +639,7 @@ Methods are functions
 *.还是上面说的，就现在的理解method之于function来说只是给function加了一个环境(用环境这个词好像不太形象，理解就好。)，这个环境的数据在function中可以引用，仅此而已(强调：是目前这么理解!)
 Methods continued
 1.前面讲的方法，接收器的类型是struct,其实对于非struct类型也是可以的
-2.receiver的类型必须是在method所在的包内声明，在其它包中声明的类型(包括内建的包)不能作为本包method中receiver的类型
+2.receiver的类型必须是在method所在的包内声明，在其它包中声明的类型(包括内建的包)不能作为本包method中receiver的类型  //举例来说, 像int, float64这样的内建类型,因为它们不是在你定义方法的那个包中声明的, 所以你不可以直接将它们作为接收器类型,如果确实想用其它包中或是内建的类型, 首先要保证该类型在本包内可访问(这主要是针对非内建包,因为内建的许多类型所在的包都是默认导入的),然后再使用"type 别名 非本包内声明的类型名"的方式,在本包内声明一下, 然后再使用这个 "别名" 作为某方法的接收器类型就可以了.
 3.定义一个类型，使用关键字"type,后接类型名，最后接类型" ,如:type myfloat float64
   type MyFloat float64
   func (f MyFloat) Abs() float64 {
@@ -642,7 +670,7 @@ Methods and pointer indirection
   v.Scale(5)  // OK
   p := &v
   p.Scale(10) // OK
-  *.作为约定,Go在解释v.Scale(5)的时候会自动解释为(&v).Scale(5)   //这块应该写错了吧，应该自动解释为(*v).Scale(5)而非(&v).Scale(5)?
+  *.作为约定,Go在解释v.Scale(5)的时候会自动解释为(&v).Scale(5)
 3.还要注意指针中&号与*号的简单作用，给个简单例子看一下吧:
     package main
     
