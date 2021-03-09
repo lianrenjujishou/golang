@@ -484,6 +484,7 @@ Exercise: Maps
 1.练习下一轮的时候再看
 Function values
 0.functions are values too.
+0.从这节的解释说明来看,function value指的是两个函数: 1是作为参数传给高阶函数的那个函数; 2是作为return返回值的那个函数
 1.初看，这一块讲的就是python中的decorator,函数即可以作为函数参数，也可以作为函数的返回值   //应该就是其它语言中所谓的高阶函数吧?
 2.再看，有一点需要注意的，就是函数作为参数时的写法，这块乍一看不理解，但是分开来想还是可以理解的: func compute(fn func(float64, float64) float64) float64{},分解开看一下:
   func是定义函数的关键字
@@ -511,20 +512,41 @@ Function values
     fmt.Println(compute(hypot))  //这块函数引用只用了函数名，需要注意一下
     fmt.Println(compute(math.Pow))
   }
+*.关于上面这个高阶函数,还要讲一下传当函数A作为另一个函数B的参数时,在调用时的注意事项,见下面代码main函数中的注释部分:
+    package main
+    import "strconv"
+    import "fmt"
+    func A() int {
+    	return 86
+    }
+    func B(fn func() int) string {
+    	return strconv.Itoa(fn())
+    }
+    
+    func main() {
+    	fmt.Println(B(A)) //方法一,直接传入函数名,切记函数名不要加(),否则被传入的类型就不是函数A了,而是返回值的类型int
+    	x := A             
+    	fmt.Println(B(x))  //这个方法基本同上,就是给函数A取了个别名
+    	y := func() int {return 86}  
+    	fmt.Println(B(y))  //这是官文推荐的方法,即不用func声明函数,而是直接将函数作为一个表达式,最终得到一个函数类型的变量y
+    }
+4.假设A是一个高阶函数,其参数一或是返回值为函数B,当时想即然函数B无论如何也是要在函数A中执行的, 那为什么不直接在函数A中直接调用函数B呢,反而多此一举,先将函数B作为函数A的参数,然后再在函数A中对B进行调用?!, 现在我想明白了, 关键点在于"动态"两个字,假设我们明确知道要在函数A中调用的函数B是谁,那么无论是使用高阶函数还是直接在函数A直接调用函数B都是没有问题的. 但问题是, 我们将函数A给抽象成可以在函数体中执行任何函数B的函数,此时就必须要用高阶函数了,因为我们不知道这个函数B不是个具体的函数了.知道了这点,再一想一下常用的map函数,它接受一个数据集,和一个处理数据集的函数, 此时你再想想, 100个人可能有100种处理数据集的想法, 你怎么能做到直接在map函数中调用一个函数逻辑去满足这100个人的处理逻辑呢?此时只能使用高阶函数,将map函数的参数类型设置成函数类型, 这样你就可以传入任何的函数, 从而可以用不同的逻辑处理数据集. 如果golang本小节是要讲高阶函数,其实它举的这个例子对于理解什么时候使用高阶函数是没有帮助的, 这只谈到了用法, 但这个例子执行完过后,脑子里并不知道什么时候会用到这种结构.
 Function closures
+1.本节对Function closures的定义是: 引用closing function中变量的function value就是function closure. 因此function closure和function value唯一的区别是function closure的函数体中要引用closing function中和其处于同一级的变量. 而要想让function value函数引用closing function中的变量,应该只有例子中提到的"匿名函数作为return返回值"时,才能办到,因为匿名函数写的时候才会写函数体, 而引用外面单独定义的非匿名函数又不可能访问到function closure的closing function中的变量,因为本地变量的作用域的原因. //还要想一下除了让匿名函数作为return的返回值这种情况,匿名函数体中可以引用closing function中的变量外,还有什么情况可以让function value即有函数体还引用了cloing function中的变量
+*.说一下自己理解的function closures的作用吧: 产生自同一个模板的实例,即有自己的逻辑,又有相互关的地方,这种条件下可以考虑function closures. //下面1,2,3,4想删来着,但后来觉得有些东西虽然说的不太准或比较琐碎,还是先留着吧,完全准备好了再删.
 1.首先说Go function可以是closure.
 2.然后下面解释什么是closure?
 3.::closure是一个函数值，我感觉再精确一点，closure就是一个作为(返回)值的函数；但是还有一个约束，就是这个函数返回值的body部分引用了body外的变量，body外应该指的就是和return同级的一些变量；这句话还可以和上一句一样说的更精确一些，closure其实就是一个无名函数，它作为函数的返回值，return的参数。即函数的返回值也是一个函数，但是还有一点需要说明的是不是随便一个被返回的无名函数都叫closure,这个无名函数体内还要引用和return同级的变量才可以；总结一下closure的特点：
   a.closure是一个无名函数;
   b.closure是某个函数的返回值;
-  c.这个无名函数体中要引用无名函数体外部的变量
+  c.这个无名函数体中要引用无名函数体外部的变量 //为什么一定要引用outer变量呢,看下面第4点的b;而且官文中并未说无名函数,而是说的function value的函数体中要引用closing function的变量,但是这么说照目前看按我的知识库来说,就是唯一指的无名函数
   d.closure一般作为return的参数
   *.就上面第3点所述，外部的变量应该指的就是和第4点中return同级的变量
 *.这一小节的1，2，3是相关联的，要一起看
 4.这节通过例子还是有两点需要注意的：
   a.同时给多个变量赋值，这个其实也不算新东西:
        pos, neg := adder(), adder()    //准确来说应该叫同时声明多个变量并赋值
-  b.在函数A中多次调用函数B，则函数B中的变量值为上一次函数B执行完成后相应变量的值，而非下一次执行B时，用的是B初始的那些值(官文最后一句说的是"Each closure is bound to its own sum variable",这一句我倒可以理解，就如同类的实例化一样，只是拿closure当作一个模板，每次都会将该模板复制一份，并且内存为这个备份分配一块新的空间，肯定模板的sum和实例化的sum在内存中不在一个地儿了；而且同一个实例内存空间是一定的，每次引用可能都会改变相应区域的值，下一次调用引用的值自然就会受上一次调用的影响；这也只是自己这么想，真正是不是这样，再说吧。计算机原理对后期的一些概念的理解真的是很重要的)   //这段话要是不明白根据官网例子的结果多推敲一下就明白了
+  b.下面这个例子讲到了精髓,在下面的例子中,所谓的function closure并不是adder()这个函数, 而是它的返回值"func(x int) int",而重点在于返回值中的函数引用了outer的变量sum,而closure function的作用可以理解为: 将closing函数adder函数理解为一个adder类,将返回值函数func(x int) int理解为内部类, 这个内部类引用了closing类的静态变量sum, 这样每次执行adder()函数后相当于得到了内部类的一个实例, 由于这个内部类的实例引用的是静态变量, 所以下一次内部类执行时,静态变量sum会受上一次内部类执行时静态变量sum结果的影响   //这段话要是不明白根据官网例子的结果多推敲一下就明白了
   func adder() func(int) int {
   	sum := 0
   	return func(x int) int {
@@ -541,7 +563,7 @@ Function closures
   			neg(-2*i),
   		)
   	}
-  }
+  }   //本节说的是function value is closure,而function value就是所说的高阶函数中的两个要点: 函数类型的参数 和 函数类型的返回值.这么这个例子只讲了 函数类型的返回值中引用了outer的变量sum. 有没有可能函数类型的参数引用outer变量呢?即,非return后面的函数引用sum,而是在sum和return中间的函数引用sum
 //按理说函数一般是没有状态的，但是closure函数更像是一个类的实例，因为它可以存储状态，因此下一次调用返回的closure函数时outer变量值为上一个closure执行完成后的值
 Exercise: Fibonacci closure
 1.练习部分下一轮再说
