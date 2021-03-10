@@ -753,7 +753,81 @@ ZS.multiply() 时, 在执行前会检测multiply()方法定义时的接收器类
 
 Choosing a value or pointer receiver
 1.这一节说出了在声明method时使用指针作为接收器类型的两点原因：一是，可以直接修改pointer指向的值；二是，避免了方法调用时要先做备份，然后对备份修改时的性能损失(接收器类型为value时,使用value类型的变量对方法进行的调用不是要先将value类进行copy,得到一个value类型副本,然后在副本上进行操作嘛,这样一来,如果value类型数据较大,则性能损失比较严重. 话又说回来了,各有优缺点, 使用value做为接收器时,不同的value类型的变量之间没有影响,因为每个value类型变量在调用相应的方法时都会先copy一个自己的value类型副本)
-2.通常来说相同类的receiver类型不能同时存在，不能混用,即如果有func (a A) x,则以后类型A只能以value类型作为方法的接收器, 不能出现func (a *A) y这种形式, 反之为然. //本节并没有说明为什么不能混用,说在下面几节能找到原因. 我写代码实际测了一下,编译这块并没有什么问题,一个是(a A),一个是(a *A)编译执行也都是没呾的.
+2.通常来说相同类的receiver类型不能同时存在，不能混用,即如果有func (a A) x,则以后类型A只能以value类型作为方法的接收器, 不能出现func (a *A) y这种形式, 反之为然. //本节并没有说明为什么不能混用,说在下面几节能找到原因. 我写代码实际测了一下,编译这块并没有什么问题,一个是(a A),一个是(a *A)编译执行也都是没问题的.
+3.为了弄求清上一条2所说的在编写代码时最好(同一个类)接收器的类型(value,pointer)不要混用,总结了一下:
+    /*
+    1.当未引入接口类型时,某个方法的接收器类型无论是value型还是pointer型,在调用的时候你都可以使用value型或pointer型进行调用(具体为啥上面已有详解).
+    2.当引入接口类型时,变数就来了, 这里要分为两种情况:
+        a.不显式的引入接口类型变量(或称为不将接口类型与接收器类型相关联), 此时可以忽略接口对方法进行调用,而且无论方法定义时用的接收器类型是value还是pointer,调用时还是上面讲的常规调用,即使用value或pointer都可以.
+      type V struct {X,Y int}
+      type I interface {ok() int}
+      func (v V) ok() int{  //这里的接收器无论是V还是*V,由于主函数中没有引入接口类型I,而是直接调用的方法,所以,见下面注释
+    	  return 666
+      }
+      func main() { 
+        //var i I
+        a := V{1,2}  //这里的值用value,V{1,2}或pointer,&V{1,2},都是没问题的,下面的fmt调用都不会出错.
+        //i = a
+        //fmt.Println(i.ok())
+        fmt.Println(a.ok())
+         
+      }
+        b.显式的引入接口类型变量(或称为将接口类型与接收器类型相关联), 此时
+              <1>.方法定义时接收器的类型为value时,基本同上, 即,既可以将value型变量赋给接口类型变量,也可以将pointer类型赋给接口变量,最后使用接口变量对方法进行调用
+      type V struct {X,Y int}
+      type I interface {ok() int}
+      func (v V) ok() int{  //因为实现接口I的ok方法时用的接收器为value,所以,见面注释
+    	  return 666
+      }
+      func main() { 
+        var i I
+        a := V{1,2}  //这里的值用value,V{1,2}或pointer,&V{1,2},都是没问题的,下面的fmt调用都不会出错.
+        i = a
+        fmt.Println(i.ok())
+         
+      }
+              <2>.方法定义时接收器的类型为pointer时,特例就来了,此时只可以将pointer类型的变量赋给接口类型变量,然后使用接口类型变最对方法进行调用; 如果此时将value类型的变量赋给接口类型的变量,则会报错(说value类型未实现接口).
+      type V struct {X,Y int}
+      type I interface {ok() int}
+      func (v *V) ok() int{  //因为实现接口I的ok方法时用的接收器为指针类型,所以,见面注释
+    	  return 666
+      }
+      func main() { 
+        var i I
+        a := &V{1,2}  //这里的值必须要用指针,如果将"&"去掉,下面fmt中的调用就出错了
+        i = a
+        fmt.Println(i.ok())
+         
+      } 
+但虽说混用时,只能将pointer类型赋给接口变量,但使用指针变量进行调用时,接收器类型是指针的,在原接收器类型对象上修改,接收器类型是value的,则还是在副本上修改,这一点和我想的不一样, 原来我想的是指针变量都是pointer类型了,肯定无论实现接口中方法的接收器是value型还是pointer型都在接收器对象原位置修改.现在想来golang尊重的是方法声明时接收器的类型:
+ type V struct {X,Y int}
+  type I interface {
+	  ok() int
+	  yes() int
+  }
+
+  func (v V) ok() int {   //接收器为value
+      v.X = v.X*10
+      return 0
+  }
+
+  func (v *V) yes() int {  //接收器为pointer
+    v.Y = v.Y * 10
+    return 0
+  }
+
+  func main() {
+	  var i I
+    r := &V{1,2}  //因为上面混用,所以这里只有将指针类型值赋给r才合法
+    i = r
+    i.ok()  //作用在v副本上
+    i.yes()  //作用在v原位置
+    fmt.Println(r.X)  //输出1
+    fmt.Println(r.Y)  //输出20
+  }
+
+*/  
+结论:那么到底为什么不能混用呢? 既然上面这段代码已经证明了,既使V和*V混用去实现一个接口,只要在给接口变量i赋值时赋指针值即可,因为r在调ok()时改的就是r的副本,在调yes()时就是在r原位置改的.所以逻辑都是通的怎么就不能混用了呢?  在stackoverflow找了个相关的链接,状态好的时候可以看一下,可能会有答案,同时里面还给出了什么时候使用value receiver什么时候使用pointer receiver( https://github.com/golang/go/wiki/CodeReviewComments#receiver-type): https://stackoverflow.com/questions/27775376/value-receiver-vs-pointer-receiver/27775558#27775558
 Interfaces
 1.首先Interface是一种类型，在定义Interface类型的时候，body中是N多方法的集合，需要注意的是:body中的这些方法只有方法名及相应的返回值类型，并没有方法的具体实现
   type Abser interface { Abs() float64 }
@@ -769,13 +843,53 @@ Interfaces and implemented implicitly
 3.类型对接口的隐式实现，好处在于将定义与实现分离了，也就是说对于接口的定义你可以放在任何包中，然后在不同的包中你可以对接口有不同的实现(这块还是要再啰嗦一下，一定要注意从接口的声明，到使用的步骤:1.肯定是先定义接口;2.实现接口中的方法，这时要注意Go中的方法其实就是函数加个接收器，而接收器的形式是"接收器名 接收器类型"；3.定义接口类型的变量，这里要尤其注意，这里的"接口类型"指的是实现接口中的方法时的"接收器类型"，即如果接收器类型是int,你在定义接口变量时给了一个float类型，编译时是会报错的；4.其实接口这块还是有一点点绕的，接口中的一个方法，在实现时，可以根据"receiver类型"的不同有多个实现方法，而在给接口变量赋值时，变量的值一定要要是已经定义过的方法中定义的"receiver类型"，否则会出错，这个可以参考上一节“Interfaces”的例子来理解一下
 *.因为接口用的还少，目前看来感觉接口就是"定义一个或多个方法，但是并没有实现"，好处是你可以将这个接口放在任何包里，因为本来也不带实现代码，所以在哪个包里放着都一样；好处是你可以在不同的包里对接口里的方法有不同的具体实现，且被实现的方法中"receiver类型"也可以是不一样的；说白了就是灵活性增强了。现在虽然说勉强会用接口了，但是因为实现的代码少，总是隐隐觉得不安，觉得理解的还不够透彻。
 Interface values
-1.这节的标题叫"Interface values"，相应原文大概要表达的意思:a.interface value可以被认为是一个由"值"和"值相对应的实体类型"组成的"元组"， 说白了就是(value, type)
+1.这节的标题叫"Interface values"，相应原文大概要表达的意思:a.interface value可以被认为是一个由"值"和"值相对应的实体类型"组成的"元组"， 说白了就是(value, type)  //这个(value, type)只是为了让我们好理解的一个假想,举个例子吧, 
+    type i I {ok() int}
+    type V struct{X int}
+    func (v V) ok() int{}
+    var i I
+    r := V{1}
+    i = r
+    i.ok()
+    上面代码中,所谓的(value,type)指的就是(i, r或是V{1}还是就是V呀)
 2.这里面还有一个字符串叫"underlying concrete type"， 这个玩意可以用上面接口例子中的内容去理解，即接口中只定义了方法名，下面要实现该方法，而方法是有接收器(receiver)的，一旦方法实现了，再给相应接口类型的变量赋值时，只能赋实现方法时所使用的接收器的类型的值，用其它类型的值就会报错，而这里开头说的"underlying concrete type"指的就是这个实现接口中方法的接收器(receiver)类型
 3.最后一段话初看者其实不好理解，说的是在"interface value"上调用一个方法，会在"interface value"相对应的"underlying type"上执行相同方法名。从例子上看，其实就是为了表达，如果定义了一个函数，函数参数是接口类型，则传参的时候，传递的这个参数必须是实现接口中方法的接收器(receiver)的类型(对于该节右侧的例子来说，应该"i"是"interface value", 而"*T"和F是"underlying type")
-*.这节讲的内容大体上会用了，但对于左侧说的内容和右侧的例子还不是很对的上
 Interface values with nil underlying values
-1.先要明白标题指的是什么东西，举例来说，【定义一个接口类型I type I interface{ M() }，然后又定义了一个结构体类型T type T struct{ S string}, 接着使用T作为接收器类型实现接口I中的方法M()   func (i T) M() {}。 声明一个变量为接口类型var p I】这里面，最后声明的p接的就是标题头两个单词"Interface value"， 最后两个单词是"underlying values",即然有"underlying values"就有"underlying type",在这里面"underlying type"指的就是实现接口I中方法M()的接收器类型T,翻回去看，"underlying value"指的就是结构体T中的值，而再看标题"nil underlying values"说白了就是使用T类型调用M()之前没有为T这个结构体赋值，就是所谓的"nil underlying values"(说白了讲的nil underlying values其实就是java中所讲的空指针，也就是说用之前没有给变量赋值就会导致空指针。Go对于用之前没有初始化值的情况不会产生像java中的空指针，官文说会优雅的处理使用nil接收器(receiver)调用/实现的方法)
-2.interface value如果保存的实体类型的值是nil,则这个interface value也不是空的。对这句话的理解又要翻到前面去了interface value可以理解为(value, type)，而这个type是在实现 方法时使用的接收器类型，"interface value" 换句话可以叫做"concrete type value" 或"receiver type value"
+1.先要明白标题指的是什么东西，举例来说:
+type I interface { M() int }
+type T struct { S string }
+func (t T) M() int {}
+var i I
+var t1 T
+i = t1
+t1.M()
+首先说上面这段代码是错误的,因为struct和map,slice不同,struct只声明不赋值时,默认0值不是nil,只有所有的指针变量不赋值时都是nil,所以上面代码要改为:
+type I interface { M() int }
+type T struct { S string }
+func (t *T) M() int {}
+var i I
+var t1 *T
+i = t1
+t1.M()
+也就是说这节主要是针对map,slice和所有类型的指针变量来说的.
+2.interface value如果保存的实体类型的值是nil,则这个interface value也不是空的。通过例子来看:
+    type I interface {ok() int}
+    type T struct { S int }
+    
+    func (t *T) ok() int{
+    	return 666
+    }
+    func main() {
+    	var i I
+    	var t1 *T
+    	i = t1
+    	if t1 == nil {   //此处为t1 == nil时,条件是成立的,因为结构体指针t1没有被赋值,如果换成i,则i == nil是不成立的.但是从输出结果来看i和t1输出的都是<nil>,这块有点不太理解内部是怎么实现的
+    		fmt.Println("nil!")
+    		fmt.Println(i)
+    		fmt.Println(t1)
+    	}
+    }
+
 Nil interface values
 1.标题所谓的"nil interface values"说白了就是没有对接口里的方法进行实现，就直接调用参数是接口类型的变量，这样会产生一个run-time错误。接着说之前说过"interface value"其实就是一个tuple (value, type)，而这个type是通过实现接口中的方法来得到的，如果没有实现接口中的方法，则interface values就是所谓的nil
 The empty interface
@@ -785,7 +899,7 @@ The empty interface
 ***
 接口这一节主要是要弄清几个单词的内容:
 1.Interface values      // (value, type)
-2.nil underlying values   //有underlying说明已经实现了方法，只不过方法中的接收器类型没有初始化(说白了就是接收器类型没有被赋值)
+2.nil underlying values   //有underlying说明已经实现了方法，只不过方法中的接收器类型没有初始化.这么说是不完全正确的,正确的应该是: 对于slice类型和map类型,和其它类型的指针类型(即类型为map[T]S, []T, *int, *float64等是正确的),因为一般的类型你只声明不赋值都会有一个0值,这个零值除了刚说的那几种是nil外,都不是nil.
 3.nil interface values   //这个说明接口中的方法没有被实现
 4.empty interface   //这个没啥说的就是接口定义时没有定义方法
 ***
