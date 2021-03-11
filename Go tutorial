@@ -899,8 +899,12 @@ The empty interface
 ***
 接口这一节主要是要弄清几个单词的内容:
 1.Interface values      // (value, type)
-2.nil underlying values   //有underlying说明已经实现了方法，只不过方法中的接收器类型没有初始化.这么说是不完全正确的,正确的应该是: 对于slice类型和map类型,和其它类型的指针类型(即类型为map[T]S, []T, *int, *float64等是正确的),因为一般的类型你只声明不赋值都会有一个0值,这个零值除了刚说的那几种是nil外,都不是nil.
-3.nil interface values   //这个说明接口中的方法没有被实现
+2.nil underlying values   //简单来说就是给指针变量赋值了, 但是赋的是一个未初始化的值. (所谓nil underlying value,首先是对接口而言的,而underlying type指的是实现了接口中方法的那个类型, underlying value自然指的就是实现了指口中方法的那个类型的值了, 而现在这个值是nil,说明我们给这个underlyig type变量只声明了, 未赋值. 这么说是不完全正确的,正确的应该是: 对于slice类型和map类型,和其它类型的指针类型(即类型为map[T]S, []T, *int, *float64等是正确的),因为一般的类型你只声明不赋值都会有一个0值,这个零值除了刚说的那几种是nil外,都不是nil.
+  var i I  //定义接口变量i
+  var t T //定义T类型变量t,其中T实现了I中的方法
+  i = t  //将T型t,赋给I型i
+  i.方法()  //此时用i调用实现的方法时,i的值就是nil,因为function value一节说了, 使用接口类型变量调用方法,实际上用的是underlying type去调方法.而此时如果underlying type只初始化没赋值,并且其zero值正好是nil,就是本节讲的内容了.)
+3.nil interface values   //通过看官文的例子,觉得nil interface values指的是接口中的方法没有被实现.现在再细想,其实重点不在这. 首先,对于nil interface values来说,大的概念还是interface value, 而interface value 说白了就是var i I中的i, 而nil interface value指的就是声明了接口变量,但没有给接口变量赋值,此时的接口变量的默认值就是nil,和上面有没有某个类实现了接口中的方法无关. 而调用没有初始化的接口会报错.
 4.empty interface   //这个没啥说的就是接口定义时没有定义方法
 ***
 Type assertions
