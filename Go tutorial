@@ -980,13 +980,14 @@ Type switches
 */
 
 Stringers
-1.这节我在swift和/或kotlin中同过类似的用法，Stringer是fmt包中定义的一个接口类型(说白了就是在fmt包中有类似type Stringer interface{ xxx }的定义),这个接口类型把它自己描述为一个字符串(fmt包中真实对stringer的接口声明为: type Stringer interface { String() string })，这里说的描述它自己其实我现在也理解不了，但通过例子来看很简单，除了fmt包外，还有其它的包打印值是通过fmt中的Stringer接口来实现的。其中fmt.Printf()这个函数打印值利用的就是fmt包中的Stringer接口中的string()函数，看个例子吧，干说有点不好理解
+1.这节主要讲的是fmt包中定义了一个名为Stringer的接口,type Stringer interface {String() string},而fmt包中所有的打印函数以及某些包的打印功能,其实调的都是Stringer接口中的String()函数. 重点来了, 所以如果我们想要自定义A类型值和B类型值的打印内容,就可以使用A和B分别实现Stringer接口的String()函数,这样我们在使用类似于fmt.Println(A,B)的时候,实际上执行的是A.String(), B.String().下面通过一个例子看一下
     type Person struct { Name string, Age int }
-    func (p Person) String() string { return fmt.Sprintf("%v (%v years)", p.Name, p.Age) }   //complements String() method within Stringer interface
+    func (p Person) String() string { return fmt.Sprintf("%v (%v years)", p.Name, p.Age) }   //Person类型实现了fmt包中Stringer接口中的String()方法
     func main() {
-        a := Person{"Arthur Dent", 42}}
-        z := Person{"Zaphod Beeblebrox", 9001}
-        fmt.Println(a, z)  //involving Stringer interface to output formated a and z
+        a := Person{"Arthur Dent", 42}}   //得到Person类型变量a
+        z := Person{"Zaphod Beeblebrox", 9001}  //得到Person类型变量z
+        fmt.Println(a, z)  //该句在实际执行的时候,其实执行的是a.String()和z.String()
+*.官文中还讲了实现String()方法以达到自定义输出内容格式,在写go代码时十分常见.
 Exercise: Stringers
 1. 下一轮统一看Exercise
 Errors
