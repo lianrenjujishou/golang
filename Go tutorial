@@ -908,17 +908,77 @@ The empty interface
 4.empty interface   //这个没啥说的就是接口定义时没有定义方法
 ***
 Type assertions
-1.标题叫"类型断言"，根据说明其实主要的用法在于，某种类型是否实现了接口(其实实现的是接口中的方法)，那么怎么判断某种类型是否实现了接口呢？是根据Go设计的表达式的返回值."类型断言"这小节主要讲了两种形式:
-    t := i.(T)
-    t, ok := i.(T)
-这两种形式讲之前需要注意一下，i指的是interface value,具体来说，如果有一个接口I,然后我又定义了一个接口类型的变量p var p I,则这个p指的就是这里的i，而p可以被赋的值要看实现接口I方法的时候接收器(receiver)类型都有啥
-好，接下来说第一种  t := i.(T):
-    如果T类型实现了接口I(接口I中的方法),则将T类型的值赋给变量t,如果T没有实现接口I(接口I中的方法),则会有一个panic发生
-第二种 t, ok := i.(T):
-  如果类型T实现了接口I(接口I中的方法)，则将类型T的值赋给变量t,将true赋给变量ok;   如果类型T没有实现 接口I(接口I中的方法), 则不会像第一种情况时会产生panic,而是将给定类型T对应的零值(整型是0，字符串型是"",等等)赋给变量t,将false赋给变量ok
+1."类型断言"的作用是判断最后一次赋给接口变量i的值,其类型是否为某个实现了接口方法的类型n.也就是说这个"类型断言"这个功能成立的必要条件是: 类型n已经实现了接口I中的方法. 我想到的使用场景: 有多个类型X,Y...都实现了接口I中的方法, 然后在代码中使用i.(n)去判断当前接口变量i中存放的是不是这个类型值.换句话说判断的是最近一次给接口i赋的值的类型是否为n.
+  *.其中有个特殊情况就是有多个类型都实现了接口I,但并未将任何一个相应类型的值赋给接口变量i.
+2.上面1中说的是我想到的场景,而落实到代码上时,有两种形式:
+  a.1个返回值: t := i.(n)   如果最近一次接口变量i的值类型为n,则将最近一次赋给i的值赋给t,否则发生panic.
+  b.2个返回值 t,ok := i.(n) 如果最近一次接口变量i的值类型为n,则将最近一次赋给i的值赋给t,将布尔值true赋给ok, 否则将n的零值赋给t,将false赋给ok,并且不会发生panic
+*.再加一句吧, 上面已经说了类型n必须是实现接口I中方法的.如果你随便用一个未实现接口I中方法的类型去替代n,则会报错告诉你,你所用的这个类型未实现接口I.
 Type switches
-1.标题是翻译为"类型转换"?还是"类型开关"?
-2.和c语言中的switch类似，只不过c中的swtich语句中，case后面接的是value,而Go中case后面接的是type; 上面说的这句主要是理解一下Go中switch的一个基本结构，但具体怎么用呢？switch的语法为 switch v := i.(type){case type: statements, ...},可以看出来语法的前面v := i.(type)和上一节讲的"type assertion"中的语法很相似，其实也是这样的，只不过"type assertion"一节括号里的是具体的类型T,而这里用的是一个类似于形参这么个参数type; 一般该结构用在函数中，接口类型变量i通过函数传参的方式接收值，然后看看传参的接口类型满足哪个case后面的类型，就执行相应case相的语句，一般case后都有一个同级的default收尾，作用和其它语言中类似语法是一样的，就是传过来的参数前面哪个case也不满足，则执行default下的语句；还有一点比较重要的就是传来的变量i的值和类型会赋给变量v
+/*这里的switch的作用是在一个结构中判断当前接口i中存放的到底是哪个类型(假设已经有多个类型已经实现了接口中定义的方法)的值. 而每个case T,就是一个判断条件.当接口变量i当前存在的值类型为某个关键字case后面的T,则执行相应的代码.如果接口变量i中存放的类型和任何一个关键字case后的类型都不匹配,则执行default关键字下面的代码.
+而在落实到代码上时, 还有两种情况:
+  a. 当switch条件部分没有变量部分时,仅仅是做类型的匹配以及执行匹配上类型的代码块;
+        type I interface {ok() int}
+        type T struct {S int}
+        
+        func (t T) ok() int { return 666}
+        
+        func main() {
+        	var i I
+        	t := T{2}
+        	i = t
+        	switch i.(type){   //因为i.(type)前面没声明变量,因此代码中不可引用i.(type)的返回值
+        	case T:
+        		fmt.Println("T")
+        	default:
+        		fmt.Println("other")
+        	}
+        }
+    b. 当switch条件部分有变量时, 如果某个关键字case后面的类型T匹配上了,则变量的类型为T,值为当前接口类型值; 如果所有关键字case后面的T都未匹配上,则变量的类型和值同接口变量相同.
+-----当前接口变量值的类型和某个case后面的类型匹配-----
+        type I interface {ok() int}
+        type T struct {S int}
+        
+        func (t T) ok() int { return 666}
+        
+        func main() {
+        	var i I
+        	t := T{2}
+        	i = t
+        	switch v:=i.(type){  //这里将i.(type)的返回值赋给变量v,后面在case或default语句块中可以引用这个变量v. 在这里因为case T被匹配上了,所以变量v的类型为T,值为当前接口类型值T{2},即 var v T = T{2}
+        	case T:
+        		fmt.Println("T")
+        		fmt.Println(v)
+        	default:
+        		fmt.Println("other")
+        	}
+        }
+-----当前接口变量值的类型和所有case后面的类型都不匹配-----
+        type I interface {ok() int}
+        type T struct {S int}
+        type Q struct {S int}
+        
+        func (t T) ok() int { return 666}
+        func (q Q) ok() int { return 666}
+        
+        func main() {
+        	var i I
+        	t := Q{2}
+        	i = t
+        	switch v:=i.(type){  //这里将i.(type)的返回值赋给变量v,后面在case或default语句块中可以引用这个变量v. 在这里因为case T没有被匹配上了,所以变量v的类型和值同i,即, var v Q = Q{2}, 这里要注意了,如果你要说i的类型为I就没啥意义了, 要用i的underylying type和underylying value才有意义.
+        	case T:
+        		fmt.Println("T")
+        		fmt.Println(v)
+        	default:
+        		fmt.Println("other")
+        		fmt.Println("v = %T\n",v)
+        		fmt.Println("i = %T\n",i)
+        	}
+        }
+    *.上一节讲"类型推断"时,可以有两个变量, 但该swtich结构中只能有0个或1个变量.
+    *.另外,如果想判断某个变量到底是什么类型,可以通过fmt.Printf("var_name = %T\n",var_name)的方法;还可以通过引入reflect包,然后使用fmt.Println("var1 = ", reflect.TypeOf(var1))或fmt.Println("var1 = ",reflect.ValueOf(var1).Kind()).而且头两种输出一样,第三种稍有不同,如头两种输出[]int,第三种输出的就是slice(变量类型输出的方法参考自: https://www.geeksforgeeks.org/different-ways-to-find-the-type-of-variable-in-golang/)
+*/
+
 Stringers
 1.这节我在swift和/或kotlin中同过类似的用法，Stringer是fmt包中定义的一个接口类型(说白了就是在fmt包中有类似type Stringer interface{ xxx }的定义),这个接口类型把它自己描述为一个字符串(fmt包中真实对stringer的接口声明为: type Stringer interface { String() string })，这里说的描述它自己其实我现在也理解不了，但通过例子来看很简单，除了fmt包外，还有其它的包打印值是通过fmt中的Stringer接口来实现的。其中fmt.Printf()这个函数打印值利用的就是fmt包中的Stringer接口中的string()函数，看个例子吧，干说有点不好理解
     type Person struct { Name string, Age int }
