@@ -991,16 +991,107 @@ Stringers
 Exercise: Stringers
 1. 下一轮统一看Exercise
 Errors
-1.Go程序使用错误码来表达错误
-2.和fmt包中的Stringer接口一样，error类型也是一个内建的接口(是fmt包内建还是其它包的?)，即在某个包中有如下定义:
-    type error interface { Error() string }
-3.和fmt包的Stringer接口类似，当要打印错误信息时，fmt包会寻找error接口来打印错误值(其实并不是打印错误值，而是打印时会先根据参数的类型去先调用fmt内建的相应接口先处理一下，然后将返回值再继续作为打印的参数，所以函数并不是打印错误，而是检测到参数的类型是error接口类型了)
-4.函数通常除了会返回正常的返回值，还会返回一个错误值(这句话说的80%不对，可能只是当函数全部执行完成后会返回一个正常值，或是执行过程中出错返回一个错误值，并不是返回两个值，现在还有些理不清(从后面这句话中的例子来看，应该还真是返回两个值))，当这个错误值是nil的时候说明函数返回是正常的没有错误，反之，当返回的错误值不是nil时，说明有错误发生。而一般常用方法是i, err := strconv.Atoi("42"),即函数的返回值可以是两个，一个是正常的返回值，还有一个是错误值，通常在函数在执行完成后，会跟一个if条件语句来检测err的值(是否为nil?等于nil执行啥？不等于nil执行啥)从而来进行错误处理(4这段会误导别人，尽快弄清改正)
-*.对4这段的说明：突然想起来了，其实函数可以返回任意多个值，基本上就是一个值，可以通过指定返数的返回值类型来指定多个返回值,如(int, float),文中有两个返回值应该是函数定义的时候显示的指定了返回两个值(这句话值得商榷，例子中可能是定义了两个返回值，但正常情况下是返回几个呢?要严谨的试一下)
-5.err为nil表示函数执行成功，非nil表示函数执行失败(官文只说是成功和失败，并没有说是函数的成功和失败，所以这块还要随着练习的加强来确定成功与失败是否指的是函数)
-6.因为error也是一个接口(方法)，而错误的输出是调用这个接口(并不是错误的输出调用这个接口，而是变量的类型是error接口类型会调用error接口)，所以我们可以自定义error接口中的Error()方法，来自定义错误输出的内容与格式
-7.好像现在明白了，关键点在于，run()函数的返回类型是error,所以在fmt.Println(err)的时候，检测到err是error类型，则去调用上面Error()方法的实现(继续观望)
-8.通过试验发现：在使用fmt.Println函数时，首先会检测函数中参数的类型，然后去调用fmt内建的Stringer()接口中的方法，将返回值返传回来，再继续将返回值作为参数打印，error()接口应该也是一样的，当fmt.Println函数检测到参数类型是接口类型时，会先调用相应的接口返回一个值，将这个返回值再作为fmt.Println的参数继续参与fmt.Println的打印(可以参见18节"Exercise: Stringers"一节的例子看一下，补充一个func (ip IPAddr) String() string { return "1234" }, 然后在最后一句对ip的格式化参数后加上123，即fmt.Printf("%v: %v123\n", name, ip),执行后你发现对ip参数的打印是"1234123",从这个结果就可以看出来，在最后一句fmt.Printf函数打印之前，是先对ip调用了内建的Stringer接口，然后将相应的返回结果返回给fmt.Printf作为参数继续打印，才能得到"1234123"这样的结果)
+1.在go中, 内建类型中有一个叫error的接口,其定义为: type error interface { Error() string },我们平时在函数或方法中返回的错误值,通常就是通过该接口进行格式化输出的.
+2.到目前为止接触了两个比较常用的接口,一个是之前讲的fmt包中的Stringer接口,还有一个就是上一条说的内建的error接口,通过实践发现, 在使用fmt包的打印函数时,先找的是Error()函数, 然后才是找String()函数.见例子:
+  a.当错误返回值类型为error类型时:
+     此时,返回值类型肯定是已经实现了Error()方法了,不然是不可能成功执行的,此时fmt包的输出语句调用的肯定是返回值类型的Error()方法,即使现在同时存在返回值类型的String()方法:
+
+    type V struct {S string}
+    func (v *V) String() string {   //*V类型实现了Stringer接口
+    	return "String-" + v.S
+    }
+    func (v *V) Error() string {   //*V类型同样实现了error接口
+    	return "Error-" + v.S
+    }
+    
+    func Test(x int) (int, error) {   //这个Test函数的错误返回值类型为error接口类型. 这么写的话, 该函数中return的第2个返回值类型要不是nil,要不是上面已经实现了Errro()方法的类型.
+        if x > 0{
+    	return x, nil
+        } else {
+    	return 0, &V{"error, not a positive!"}
+        }
+    }
+    
+    func main() {
+    	fmt.Println(Test(5))   // 5 <nil>   //5大于0,返回的是5和nil,由于nil没有作为任何类型的接收器, 所以原样输出了
+    	fmt.Println(Test(-5))   // 0 Error-error, not a positive!  //-5小于0,返回的是V指针,所以最终实际执行的是&V{"error, not a positive!"}.Error()这个方法.这里要说明的是,虽然上面也定义了*V类型的String()方法,但它的优先级没有Error()高(最后一句是猜的,但从实际的测试结果来看,这样解释目前是合理的).
+    }
+
+  b.当错误返回值类型为非error类型时:
+    <1>.当Stringer接口和error接口都被实现的情况下, Error()方法优先被调用:
+
+    type V struct {S string}
+    func (v *V) String() string {   //*V类型实现了Stringer接口
+    	return "String-" + v.S
+    }
+    func (v *V) Error() string {   //*V类型同样实现了error接口
+    	return "Error-" + v.S
+    }
+    
+    func Test(x int) (int, *V) {   //注意这里和a中不一样了,a中的返回值类型为error,现在变成了*V
+        if x > 0{
+    	return x, nil
+        } else {
+    	return 0, &V{"error, not a positive!"}
+        }
+    }
+    
+    func main() {
+    	fmt.Println(Test(5))    //输出同a例
+    	fmt.Println(Test(-5))   //输出同a例, 虽然返回值类型变了,但是还是以Error()接口优先,所以最终执行的还是&V{"error, not a positive!"}.Error()
+    }
+
+    <2>.当只有error接口被实现的情况下, 肯定调的是Error()方法:
+
+    type V struct {S string}
+    func (v *V) Error() string {   //*V类型只实现了error接口
+    	return "Error-" + v.S
+    }
+    
+    func Test(x int) (int, *V) {   //注意这里和a中不一样了,a中的返回值类型为error,现在变成了*V
+        if x > 0{
+    	return x, nil
+        } else {
+    	return 0, &V{"error, not a positive!"}
+        }
+    }
+    
+    func main() {
+    	fmt.Println(Test(5))    //输出同a例
+    	fmt.Println(Test(-5))   //输出同a例, 虽然返回值类型变了,但是此时只有Error()接口,因此这块执行的还是&V{"error, not a positive!"}.Error()
+    }
+
+    <3>.当只有Stringer接口被实现的情况下,因为没实现error接口,故一开始找不到Error()方法,所以此时调的是String()方法:
+
+    type V struct {S string}
+    func (v *V) String() string {   //*V类型只实现了Stringer接口
+    	return "String-" + v.S
+    }
+    
+    func Test(x int) (int, *V) {   //注意这里和a中不一样了,a中的返回值类型为error,现在变成了*V
+        if x > 0{
+    	return x, nil
+        } else {
+    	return 0, &V{"error, not a positive!"}
+        }
+    }
+    
+    func main() {
+    	fmt.Println(Test(5))    //输出同a例
+    	fmt.Println(Test(-5))   // 0 String-error, not a positive!这的输出就不一样了,因为只实现了String()方法,没有找到Error()方法,所以最终调的是&V{"error, not a positive!"}.String()
+    }
+
+3.再就是最重要的,这个Errors到底用在什么场景下:
+  而使用方法基实就同上面这几个例子:只不过在main()函数中不同:
+    func main() {
+        a,b = Test(5)
+        if b == nil {
+           fmt.Println(a)
+        } else {
+          fmt.Println("出错啦")
+        }
+    }   //也就是说在函数返回后, 会先通过错误返回值判断一下操作是否成功了,成功执行啥操作,不成功执啥操作.
+4.还有一点需要注意的: 官文说的对于error接口nil返回值为执行成功,非nil为执行失败,这其实是一个让你在编码的时候遵守的一个约定.你可以不遵守这个约定, 比方说你就是要返回0表示成功,这也是没有问题的, 只不过如上面第3点所写的if判断那块,改为相应的值即可.但你这样写的话,会让其它不了解你代码风格的人产生困惑,这个人必须要看你的代码才能明白. 而nil表示成功,非nil表示失败,是大多数人在编码是遵守的一个约定,你按约定写, 别人一看就明白.
 Exercise: Errors
 1.下一轮做该练习
 Readers
