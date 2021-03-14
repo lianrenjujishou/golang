@@ -1130,13 +1130,179 @@ Images
 Exercise: Images
 1.已看, 看着没引入新的语法,只是要告诉我们go可以处理图片.
 Goroutines
-1.轻量级进程
-2.协程的声明外形看就是一个函数
-3.协程的运行是在函数前加上go
-4.协程运行是在新的协程中  //参考kotlin,猜测go fun()就是将协程放进队列
-5.多个协程运行在同一个地址空间，所以访问数据时注意synchronous问题
-6.sync包
-7. youtube中看到可以使用delve调试go,但不知道能否调试goroutines, kotlin中提供的调试就很好用，看输出一目了然
+1.轻量级线程
+2.通过delve调试来看, main()函数其实也是新建协程执行的. 也就是说main()函数在执行前,被处理成 go main()了,然后执行的时候,先进一个主线程,这个主线程执行main()函数所在的协程.
+
+import (
+	"fmt"
+	"time"
+)
+
+func say(s string) {
+	for i := 0; i < 5; i++ {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println(s)
+	}
+}
+
+func main() {   //在这下断
+	go say("world-A")
+        say("hello")
+   //time.Sleep(10000 * time.Millisecond)
+}
+
+-----调试信息-----
+(dlv) b main.go:20                                                             //断在main()函数
+Breakpoint 2 set at 0x4b6b2f for main.main() ./main.go:20
+(dlv) c
+> main.main() ./main.go:20 (hits goroutine(1):1 total:1) (PC: 0x4b6b2f)
+    15:			time.Sleep(100 * time.Millisecond)
+    16:			fmt.Println(s)
+    17:		}
+    18:	}
+    19:	
+=>  20:	func main() {                            //已经断在这了
+    21:		go say("world-A")
+    22:		//go say("world-B")
+    23:		//go say("world-C")
+    24:		//go say("world-D")
+    25:		//go say("world-E")
+(dlv) threads
+* Thread 138200 at 0x4b6b2f ./main.go:20 main.main     //线程138200执行的main.main函数
+  Thread 138203 at 0x47045d /root/golang/go/src/runtime/sys_linux_amd64.s:145 runtime.usleep
+  Thread 138204 at 0x47045d /root/golang/go/src/runtime/sys_linux_amd64.s:145 runtime.usleep
+  Thread 138205 at 0x470ac3 /root/golang/go/src/runtime/sys_linux_amd64.s:580 runtime.futex
+  Thread 138206 at 0x470ac3 /root/golang/go/src/runtime/sys_linux_amd64.s:580 runtime.futex
+(dlv) goroutines
+* Goroutine 1 - User: ./main.go:20 main.main (0x4b6b2f) (thread 138200)    //线程138200执行的协程main.main,通过这句和上句注释表明,main函数也是协程
+  Goroutine 2 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [force gc (idle)]
+  Goroutine 3 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [GC sweep wait]
+  Goroutine 4 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [GC scavenge wait]
+  Goroutine 5 - User: /root/golang/go/src/runtime/mfinal.go:161 runtime.runfinq (0x41ad20)
+[5 goroutines]
+
+
+3.新建协程需要两步, 第一步:新建要在新协程中运行的函数. 第二步,在执行函数时,前缀一个关键字go, 如 go say("Hello"),并且要注意新建的协程默认也会新起一个线程去执行的:
+    import (
+    	"fmt"
+    	"time"
+    )
+    
+    func say(s string) {
+    	for i := 0; i < 5; i++ {
+    		time.Sleep(100 * time.Millisecond)
+    		fmt.Println(s)  //在这下断点,因为main()函数中的两条语句调的其实都是这个函数,在这下断,然后看一下线程和协程情况就知道那两个函数运行时起了几个协程几个线程
+    	}
+    }
+    
+    func main() {
+    	go say("world-A")  //这会新起一个协程
+            say("hello") //这句在主协程中运行
+       //time.Sleep(10000 * time.Millisecond)
+    }
+    
+    -----调试输出-----
+    (dlv) b main.go:16    //断在fmt.Println(s)
+    Breakpoint 1 set at 0x4b6a46 for main.say() ./main.go:16
+    (dlv) c
+    > main.say() ./main.go:16 (hits goroutine(6):1 total:2) (PC: 0x4b6a46)
+    > main.say() ./main.go:16 (hits goroutine(1):1 total:2) (PC: 0x4b6a46)
+        11:	)
+        12:	
+        13:	func say(s string) {
+        14:		for i := 0; i < 5; i++ {
+        15:			time.Sleep(100 * time.Millisecond)
+    =>  16:			fmt.Println(s)   //断在这了,注意,断在这说明这句还未执行,下面看看线程和协程数量情况
+        17:		}
+        18:	}
+        19:	
+        20:	func main() {
+        21:		go say("world-A")
+    (dlv) threads
+      Thread 137877 at 0x470ac3 /root/golang/go/src/runtime/sys_linux_amd64.s:580 runtime.futex
+      Thread 137882 at 0x47045d /root/golang/go/src/runtime/sys_linux_amd64.s:145 runtime.usleep
+      Thread 137883 at 0x4b6a46 ./main.go:16 main.say                                               //线程137883
+      Thread 137884 at 0x470ac3 /root/golang/go/src/runtime/sys_linux_amd64.s:580 runtime.futex
+    * Thread 137885 at 0x4b6a46 ./main.go:16 main.say                                               //线程137885
+    (dlv) goroutines
+    * Goroutine 1 - User: ./main.go:16 main.say (0x4b6a46) (thread 137885)                                       //由线程137885执行的main.say
+      Goroutine 2 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [force gc (idle)]
+      Goroutine 3 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [GC sweep wait]
+      Goroutine 4 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [GC scavenge wait]
+      Goroutine 5 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [finalizer wait]
+      Goroutine 6 - User: ./main.go:16 main.say (0x4b6a46) (thread 137883)                                      //由线程137883执行的main.say
+    [6 goroutines]
+
+4.上面讲到的是每个协程都由一个新的线程执行.其实这是不完全正确的.默认情况下执行协程的线程数的多少,看的是当前机器的核心数,即 go程序默认启用的线程数的最大值应该等于机器的核心数,如我的机器是四核的,则go默认最多启用4个线程. 即使你有8个go say("x"),也只会由4个线程运行它们, 而具体将哪个协程分配给哪个线程就是内部机制了. 而一个线程运行多个协程时,应该也有一个协程队列:
+
+
+import (
+	"fmt"
+	"time"
+)
+
+func say(s string) {
+	for i := 0; i < 5; i++ {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println(s)   //断点下在这
+	}
+}
+
+func main() {
+	go say("world-A")   //总共有8个协程,其中前7个是新建的协程中运行,第8个是在主协程中运行
+	go say("world-B")
+	go say("world-C")
+	go say("world-D")
+	go say("world-E")
+	go say("world-F")
+	go say("world-G")
+        say("hello")
+   //time.Sleep(10000 * time.Millisecond)
+}
+
+-----调试信息-----
+
+(dlv) b main.go:16
+Breakpoint 1 set at 0x4b6a46 for main.say() ./main.go:16
+(dlv) c
+> main.say() ./main.go:16 (hits goroutine(7):1 total:4) (PC: 0x4b6a46)    //只运行了四个协程,7,9,12,11,但从上面代码看共有8个协程
+> main.say() ./main.go:16 (hits goroutine(9):1 total:4) (PC: 0x4b6a46)
+> main.say() ./main.go:16 (hits goroutine(12):1 total:4) (PC: 0x4b6a46)
+> main.say() ./main.go:16 (hits goroutine(11):1 total:4) (PC: 0x4b6a46)
+    11:	)
+    12:	
+    13:	func say(s string) {
+    14:		for i := 0; i < 5; i++ {
+    15:			time.Sleep(100 * time.Millisecond)
+=>  16:			fmt.Println(s)   //断点下在这
+    17:		}
+    18:	}
+    19:	
+    20:	func main() {
+    21:		go say("world-A")
+(dlv) threads
+* Thread 138301 at 0x4b6a46 ./main.go:16 main.say     //线程 138301
+  Thread 138307 at 0x47045d /root/golang/go/src/runtime/sys_linux_amd64.s:145 runtime.usleep
+  Thread 138308 at 0x4b6a46 ./main.go:16 main.say    //线程 13838
+  Thread 138309 at 0x4b6a46 ./main.go:16 main.say    //线程 138309
+  Thread 138310 at 0x4b6a46 ./main.go:16 main.say    //线程 138310
+(dlv) goroutines
+  Goroutine 1 - User: /root/golang/go/src/runtime/time.go:193 time.Sleep (0x46bef2)                        //协程1
+  Goroutine 2 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [force gc (idle)]
+  Goroutine 3 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [GC sweep wait]
+  Goroutine 4 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [GC scavenge wait]
+  Goroutine 5 - User: /root/golang/go/src/runtime/proc.go:337 runtime.gopark (0x43bdd5) [finalizer wait]
+  Goroutine 6 - User: /root/golang/go/src/runtime/time.go:193 time.Sleep (0x46bef2)                       //协程2
+  Goroutine 7 - User: ./main.go:16 main.say (0x4b6a46) (thread 138308)                                    //协程3
+  Goroutine 8 - User: /root/golang/go/src/runtime/time.go:193 time.Sleep (0x46bef2)                       //协程4
+  Goroutine 9 - User: ./main.go:16 main.say (0x4b6a46) (thread 138309)                                    //协程5
+  Goroutine 10 - User: /root/golang/go/src/runtime/time.go:193 time.Sleep (0x46bef2)                      //协程6
+* Goroutine 11 - User: ./main.go:16 main.say (0x4b6a46) (thread 138301)                                   //协程7
+  Goroutine 12 - User: ./main.go:16 main.say (0x4b6a46) (thread 138310)                                   //协程8
+[12 goroutines]
+
+5.多个协程运行在同一个地址空间，所以访问数据时注意synchronous问题,基础的是要用到sync包中的函数,这个后面会讲到
+6.并发主要用的是runtime包.所以掌握这个包很重要. 刚学的是runtime包里的GOMAXPROCS(n)函数,作用是设置执行协程的线程数.配合delve调试程序的b,c,threads,goroutines来检察设置不同的线程数时,线程和协程的实际情况.需要注意的是,这里面的n,不包含调用系统功能的那些线程.也就是说你在threads里看到的线程数可能要大于你设置的数字n.而怎么看线程执行的是系统调用呢, 我现在的技巧就是从threads中看文件名称带sys前缀的这个线程就是系统调用. 另外1.png讲的是进程,线程,cpu分片的基本概念,网上找的,感觉好理解就截图存下了
 8.看例子执行过程可以明白. 全程只有一个主线程在执行，且time.Sleep()是线程阻塞的
 Channels
 1.通道就像一根管子，可以接收或发送数据
