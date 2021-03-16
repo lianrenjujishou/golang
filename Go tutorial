@@ -1303,15 +1303,40 @@ Breakpoint 1 set at 0x4b6a46 for main.say() ./main.go:16
 
 5.多个协程运行在同一个地址空间，所以访问数据时注意synchronous问题,基础的是要用到sync包中的函数,这个后面会讲到
 6.并发主要用的是runtime包.所以掌握这个包很重要. 刚学的是runtime包里的GOMAXPROCS(n)函数,作用是设置执行协程的线程数.配合delve调试程序的b,c,threads,goroutines来检察设置不同的线程数时,线程和协程的实际情况.需要注意的是,这里面的n,不包含调用系统功能的那些线程.也就是说你在threads里看到的线程数可能要大于你设置的数字n.而怎么看线程执行的是系统调用呢, 我现在的技巧就是从threads中看文件名称带sys前缀的这个线程就是系统调用. 另外1.png讲的是进程,线程,cpu分片的基本概念,网上找的,感觉好理解就截图存下了
-8.看例子执行过程可以明白. 全程只有一个主线程在执行，且time.Sleep()是线程阻塞的
+7.time.Sleep()是协程线程阻塞的而非线程阻塞的.go中main()函数虽说没有前缀go,但其实也是运行在协程中的.
+8.另外,在使用delve时,下断点的位置很重要,可能参考第4点中的那些例子.
+
 Channels
 1.通道就像一根管子，可以接收或发送数据
 2.通道符号是 "<-"
-3.使用make(函数?类?)声明一个通道 ch := make(chan int)
+3.使用make函数得到一个通道类型的变量 ch := make(chan int)
 4.发送接收数据的一般形式: a.将数据送入通道: ch <- v;
                           b.从通道读取数据: v:= <-ch;
-5.默认情况下，发送和接收数据都是阻塞的，直到另一方准备好
-6.貌似Go中我们不可以自己管理线程, 咋利用多核?
+5.默认情况下，发送和接收数据都是阻塞的，直到另一方准备好,所以可以利用管道的这个特性来实现syncronization:
+
+    var result int = 0
+    func sum(c chan int, d chan int) {  //d参数完全是为了判断协程是否都执行结束才加上的, 但看了下面switch中判断结束的语句有点自欺欺人,就是通过result是否为100000来判断的,如果中途出现问题了,没有执行完毕,返回的也是100000,那就不好玩了,有点掩耳盗铃的味道.
+    	result = <- c
+    	result += 1
+    	switch result{
+               case 100000: 
+                   d <- result
+               default: 
+                   c <- result
+           }
+    }
+    func main() {
+    	ch := make(chan int)
+    	ch1 := make(chan int)
+    	for i:=0;i<100000;i++{
+    		go sum(ch,ch1)
+    	}
+    	ch <- result  //这句要注意,向ch管道中发送内容一定要放到for语句后面,要不就死锁了,如果放在for语句前,则for语句永远也不会执行,因为这句一直等待有其它协程里的从ch中接收值的语句被执行才会向下走. 通过试验得知,通道不是线程阻塞的,所以将runtime.GOMAXPROCS(n)中的n值设置为1也是没有问题的, 也就是说ch<-result运行在主协程,当这句执行完后,暂时没有发现有变量从管道接收数据,则主线程会转去执行其它协程中的语句(之前认为ch <- result是线程阻塞而不是协程阻塞,也就是说ch<-result执行后,如果是单线程就会一直卡死在这造成死锁,其实不是的).
+    	result = <- ch1  //这句是后来加的,一直不知道怎么优雅的让所有协程都执行完毕,所以又多设置了一个通道ch1,然后给sum()函数多加了个d参数,以及sum()中的switch语句.之前是单纯的在fmt语句前加上time.Sleep(),但这样太傻了.目前这样做也不好,为了判断协程是否都执行完了多执行了好多个switch语句,这样的结果是协程越多性能越低,如果有像kotlin中runBlock{}语句块就好了.
+    	fmt.Println(result)
+    }   
+
+6.貌似Go中我们不可以自己管理线程, 咋利用多核? //上一小节说了,如果是在多核机器上运行默认用的就是多核,因为GOMAXPROCS默认值就是cpu的逻辑核心数.但默认用多核也不一定好,有些时候单线程要比多线程速度快.
 Buffered Channels
 1.通道声明时可以设置make第二个参数为通道的buffer: c := make(chan int, 2)
 2.一直向通道中发送内容，直接达到通道设置的buffer数
@@ -1320,20 +1345,107 @@ Buffered Channels
                       ch <- 1
                       ch <- 2
                       *.此时1等待被接收，所以一直在这阻断着，而2等待着发往ch,但因为没有变量接收1，所以就卡死在这了，解决方法是将make中的缓冲参数改为2
+*.从4可以看出, buffer channel死锁或是让程序停止向下执行的条件是: a. buffer满了; b.buffer空了
+*.协程这块要注意几点: 1.语句是线程阻塞吗?是协程阻塞吗? 而在协程中应用通道,则还要注意: 主协程向通道发送内容后,有其它协程接收它吗?等等
 Range and Close
-1.当通道中没有数据以后要将使用close()函数将通道关闭: close(channel)
-2.只有sender可以关闭通道，receiver不可以
-3.receiver可以使用"v,ok := <-ch"形式，通过ok的值是true还是false判断通道是否关闭
-4.可以使用"for i := range c"的形式来连续的从通道接收值
-5.不向向已关闭的通道(after close(channel))发送数据 //这个是重点，实际测试会出现死锁，因为一方channel等待接收数据，另一方没有数据，就这样一直耗着.其实还没有太理解
-6.平时不要使用close()函数关闭通道，只有当sender没数据了需要告诉receiver的时候才能调用,如告诉for i := range c已没数据了，从而终止/完成循环的执行
+1.range是个关键字,在通道这的用法是i:=range channel; close是个函数,在通道这的用法是close(channel)  //之前讲的range slice可以有两个值
+2.在实际使用时,从通道里取值通常是两种方法,使用range关键字,使用<-符号:
+  a.使用<-符号时,返回值有两个,一个是返回值,还有一个是布尔值用来检测通道是否关闭:
+
+        func num(c chan int) {
+          for i:=0; i<10; i++ {   //使用for循环向通道依次发送0-9共10个数
+             c <- i     //将数送往通道,如果没有语句从c中接收就一直等着,如果有语句接收就将下一个i送到通道c中
+          }
+          close(c)  //当for循环将10个数都送到通道中了,就调用close()函数关闭通道,从通道中接收内容的语句相应的会得到一个false值,知道通道已经被关闭了,不会再有数据再过来了.
+        }
+        func main() {
+        	ch := make(chan int)
+        	go num(ch)   //在新建协程并在新协程中执行函数
+                for {
+        	v,ok:= <- ch  //使用<-符号,每次从通道中接收值时,都可以得到两个值,一个是发送到管道的值,一个是管道当前状态,是一直通的(true),还是已经被关闭了(false).
+        		if ok == true{     //通过if...else语句判断通道是否关闭,从而执行不同的逻辑,如果未关,则输出从管道接收的值,如果关闭了,则中止for循环
+                   		//fmt.Println(ok)
+        	        	fmt.Println(v)
+        	        } else{
+                   		//fmt.Println(ok)
+        			break
+        		}
+        	}
+        }
+
+  b.使用range关键字时,返回值只有一个,即从通道获取的值(这个小b才是这小节的内容):
+
+        这段代码的执行结果和上面a的相同.
+        func num(c chan int) {
+          for i:=0; i<10; i++ {
+             c <- i
+          }
+          close(c)
+        }
+        func main() {
+        	ch := make(chan int)
+        	go num(ch)
+        	for v:= range ch {   
+        		fmt.Println(v)
+        	} //跟上面的那段代码相比,就这个for循环不一样,看着更简单了,我们只需要从通道ch中接收值,并处理值(在这里是直接输出),不需要关心通道的关闭问题.猜测应该实际执行的代码和a中的差不多, 只不过range函数将对通道状态的检测以及检测到通道关闭后退出循环都封装好了.也就是说:ror v:=range ch {fmt.Println}在执行前会被编译器预处理成: for tmp,v := <- ch { if tmp!=true{break}fmt.Println(v)}
+        }
+*.总结一下上面两个例子,无论从管道接收数据用的是range形式,还是<-形式,sender一定要用close()函数关闭通道才行
+*后一我将上面的代码改了一下,向通道发送的还是0-9这10个数字,但是我想发送到第5个就停止发送了,我就在num()函数for循环中又加了个if,结果一开始报错"panic: close of closed channel",看一下到底是怎么回事吧,上代码:
+
+        func num(c chan int) {
+          for i:=0; i<10; i++ {
+            if i > 5{                
+        	    close(c)
+        //	    break
+            }else{
+        	    c <- i
+            } //这个if...else是我后加的,当前这个代码就是报上面说的panic,即关闭已经关闭的通道.我们看一下当i=6的时候已经执行close(c)了,但由于此时没有执行break操作,而for循环还未执行完,所以当i=7时,又执行了一次close(c),这次由于c已经在i=6时被关闭了,所以i=7时再执行就报错了.解决方法是将break的注释给去掉,这样在i=6时close(c)的同时将for循环的执行也结束掉了.
+        }
+        }
+        func main() {
+        	ch := make(chan int)
+        	go num(ch)
+                for {
+        	v,ok:= <- ch
+        		if ok == true{
+                   		//fmt.Println(ok)
+        	        	fmt.Println(v)
+        	        } else{
+                   		//fmt.Println(ok)
+        			break
+        		}
+        	}
+        }
+
+
+*.第一小节讲的例子中没有用到close()函数,为啥也没出错呀? 那是因为这节从通道中接收数据是在for循环中,如果发送端没有调用close()函数关闭通道,for循环就会一直执行下去,虽说for i:=range ch表面上没有检测通道关闭状态的变量,但上面也说了猜测相应的逻辑被封装了,实际是有的.我们试一下,主体还是上面的代码,我们将sum()函数中的close()函数去掉,main()函数中的for循环也去掉,就接收一次值:
+
+    func num(c chan int) {
+      for i:=0; i<10; i++ {
+    	    c <- i
+        }
+    }   //可以看到num()函数中没有调用close()函数去关闭管道
+    func main() {
+    	ch := make(chan int)
+    	go num(ch)
+    	v:= <- ch   //这里只接收了一次值,打印结果是0,没有报错
+    	fmt.Println(v)
+    }
+所以说发送端调不调close()去关闭管道,要看代码的实际逻辑, 通常是像上面代码提到的,接收端如果是在一直等待从管道接收数据,如将接收语句放在for循环中,则即发送端即要有close()的调用,接收端也要有通道状态的检测(或者直接用range).
+3.只有sender可以关闭通道，receiver不可以.如果使用receiver关闭了通道,则sender向已关闭的通道中发送数据会发生panic.
+4.receiver可以使用"v,ok := <-ch"形式，通过ok的值是true还是false判断通道是否关闭
+5.可以使用"for i := range c"的形式来连续的从通道接收值
+6.一般不需要sender调用close()函数关闭通道，只有当sender没数据要发了,才需要调用close()函数,将range()函数的第二个参数由true变为false,当receiver检测到第二个参数值为false时,会做一些其它操作,如关闭for循环. //这点和第2大点重复了,但先不删.
 Select
-1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句 //需要注意的是这里为什么c通道执行完成后不用执行close()函数
-2.注意for{select{}}的连用，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句
+1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句 //需要注意的是这里为什么c通道执行完成后不用执行close()函数? ::因为用close()函数关闭通道的情况是,接收端一直处于接收状态,如果不通知接收端通道已关闭没有内容,如果接收端由主协程运行则会造成死锁.而本节的例子,由于有两个通道,虽然当i=10时不再给c通道发送内容了,但会向quit通道发送内容,而且最后程序还正常退出了.还是那句话,用不用close()要看实际情况,具体上面range and close那小节也提到了
+2.注意for{select{}}的连用，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句   //是因为return的执行导致fibonacci()函数执行完毕,而该函数也是主协程的最后一条语句,因此主协程正常结束,整个程序也就正常结束了,即使不关闭通道也不会发生主协程死锁的情况,因此不用加
+3.另外在这节还学到了,接收通道的内容不一定要有变量,如print(<-c), case <-c,这两个语句都是成立的;另外,还可以直接使用匿名函数,如 go func() {}() //注意最后的括号一定要有,前面的表示匿名函数,你只有加上最后的一对(),才叫对匿名函数的调用
 Default Selection
+0.网上搜的,还可以定义单向通道,用来生成只读或只写的通道, 只读通道: var readOnly <-chan int; 只写通道: var writeOnly chan <- int
 1.这个简单，类似于switch中的default,即其它语句都不满足的情况下执行default下的语句，具体执行是每次线程执行到该协程时如果如果其它case都不满足的话都会执行一遍default下的语句  // 大机制上来说，select本就类似于多条件分支语句switch
-2.time.Tick()
+2.time.Tick()    //这两个都是定时器,都是在指定时间间后隔返回当前时间,区别是看源码后再聊
 3.time.After()
+4.time.Sleep()
 Exercise: Equivalent Binary Trees
 Exercise: Equivalent Binary Trees
 sync.Mutex
