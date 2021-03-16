@@ -1447,11 +1447,9 @@ Default Selection
 3.time.After()
 4.time.Sleep()
 Exercise: Equivalent Binary Trees
-Exercise: Equivalent Binary Trees
 sync.Mutex
-1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题
-2. Inc和Value方法
-3. defer
+1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题.而具体的用法是:新建一个结构体,里面有一个特殊的字段类型是sync.Mutex.其它字段自己加.然后调的时候,先实例化这个结构体,最后调的时候将结构体中的变量放在Lock()和Unlock()方法中间,基本就完事了.
+3. defer这个在这里其实没啥讲头,它的作用就是在输出结构体中变量值时先拿到锁, 等拿到值之后,最后不要忘了解锁
 Exercise: Web Crawler
 ===================================
 Go中常用的包: fmt,os,net
@@ -1459,3 +1457,5 @@ Stringer是fmt包中声明的接口,内定义了方法String()
 Error是内建的接口,内定义了方法Error()
 使用print,println等打印值时会调用Stringer中的String()方法，当打印时检测到类型为error时，会调用内建接口Error的Error()方法
 文档中每个包都有几个例子，学一个包一开始，先从这些例子开始应该是个好方法
+
+*.本次Default Selection里的练习,以及sync.Mutex的练习没看,看不下去.
