@@ -564,6 +564,15 @@ Function closures
   		)
   	}
   }   
+**.在看net/http/server.go的源码时发现了函数的另一种用法:
+    import "fmt"    
+    
+    func main() {
+         type X func(int,string)
+         Q := X(func(y int, z string){fmt.Println(y,z)})
+         Q(3,"6")
+    }
+    上面看到的写法是直接将匿名函数作为变量值,即 a := func(){...}, 之后便可以使用a()来进行函数调用; 而上面这个例子中是先声明一个函数类型的变量X, 用的时候有的不一样,将匿名函数作为X的参数类型,而得到的函数类型Q,可以像Q(y,z)这样使用. 这样的好处是,声明了一个函数类型,我们可以用这个类型去扩展一些方法.而像刚刚说的直接将函数作为表达式的情况就不能用得到的a去扩展方法.
 Exercise: Fibonacci closure
 1.练习部分下一轮再说
 Methods and interfaces
