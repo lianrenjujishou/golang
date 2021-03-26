@@ -1,0 +1,66 @@
+利用tcp传输和文件客户端与服务端设计.
+
+一. Server end
+  流程: 监听指定端口获得Conn类型的实例C1  -->  获取文件对象O1  --> 利用buffer从O1读取并写入文件描述符  --> 收尾释放资源 
+  设计类型:
+  设计函数:
+二. Client end
+  流程: 连接指定ip:port,并获得Conn类型的实例C2  -->  新建空文件获取操作对象E1 --> 利用buffer从从C2的fd中读取数据流写入E1  -->  收尾释放资源
+  设计类型:
+  设计函数:
+*.1.释放资源一定要做否则会造成内存泄漏,如/proc下的进程及其下的用于数据传输的文件描述符也都占着资源
+  2.当前版本的源文件和目标文件都是写死的,后面将加入os.Args处理命令行参数以及os.Read()函数返回的*File类型的State()函数读取并传输文件信息
+  3.还要将代码从主函数中抽象出来
+-----Server-----
+import (
+  "net"
+  "os"
+)
+
+func main() {
+  ln,_ := net.Listen("tcp", ":8090")
+  defer ln.Close()
+
+  f,_ := os.Open("/root/1.png")
+  defer f.Close()
+  
+  buf := make([]byte, 1024)
+  for {
+    conn,_ := ln.Accept()
+    for {
+      n1, err1 := f.Read(buf)
+      if err1 != nil{
+        break
+      }
+      n2, err2 := conn.Write(buf[:n1])   //when buf is full, whether the state will block
+      if n1 < 1024 || err1 != nil || n2 < 1024 || err2 != nil{
+        break
+      }
+    }  
+  }
+}
+
+-----Client-----
+import (
+  "net"
+  "os"
+)
+
+func main() {
+  conn,_ := net.Dial("tcp",":8090")
+  defer conn.Close()
+
+  f,_ := os.Create("/root/golang/test/2.png")  
+  defer f.Close()
+  buf := make([]byte, 1024)
+  for {
+    n1, err1 := conn.Read(buf)
+    if err1 != nil{
+      break
+    }
+    n2, err2 := f.Write(buf[:n1])
+    if n2 < 1024 || err2 != nil{
+      break
+    }
+  }
+}
