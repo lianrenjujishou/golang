@@ -1408,7 +1408,7 @@ Range and Close
         	go num(ch)
         	for v:= range ch {   
         		fmt.Println(v)
-        	} //跟上面的那段代码相比,就这个for循环不一样,看着更简单了,我们只需要从通道ch中接收值,并处理值(在这里是直接输出),不需要关心通道的关闭问题.猜测应该实际执行的代码和a中的差不多, 只不过range函数将对通道状态的检测以及检测到通道关闭后退出循环都封装好了.也就是说:ror v:=range ch {fmt.Println}在执行前会被编译器预处理成: for tmp,v := <- ch { if tmp!=true{break}fmt.Println(v)}
+        	} //跟上面的那段代码相比,就这个for循环不一样,看着更简单了,我们只需要从通道ch中接收值,并处理值(在这里是直接输出),不需要关心通道的关闭问题(这应该是写错了,应该是不需要关心for循环的退出问题).猜测应该实际执行的代码和a中的差不多, 只不过range函数将对通道状态的检测以及检测到通道关闭后退出循环都封装好了.也就是说:ror v:=range ch {fmt.Println}在执行前会被编译器预处理成: for tmp,v := <- ch { if tmp!=true{break}fmt.Println(v)}
         }
 *.总结一下上面两个例子,无论从管道接收数据用的是range形式,还是<-形式,sender一定要用close()函数关闭通道才行
 *后一我将上面的代码改了一下,向通道发送的还是0-9这10个数字,但是我想发送到第5个就停止发送了,我就在num()函数for循环中又加了个if,结果一开始报错"panic: close of closed channel",看一下到底是怎么回事吧,上代码:
