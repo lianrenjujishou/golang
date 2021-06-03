@@ -1456,7 +1456,7 @@ Range and Close
 3.只有sender可以关闭通道，receiver不可以.如果使用receiver关闭了通道,则sender向已关闭的通道中发送数据会发生panic.
 4.receiver可以使用"v,ok := <-ch"形式，通过ok的值是true还是false判断通道是否关闭
 5.可以使用"for i := range c"的形式来连续的从通道接收值
-6.一般不需要sender调用close()函数关闭通道，只有当sender没数据要发了,才需要调用close()函数,将range()函数的第二个参数由true变为false,当receiver检测到第二个参数值为false时,会做一些其它操作,如关闭for循环. //这点和第2大点重复了,但先不删.
+6.一般不需要sender调用close()函数关闭通道，只有当sender没数据要发了,才需要调用close()函数,将range的第二个返回值由true变为false,当receiver检测到第二个参数值为false时,会做一些其它操作,如关闭for循环. //这点和第2大点重复了,但先不删.
 Select
 1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句 //需要注意的是这里为什么c通道执行完成后不用执行close()函数? ::因为用close()函数关闭通道的情况是,接收端一直处于接收状态,如果不通知接收端通道已关闭没有内容,如果接收端由主协程运行则会造成死锁.而本节的例子,由于有两个通道,虽然当i=10时不再给c通道发送内容了,但会向quit通道发送内容,而且最后程序还正常退出了.还是那句话,用不用close()要看实际情况,具体上面range and close那小节也提到了
 2.注意for{select{}}的连用，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句   //是因为return的执行导致fibonacci()函数执行完毕,而该函数也是主协程的最后一条语句,因此主协程正常结束,整个程序也就正常结束了,即使不关闭通道也不会发生主协程死锁的情况,因此不用加
