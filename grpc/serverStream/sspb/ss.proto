@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "work.out/user/hello/sspb";
+service transport {
+  rpc ListFeatures (X) returns (stream Y) {}
+}
+
+message X {
+  string name = 1;
+}
+
+message Y {
+  string message = 1;
+}

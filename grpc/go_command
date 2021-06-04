@@ -1,0 +1,20 @@
+server和client端都引入了pb, 而远程调用实际上是由protoc生成的文件代码之间的通信, server端和client会有自己额外的代码, 这些代码会为pb提供参数或使用pb返回的值
+
+protoc ... x.proto 创建x.pub.go和x_grpc.pb.go这两个文件,头一个文件中包括对x.protoc文件中声明类型中字段处理的方法(populate, serialize, retrieve); 后一个文件中既包含了用于客户端的接口,该接口中定义的方法即x.protoc文件中service中的方法,限制了客户端只能调用该接口中定义的方法;同时也包含了要在服务端实现的接口类型,其实和客户端说的那些接口是一个东西.
+
+1.go mod init example.com/user/hello执行后, 模块名称会让go记住吗,即我的程序不在workspace中, 而是在其它目录里, 我执行上面命令后, 以后在程序中导入包, 可以直接用吗?
+
+2. go install之后会在$gobin或$gopath/bin下生成可执行文件, 但go install运行的前提是工作目录中要有go.mod文件存在, 因此在执行go install之前要先执行"go mod init 模块名"生成go.mod文件.
+
+3.如果某个库引用了远程包,则要先在该库下执行go build,此条命令会先下载远程库依赖,然后再构建,但并不安装到bin目录,因为该库的目录是为了让其它库引用.
+
+4.如果main函数中有import远程包,则要先使用go mod tidy命令,下载远程依赖包,并且该依赖包记录到go.mod文件中.
+
+5.远程依赖包都被下载到到了$gopath/pkg/mod下了, 可以使用go clean -modcache删除mod文件夹下的内容
+
+6.go还自带了一个由go test命令和testing包组成的一个轻量级的测试框架, 这个框架的简单特点是:
+  a.新建文件名为 "要被测试的文件+_test.go";
+  b.测试某个函数的格式为func Test+函数名(t *testing.T){},然后在这个函数中构建数据,然后调用被测试的函数处理这些数据,最后如果出错调用t.Errorf()函数,如果不出错就不用管,testing库应该会在测试的函数外还有一层对测试成功的输出处理封装.最后的最后就是执行go test看测试结果了.
+
+
+灵感: 一,在_rpc文件中肯定有UnimplementedService_name的定义以及对接口的实现, 这个应该是我们未在服务端实现方法且调用了方法时的默认实现.而我们在真正写服务端代码时结构体中也要有UnimplementedService_name类型. 还要调一下如果我们未在服务端实现接口就调用方法时,代码调用的过程.

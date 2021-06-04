@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "bi.com/user/hello";
+
+service action {
+  rpc hit (stream X) returns (stream Y) {}
+}
+
+message X {
+  string name = 1;
+}
+
+message Y {
+  string message = 1;
+}

@@ -1,0 +1,41 @@
+grpc客户端和服务端之间的数据传输共有4种模式,这四种模式是根据c/s之间的数据传输是否为stream而划分的:
+  a. client: no  server: no
+  b. client: yes server: no
+  c. client: no  server: yes
+  d. client: yes server: yes
+-----
+配置文件情况: 
+  syntax = "proto3";
+  option go_package = "xxx/yyy/zzz";
+  service interfaceName {
+    rpc methodName ([stream ]X) returns ([stream ]Y) {};
+  }
+  message X{
+    string name = 1;
+  }
+  message Y {
+    string message = 1;
+  }
+*.说明,上面配置文件"[stream ]"部分不是语法的一部分,只是为了写的简单些,在这里表示可选.  
+-----
+代码结构:
+├── client.go //客户端代码
+├── go.mod   //go mod init xxx/yyy/zzz生成的
+├── go.sum   //go mod tidy生成的
+├── server.go //服务端代码
+└── sspb  //新建的子文件夹,存放proto配置文件和protoc命令生成的代码文件
+    ├── ss_grpc.pb.go
+    ├── ss.pb.go
+    └── ss.proto
+-----
+生成代码文件的命令: protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative 子文件夹/配置文件.proto
+-----
+代码中引用sspb包下的代码: import pb "xxx/yyy/zzz/sspb"
+-----
+下面就是重点对比一下这四种模式下,protoc生成的两个go文件有什么区别:
+  a.xxx.pb.go中存放的是proto文件中message转换过来的类型声明以及对类型中字段操作的方法.通过对比,四种模式下, 生成的xxx.pb.go文件中类型声明及相应类型的方法这些基本是一样的:
+    type X struct {...}
+    type Y struct {...}
+    X作为接收器的方法: Reset(), String(), ProtoMessage() ProtoReflect() Descriptor() GetName()
+    Y作为接收器的方法: Reset(), String(), ProtoMessage() ProtoReflect() Descriptor()  GetMessage()
+  b.xxx_rpc.pb.go文件对比见excel表

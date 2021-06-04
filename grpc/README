@@ -1,0 +1,24 @@
+参考链接:
+ Go版本:
+  https://grpc.io/docs/languages/go/quickstart/
+  https://grpc.io/docs/languages/go/basics/
+其中quickstart部分讲的是最基础的配置文件的书写; basic部分在quickstart的基础上又引入了数据的流式传输. 并引出了共有4种数据传输模式: 不使用流, c使用流,s使用流,cs都使用流.
+-----
+而我们自己编写的client.go和server.go在利用grpc框架时,实际上是调用配置模板生成的go代码文件中的内容,所以我就想知道配置文件中的每个配置信息都被转换成了什么代码,因此有了这个东西.
+-----
+其中,
+ chat对应 c:no, s:no
+ clientStream对应 c:yes s:no
+ serverStream对应 c:no  s:yes
+ biStream对应 c:yes s:yes
+-----
+而protocGeneratedRpcFile.xlsx表格的内容是对比这四种模式下,protoc创建代码的异同
+-----
+grpcFourModeCompare对应的是上面四种模式的demo中, 配置文件的情况,protoc命令格式,xxx.pb.go文件情况. 说到这不提不提到basics中有一段话其实意义很大:
+    route_guide.pb.go, which contains all the protocol buffer code to populate, serialize, and retrieve request and response message types.
+    route_guide_grpc.pb.go, which contains the following:
+        An interface type (or stub) for clients to call with the methods defined in the RouteGuide service.
+        An interface type for servers to implement, also with the methods defined in the RouteGuide service.
+上面的英文告诉我们生成的两个文件中存放的是什么,这样我们在写client.go和server.go的时候就知道去哪个文件中找我们想要的内容.
+-----
+go_command是杂记,里面的东西不一定正确.

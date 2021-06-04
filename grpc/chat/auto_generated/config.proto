@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "52fighting.com/user/chat";
+service Chat {
+  rpc SayHello (X) returns (Y);
+}
+
+message X {
+  string name = 1;
+}
+
+message Y {
+  string message = 1;
+}

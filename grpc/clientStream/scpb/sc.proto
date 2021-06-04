@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "sc.com/user/hello/scpb";
+
+service sc {
+  rpc greeting (stream X) returns (Y) {}
+}
+
+message X {
+  string name = 1;
+}
+
+message Y {
+  string message = 2;
+}
