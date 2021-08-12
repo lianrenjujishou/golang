@@ -19,7 +19,7 @@ func main() {
 //  http.HandleFunc("/b", func(res http.ResponseWriter, req *http.Request){
 //  http.Redirect(res, req, "/red", 301)
 //  })
-  h := http.RedirectHandler("/red", 302)
+  h := http.RedirectHandler("/red", 303)
   http.Handle("/b", h)
    log.Fatal(http.ListenAndServe(":8090", nil))
  }
