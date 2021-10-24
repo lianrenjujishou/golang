@@ -201,14 +201,15 @@ Pointers to structs
 2.当p的类型为struct pointer时，正常情况下应该使用(*p).X才能够访问结构体中的field X,但是Go语言允许我们在不明确表示废弃*前缀的情况下直接使用p.X的方式来访问结构体中的X field(好多初学者其实对于一些概念的描述可能会很迷糊，因为以前没接触过，脑子里没有可供参考的东西，我当时也是，现在再回头看，就要简单的多；比如这点开头说的p的类型为结构体指针，其实要明白，其实说的就是p中存放的值指向的内存地址处存放的数据其类型为结构体，而给结构体指针p前加上*号前缀就表示该结构体内容本身了.举例来说,有10个抽屉,相当于内存中的地址,我将一把锁放在了第3个抽屉,那么 假设声明了var p *锁,则p的值就是3, *p就是那把锁)
 3.struct value加上&符号，返回的是一个指向struct value的指针(这句话听起来也别扭，首先struct value是个什么东西？(从例子上看其实就是类似于类的实例，这么说不准确，准确来说应该就是类的实例，因为结构体也是一种类型，所谓类型就是类，所以说struct value其实就是类的实例)也不好描述，看例子吧: p=&Vertex{1,2} 这个例子中，Vertex{1,2}相当于描述中讲的struct value; 此时p是一个指针变量，也就是说p中存放的是Vertex{1,2}这个实例在内存中被分配的地址，然后上一节也说了按理说如果要引用Vertex中的值的话，需要用(*p).X/Y,但是Go语言在这块为我们做了处理，即p的*前缀可以省略掉)
 Struct Literals
-1.struct literal主要的意思是:通过给出结构体中字段的值来表示最近分配的结构体值(struct value,上面Pointers to structs第3点也误差了,struct value其实就是对结构体类型的实例化)。看完例子看感觉,所谓的Struct Literals是指通过给结构体类型中字段赋值的方式来得到stucture value,也就是说可以将Structure Literal理解为一种得到structrue value的手段.而学到的新东西是在实例化化的时候，结构体中的所有字段不必完全都赋到值，可以只赋一部分，剩余那部分没赋到的，会根据之前讲过的，按相应类型的"零值"去赋(整型的是0,字符串类型的是""等等吧,这个也有一部分是自己猜的，不过应该没啥大问题),下面是官文中给的例子:
-    type Vertex struct { X, Y int }
+1.struct literal,看完例子感觉,所谓的Struct Literals是指通过给结构体类型中字段赋值的方式来得到stucture value,也就是说可以将Structure Literal理解为一种得到structrue value的手段.而学到的新东西是在实例化化的时候，结构体中的所有字段不必完全都赋到值，可以只赋一部分，剩余那部分没赋到的，会根据之前讲过的，按相应类型的"零值"去赋(整型的是0,字符串类型的是""等等吧,这个也有一部分是自己猜的，不过应该没啥大问题),下面是官文中给的例子:
+   type Vertex struct { X, Y int }
     var (
     	v1 = Vertex{1, 2}  // has type Vertex
     	v2 = Vertex{X: 1}  // Y:0 is implicit
     	v3 = Vertex{}      // X:0 and Y:0
     	p  = &Vertex{1, 2} // has type *Vertex
     )
+    *.这是该小节的第一句话, A struct literal denotes a newly allocated struct value by listing the values of its fields. 其中newly翻译为"重新"而不是"最近",listing翻译为"登记"而不是"列出",整个句子的意思应该更好理解一些
 2.我感觉把Struct Literal叫做结构体的实例化方法或叫创建结构体的对象的方法比较合适(根据给出的例子推想出来的)
 Arrays
 1.数组类型的声明: [n]T   //一个含有n个类型为T的数组(声明一个数组，该数组有n个类型为T的元素)
