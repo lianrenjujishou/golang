@@ -290,7 +290,7 @@ Slice length and capacity
 Nil slices
 1.之前讲过如果变量声明的时候如果没有初始化器，也就是说如果声明时不赋值，则Go会按类型给相应的变量赋一个值，这个值Go叫它zero value,也就是零值。不管叫啥明白这个意思就好。同样的slice如果声明时不赋值也会默认有一个zero value,为nil.
 2.从例子来看，所谓slice声明时不赋值，指的是没有右边的数组那部分，var s []int,这样的slice,它的len()和cap()都是0，因为这个slice没有underlying array(这个词我还是觉得翻译为基础数组好一些)
-3.一般是用if语句去判断slice是否为未初始化.这块就要注意了, "var a []int" 和 "var a = []int{}" 是不一样的,前者是没有初始化,此时a值为nil,而后者的值不是nil, 另外通过实践还从编译器得到一名话,"slice can only be compared to nil",即在使用if语句判断的时候,条件部分的"=="号一边是slice名称,另一边只能是nil.//得到提示使用的例子为:var x []int = []int{} if x==[]int{}{ fmt.Println("nil!")}
+3.一般是用if语句去判断slice是否未初始化.这块就要注意了, "var a []int" 和 "var a = []int{}" 是不一样的,前者是没有初始化,此时a值为nil,而后者的值不是nil, 另外通过实践还从编译器得到一名话,"slice can only be compared to nil",即在使用if语句判断的时候,条件部分的"=="号一边是slice名称,另一边只能是nil.//得到提示使用的例子为:var x []int = []int{} if x==[]int{}{ fmt.Println("nil!")}
 Creating a slice with make
 1.首先Go提供了一个内建的函数,make,它的返回值就是一个slice；文中还有一句"this is how you create dynamically-sized arrays"也就是make是用来创建动态数组的方式，记得其它语言中当数据的类型为[]T时声明的就是动态数组，但是在Go中，[]T只是slice的类型，数组array的类型必须是[n]T即必须指定大小。还接着上面那句英文，感觉给的例子不是创建的动态数组呀，"a := make([]int, 5)"还是指定了数组的大小了，哎，这块有点不明所以。 //现在感觉呀,golang中所谓的动态数组和C中的还不太一样, golang中的动态数组的动态是有一个大前提的,即在underlying array下的动态, 这么想应该就通了
 2.内建函数make的参数可以是两个，也可以是三个，但是第一个一般都是slice的类型:
