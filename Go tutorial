@@ -340,7 +340,7 @@ Appending to a slice
     }
 Range
 1.for循环中的range形式用于遍历一个slice或是一个map
-2.当使用range遍历一个slice的时候，每次遍历会返回两个值，index和与之对应的value(文中特别强调那个值是slice相应位置的一个copy,说白了就是告诉我们，对slice的遍历并不会影响原slice的内容，即并不是说将0位置的索引值返回后，这个值就从原slice删除了)
+2.当使用range遍历一个slice的时候，每次遍历会返回两个值，index和与之对应的value(文中特别强调那个值是slice相应位置的一个copy,说白了就是告诉我们，对slice的遍历并不会影响原slice的内容，即并不是说将0位置的索引值返回后，这个值就从原slice删除了.这一点可以和python中使用readline()或readlines()函数从文件对象中读行形成鲜明对比,如readline()函数是调一次文件对象中就少一个元素,而readlines()调一次文件对象直接就空了)
 3.for循环中对slice使用range的形式: for i, v := range slice { statements}  //需要注意的是在for和range联用时,不能将i,v:=range slice看成是上面讲for循环三个部分的第一部分,而是这样就够了,如果你强行加上iv:range slice;condition;x++|x--是会报错的,具体后面还要看一下for和range联用的语法中有没有写其它的.
 *.for循环中对map的遍历还没说，因为还没看到map,后面应该有相关的例子,到时再补
 Range continued
