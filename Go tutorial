@@ -235,7 +235,7 @@ Slices
 4.接着3说，数组的分片一般是包前不包后的，即a[1,4]是指数组a中第1到第3个元素
 *.第三条的例子，可以看出分片s的类型是[]T,这个现在就死记吧，数组的分片(感觉叫切片更生动一些)(不知道将slice和array连起来说准不准确，暂且先这样记吧)，一开始我以为[]T只是因为方便不用刻意的去关心分片的大小，事实上Go可能也是这样考虑的；我尝试着将分片s的类型换成[3]int,因为后面的分片就三个元素嘛，但是执行失败了。而且回显明确告诉我分片的类型是[]T(不能指定slice包含元素的数量)
 Slices are like references to arrays
-1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base=[1,2,3,4,5,6,7,8,9,10]这10个数，然后我对该underlying array做了一个切片，比如slice=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名(这段的描述有点屎了)
+1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base=[1,2,3,4,5,6,7,8,9,10]这10个数，然后我对该underlying array做了一个切片，比如slice:=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名(这段的描述有点屎了)
 2.既然slice会直接改变它underlying array中的数据，则其它的slice肯定也会受到影响
 Slice literals
 1.前面有个struct literal从例子中看，struct literal就是一个创建结构体实例或是对象的方法或叫手段,即通过给结构体中字段进行赋值的方法来得到struture value(也就是所谓的结构体实例或对象)
