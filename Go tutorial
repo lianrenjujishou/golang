@@ -244,7 +244,7 @@ Slice literals
 3.声明一个array literal: [3]bool{true, true, false}
 4.声明一个slice literal: []bool{true, true, false}
 *.其中3和4的区别是，3只是简单的声明一个含有三个为bool类型的array并赋值；而4其实可以理解为2步，第一步是创建一个array第二步是基于第一步的array创建一个slice
-5.对于结构体在声明时初始化的时候，需要注意的是，因为结构体中不止一个field，而这些所有的field对于struct来说是一个整体，所以在声明时给结构体的赋值时每个元素都是一个由花括号括起来的，含有所有field的整体
+5.对于元素类型为结构体的slice,在声明时初始化需要注意的是,不能和单个结构体初始化一样,只给部分filed赋值,剩下的field自动获得相应类型的初始值; 必须要将结构体中所有的field都赋值,否则会报错.
   s := []struct {
     i int
     b bool
