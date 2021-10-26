@@ -489,7 +489,7 @@ Exercise: Maps
 Function values
 0.functions are values too.
 0.从这节的解释说明来看,function value指的是两个函数: 1是作为参数传给高阶函数的那个函数; 2是作为return返回值的那个函数
-1.初看，函数即可以作为函数参数，也可以作为函数的返回值, 应该就是其它语言中所谓的高阶函数吧?! //之前说类似于python中的decorator,其实也不一样, python中对于decorator的解释是 参数和返回值都是函数,是和的关系, 而这里的函数值说的是函数也可以作为值进行流转, 是或的关系, 即函数值出现在哪个环节都行
+1.初看，函数即可以作为函数参数，也可以作为函数的返回值, 应该就是其它语言中所谓的高阶函数吧?! //之前说类似于python中的decorator,其实也不一样, python中对于decorator的解释是 参数和返回值都是函数,是和的关系(可以看cnblogs上关于python中decorator的笔记), 而这里的函数值说的是函数也可以作为值进行流转, 是或的关系, 即函数值出现在哪个环节都行
 2.再看，有一点需要注意的，就是函数作为参数时的写法，这块乍一看不理解，但是分开来想还是可以理解的: func compute(fn func(float64, float64) float64) float64{},分解开看一下:
   func是定义函数的关键字
   compute是函数名
