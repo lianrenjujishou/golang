@@ -839,7 +839,7 @@ In general, all methods on a given type should have either value or pointer rece
   }
 
 */  
-结论:那么到底为什么不能混用呢? 既然上面这段代码已经证明了,既使V和*V混用去实现一个接口,只要在给接口变量i赋值时赋指针值即可,因为r在调ok()时改的就是r的副本,在调yes()时就是在r原位置改的.所以逻辑都是通的怎么就不能混用了呢?  在stackoverflow找了个相关的链接,状态好的时候可以看一下,可能会有答案,同时里面还给出了什么时候使用value receiver什么时候使用pointer receiver( https://github.com/golang/go/wiki/CodeReviewComments#receiver-type): https://stackoverflow.com/questions/27775376/value-receiver-vs-pointer-receiver/27775558#27775558    这个链接又说可以混用: https://github.com/golang/tour/issues/97
+结论:那么到底为什么不能混用呢? 既然上面这段代码已经证明了,既使V和*V混用去实现一个接口,只要在给接口变量i赋值时赋指针值即可,因为r在调ok()时改的就是r的副本,在调yes()时就是在r原位置改的.所以逻辑都是通的怎么就不能混用了呢?  在stackoverflow找了个相关的链接,状态好的时候可以看一下,可能会有答案,同时里面还给出了什么时候使用value receiver什么时候使用pointer receiver( https://github.com/golang/go/wiki/CodeReviewComments#receiver-type): https://stackoverflow.com/questions/27775376/value-receiver-vs-pointer-receiver/27775558#27775558    这个链接又说可以混用,说原文说不能混用是误导别人: https://github.com/golang/tour/issues/97
 Interfaces
 1.首先Interface是一种类型，在定义Interface类型的时候，body中是N多方法的集合，需要注意的是:body中的这些方法只有方法名及相应的返回值类型，并没有方法的具体实现
   type Abser interface { Abs() float64 }
