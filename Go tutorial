@@ -487,7 +487,7 @@ Mutating Maps
 Exercise: Maps
 1.练习下一轮的时候再看
 Function values
-0.functions are values too.
+0.functions are values too. //对于理解非常重要的一句话, 函数值是"函数作为值",即有参数类型是函数类型和或返回值是函数类型, 而不是"函数的返回值"
 0.从这节的解释说明来看,function value指的是两个函数: 1是作为参数传给高阶函数的那个函数; 2是作为return返回值的那个函数
 1.初看，函数即可以作为函数参数，也可以作为函数的返回值, 应该就是其它语言中所谓的高阶函数吧?! //之前说类似于python中的decorator,其实也不一样, python中对于decorator的解释是 参数和返回值都是函数,是和的关系(可以看cnblogs上关于python中decorator的笔记), 而这里的函数值说的是函数也可以作为值进行流转, 是或的关系, 即函数值出现在哪个环节都行
 2.再看，有一点需要注意的，就是函数作为参数时的写法，这块乍一看不理解，但是分开来想还是可以理解的: func compute(fn func(float64, float64) float64) float64{},分解开看一下:
@@ -504,7 +504,7 @@ Function values
   )
 
   func compute(fn func(float64, float64) float64) float64 {
-    return fn(3, 4)
+    return fn(3, 4)          
   }
 
   func main() {
@@ -513,7 +513,7 @@ Function values
     }
     fmt.Println(hypot(5, 12))
     
-    fmt.Println(compute(hypot))  //这块函数引用只用了函数名，需要注意一下
+    fmt.Println(compute(hypot))  //这块函数引用只用了函数名，需要注意一下;另外,compute中, return返回的是fn(3,4)而不是fn,也就是说return返回的是fn(3,4)的返回值,因此compute(hypot)返回的其实是hypot(3,4)的返回值,float64类型的math.Sqrt(3*3+4*4),即最后返回的其实不是一个函数, 而是一个值.
     fmt.Println(compute(math.Pow))
   }
 *.关于上面这个高阶函数,还要讲一下传当函数A作为另一个函数B的参数时,在调用时的注意事项,见下面代码main函数中的注释部分:
