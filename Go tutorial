@@ -388,7 +388,7 @@ Maps
     m[Vertex{1,2}] = 3
     fmt.Println(m[Vertex{1,2}])  
 Map literals
-1.map literals指的同上边一样,即在声明时赋值从而得到相应的map对象.之前说的是上面讲的struct literals不同于其它的literals,当时的想法是看代码中先有type Vertex struct {X,Y int},然后下面才是var x := Vertex{1,2}就觉得struct literals和其它类型的literals不同了, 但其实是我想错了, 重要的一点是,所谓T literals的前提是你得先有T才行啊,你有了T下面才能谈T的literals,而之前的错误想法来源于,像slice,array这些都是内置的类型,可以直接用,而Vertex是我们自定义的一个类型.
+1.map literals指的同上边一样,即在声明时赋值从而得到相应的map对象.之前说的是上面讲的struct literals不同于其它的literals,当时的想法是看代码中先有type Vertex struct {X,Y int},然后下面才是var x := Vertex{1,2}就觉得struct literals和其它类型的literals不同了, 但其实是我想错了, 重要的一点是,所谓T literals的前提是你得先有T才行啊,你有了T下面才能谈T的literals,之前之所以理解错误,原因在于slice,array这些都是内置的类型,可以直接用,而Vertex是我们自定义的类型.
 2.这一节的map literal看例子也是在声明时一并赋值，看一下例子中的部分代码:
   type Vertex struct {
     Lat, Long float64
