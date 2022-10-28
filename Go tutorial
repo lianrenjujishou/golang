@@ -171,6 +171,19 @@ Switch with no condition
    }
 Defer
 1.函数前面如果加上defer关键字的话，如果该函数在另外一个函数里面时，在执行到带有defer前缀的函数时，仅仅会将该函数进行预处理，即将变量换成值这类的操作，但并不会立刻执行，直到这个函数的外层函数执行完毕后，才会执行该函数
+  *.需要注意的是预处理的仅仅是deferred函数定义的参数部分, 函数体中的变量还是在执行的时候才会替换的,看例子:
+  -----
+  func DeferStack(){ 
+  i := 0 
+  defer func(x int){ fmt.Println(i, x)}(i) //执行时,只有最后括号里的这个(i)被替换了,即预处理后变成了fmt.Println(i,0),而函数体中Println()函数的第一个参数i此步并没有被替换.
+  i+=1 
+  defer func(x int){ fmt.Println(i, x)}(i) 
+  i+=1 
+  defer func(x int){ fmt.Println(i, x)}(i) 
+ 
+  fmt.Println(i) 
+}
+-----
 Stacking defers
 1.如果函数中存在多个defer时，则这多个带有defer的函数会被入栈，栈的原理是后进先出，所以在相应的外层函数执行完后，里面带有derer的函数是被从后向前执行的
 Pointers
