@@ -238,6 +238,7 @@ Arrays
   var a [2]int   a[0]=1  a[1]=2  //使用var可以先声明,后面使用索引的方式赋值
   var a [2]int = [2]int{1,2}  //使用var同样可以连声明和赋值在一块做了
   var a = [2]int{1,2} //使用var可以省略左边声明部分的显式类型说明,因为可以根据右边推断出来
+6.数组的长度不能必须是一个固定的数值,不可以是变量,因为Go是一门静态类型的语言, 所以必须要在编译时知道其长度.如果想声明一个大小不固定的"数组",可以考虑使用下面要说的分片,slice.  //https://stackoverflow.com/questions/46809499/why-cant-you-put-a-variable-as-a-multidimensional-array-size-in-go
 Slices
 1.首先说了array的大小是固定的。接着引出相对而言slice是变化的，slice在其它语言中经常翻译为分片，通过看他的描述，在Go里对slice翻译为分片也是合适的。而分片其实指的是取array的一部分，也就是说slice一般是和array联用;
 2.slice也有类型，为[]T,即未指定大小，[]中未指定分片的大小，也就是说大小是动态的，T一般为相应array的类型;
