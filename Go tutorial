@@ -23,6 +23,7 @@ Imports
 Exported names
 1.使用import将包导入进来以后，程序只能引用包中以大写字母开头的定义，可以理解为当执行import的时候会将相应包中以大写字母开头的定义给导进当前程序的空间，而那些以非大写字母开头的定义仅仅可以在包内部引用，官方将这些以大写字母开头的叫做"exported name",从字面意思上理解是"导出的名称",此时这个"导出"的动作应该是看作在执行"import 包名"的时候，会将包里以大写字母开头的定义从"包"里导出到程序的应用空间中。这么解释可能不太对，但目前这么解释的话是有帮助理解的。
 2.一个包里可包含多个扩展名为go的文件，而在import的时候应该是将包里所有文件中的以大写字母开头的定义都导到程序空间中了。这个也是猜的，不过通过Packages那一节的例子中的math.Int //到这断了，应该是误删了，后面应该是 "这个例子可以推断出来"
+ *.先来简单的理解一下module和package, 准确来说,module是一个目录, 而package是一个或多个具有相同首行,"package Name",的文件集合. 而为了好维护, 通常将具有相同包名的文件放在同一个目录下(而使用import导入包时,找的恰巧就是这个目录), 而且包通常会被作为某个功能导入到其它包内,所以一般来说, 一个文件夹中只能包含一个包(注意是一个包而不是一个源文件),如果在同一个目录下有多个包,则在使用import导入的时候会出错, 原因是import后面跟的路径的最后一个元素是包所在目录的名字(通常会将包名和包所在目录名命名为同一个,假设有一个模块叫Animals,它下面有个文件夹叫sheep,在sheep文件夹中有一个包,package sheep,则我们在使用import "Animals/sheep"导入后,引用时,直接使用sheep.X就行,但如果sheep文件夹中的包不叫sheep,而是pig,则在使用import "Animal/sheep"后你还要查一下这个包名到底是啥才能进行引用,这就是为什么通常我们在设计目录时,都会将包名与其所在目录名设置为同一个的原因, 如果目录名和包名不同,引用的时候还不想查包名到底是啥,可以指定一个别名,然后使用这个别名对名中exported进行引用,格式为 alias import "moduleName/dir/of/package"),如果你在这个目录下有多个包,程序不知道你到底要导的是哪个. 当然,包所在目录还可以有子目录, 如有一个模块A,其下有一个目录叫A1,A1下有包A1(即源文件的头一行为package A1),此时我们要使用A1这个包,则直接使用import "A/A1",此时在A1目录下还可以有A11,在A11下同样可以有包,如这个包就叫A11,此时我想引用A11这个包,则可以直接使用import "A/A1/A11", 如果要问为啥不将A11与A1设置为同一级,那样看着也没这么繁索,这就是设计问题了, 可以是可以,只不过具体问题具体分析时,可能这样设计看起来会更合理一些.
 Functions
 1.函数可以带任意多个参数，包含0个
 2.函数参数中，形参类型出现在形参的后面
@@ -45,7 +46,7 @@ Variables
 Variables with initializers
 1.声明变量时可以包含初始化器，一个变量一个；所谓的初始化说中了就是变量赋值，这句话说白了就是声明变量时可以给变量赋值，一个变量一个值，这样更明了一些
 *.var i, j int = 1, 2
-2.如果声明变量时有初始化器，则变量后面的类型可以忽略，程序会将初始化器的类型作为变量的类型。换句话说就是声明变量时可以不指明变量类型，程序会将变量值的类型作为变量的类型
+2.如果声明变量时有初始化器，则变量后面的类型可以忽略，程序会将初始化器的类型作为变量的类型。换句话说就是声明变量时可以不指明变量类型，编译器会根据变量值进行推断补全,简单来说就是定义一个变量var a = 1, 然后编译的时候,编译器发现1是整型,然后将这个声明变量的语句补全为var a int = 1.
 Short variable declarations
 1.变量声明不仅可以通过var关键字，还可以使用:=符号，使用这种形式不需要var关键字，而且也不用显示的给出变量类型。但是:=和var有一点不同的是，var既可用在包级别又可用在函数级别，而:=只可用在函数级别
 2.对照1来看，包级别的语句都需要以关键字打头
@@ -54,10 +55,13 @@ Basic types
 1.Go中的基本类型有:
 布尔型: bool
 字符串: string
-整型: int int8 int16 int32 int64
-无符号整型: uint uint8 uint16 uint32 uint64 uintptr          //int uint unitptr默认是自适应的,即虽然看起来int有好几种,unit也有好好种,但如果你是在32位系统上运行则,编译器会动将int精确为int32,也就是说我们用的时候只需要使用int和uint就行,不用人为的去写后面的位数; 但是如果你明确知道你想存储的是16位的,则你就用int16,这样即使你在32或64位系统上运行,用的也是int16,这样可以减少内存的占用. 至于uintptr还不会用,它的作用见:Https://stackoverflow.com/questions/59042646/whats-the-difference-between-uint-and-uintptr-in-golang
-字节型: byte  //unit8的别名
+(有符号)整型: int int8 int16 int32 int64   //除int外,取值范围-2^(N-1)到2^(N-1)-1
+无符号整型: uint uint8 uint16 uint32 uint64 uintptr   //除unit和uintptr外,取值范围0到2^N-1
+  *.在理解这个取值范围时,如不进行计算,可以从两方面合起来去理解这个范围:第一,这个类型总共可以存储多少个数; 第二,最小数起的数是哪个.如int8可以理解为可以存储2^8个数,因为是有符号的,所以最小数是-128,从这个最小数往上数呗,够2^8个就是最大数了,即127.
+  *.int uint uintptr默认是自适应的,即虽然看起来int有好几种,uint也有好好种,但如果你是在32位系统上运行时,编译器会动将int精确为int32,也就是说我们用的时候只需要使用int和uint就行,不用人为的去写后面的位数是32还是64; 但是如果你明确知道你想存储的是16位的,则你就用int16,这样即使你在32或64位系统上运行,用的也是int16,这样可以减少内存的占用. 至于uintptr还不会用,它的作用见:Https://stackoverflow.com/questions/59042646/whats-the-difference-between-uint-and-uintptr-in-golang
+字节型: byte  //uint8的别名
 文字型: rune  //int32的别名，表示一个Unicode码点
+  *.rune通常作为单个字符的类型,且单个字符需要使用单引号引起来,var char rune = 'b'或var char rune = '杨', 得到的结果是unicode数值,使用string(char)可以再次得到相应的单个字符.举例来说, for _,r := range "Hello, 世界!" {这里的r就是rune类型或说成是int32类型,因为rune是int32的别名,而非字符串类型}
 符点型: float32 float64    //int 和float的最大值最小值在src/math/const.go中都有说明,也备注了算法,也可以直接使用math.MaxInt32等这样的形式直接输出
 复合型: complex64 complex128   //complex64用来描述float32类型的实数和虚数,complex128用来描述float64类型的实数和虚数,详述:https://www.cloudhadoop.com/2018/12/golang-tutorials-complex-types-numbers.html
 2.变量的声明也可以使用"因式分解"式，即使用一个var关键字完成多个变量的声明
@@ -70,15 +74,14 @@ Zero values
   字符串: ""
 Type conversions
 1.Go中的类型转换必须要精确指定要转换到的类型
-，表现在实际的写法上即要将被转换值作为相应类型的参数
+，表现在实际的写法上即要将被转换值作为函数名为相应类型函数的参数
   var i int = 42
   var f float64 = float64(i)
   var u uint = uint(f)
   还可以使用:=形式:
     i := 42
     f := float64(i)
-    u := uint(f)        //对于数值和字符串相转换,如var a int = 97 , var b string = string(a) 这种写法得到的b是ascii码,小写字母"a",而不是我们想要的"97", 想要得到"97"要使用strconv包的Itoa函数, var b string = strconv.Itoa(a), 得到b为"97" (https://yourbasic.org/golang/convert-int-to-string/)
-2.C语言中的类型转换不强制要求加上被转换到的类型(C都忘了...)
+    u := uint(f)        //对于数值和字符串相转换,如var a int = 97 , var b string = string(a) 这种写法得到的b是小写字母"a",而不是我们想要的"97", 想要得到"97"要使用strconv包的Itoa函数, var b string = strconv.Itoa(a), 得到b为"97" (https://yourbasic.org/golang/convert-int-to-string/)
 Type inference
 1.到目前为止变量声明的几种形式:
   var a int  //默认会为a赋值0
@@ -92,13 +95,35 @@ Type inference
 3.如果使用:=声明的变量类型为数值型常量时，该变量的类型要看数值的精度，从而确定是int, float64, complex128还是...
 Constants
 1.常量声明使用关键字const
-2.常量值可以是字符，字符串，布尔值或是数值
+2.常量值可以是字符(单引号,一个字符,rune或int32类型)，字符串(双引号,一个或多个字符,string类型)，布尔值或是数值
+  *.for _, r := range "hello, 世界!" {这里r是单个字符,所以是rune或int32类型,而非字符串类型}
 3.常量不能使用:=语法声明
 4.这个是自己猜的，常量定义时就必须赋值，否则会出错，程序不会给默认值  //仔细想想这么做也是有道理的，常量代表固定值，或说后期不可改的值，即然这样，你声明常量时如果不初始化，让编译器给个zero value就没啥意义了，所以干脆就设计成常量声量时必须有值，没值编译不过.
 Numeric Constants
-1.常量声明也可使用因式分解法"factored"
+1.常量声明也可使用因式分解法"factored"  //还可以使用因式分解法的有import和var
 2.一个未明确写明类型的常量具体的类型要根据右边的值来确定
 3.位运算符: & | ^ << >>   &:都有1才是1; |:有一个是1就是1; ^:有且只有一边是1才是1; <<:左移变大; >>:右移变小  //该教程中举的例子很好:https://www.tutorialspoint.com/go/go_bitwise_operators.htm
+  *.理解左移右移的技巧,把当前数值的二进制放在一个左右严丝合缝的卡板中间,这两个卡板位置是不变的,然后对整体进行左移或右移,移动之后,由于卡板位置没变,肯定会在左边或右边空出位置,在空出的位置进行补零即可.举例来说,1,二进制是00000001,我们把它放到卡边里|00000001|,比如说左移3位,则把卡边中的数字整体左移3位,变成了|00001***|,由于卡板不变,右边对应多出3个空位,此时对空位补0,变成|00001000|,这就是1左移3位得到的结果.右移同理,只不过是在左边补零.
+  *****
+    var (
+    a = 1       //00000001
+    b = 2       //00000010
+
+    c = a & b   //00000000
+    d = a | b   //00000011
+    e = a ^ b   //00000011
+    f = a >> b  //|00000001|->整体右移2位->|**000000|->补零->|00000000|
+    g = a << b  //|00000001|->整体左移2位->|000001**|->补零->|00000100|
+  )
+
+    fmt.Println(a)  //a = 1
+    fmt.Println(b)  //b = 2
+    fmt.Println(c)  //c = 0
+    fmt.Println(d)  //d = 3
+    fmt.Println(e)  //e = 3
+    fmt.Println(f)  //f = 0
+    fmt.Println(g)  //g = 4
+  *****
 For
 1.Go中只有一种循环结构，for循环
 2.for循环的基本结构为for关键字，然后是由两个分号分隔的三部分，接着是由一对花括号将要执行的语句括起来。需要注意的是由分号分隔的那三部分不需要使用圆括号括起来
@@ -106,7 +131,7 @@ For
 *.这个for的每一部分就不具体说了，基本上和其它语言的for循环没区别
 For continued
 1.这个是接上一节的For讲的，主要说的是由分号分隔的那三部分中的第一部分init和第三部分post都是可选的，即如果不写也是正确的。其实如果省略第一和第三部分，则一般情况下，第一部分会从包级别中去获取，第三部分会在for循环语句中获取，总的来说还是完整的，只是位置不一样罢了
-2.虽然省略了第一和第三部分，但是那两个分号还是结构中必须有的
+2.虽然省略了第一和第三部分，但是那两个分号还是结构中必须有的 //这句话是错误的
 *.抓住for循环的本质，有初始点，有判断条件，有结束点
 For is Go's "while"
 1.上面一节还说了如果省略了初始化部分和post部分但两个分号还是必须有的，这节就打脸了，即使省略了第一三部分，两个分号也可省略，这样写下来看起来就像其它语言中的while循环了，但还是那句话，虽说省略，但那三个基本点肯定在上下文都 是可以找到的
@@ -129,6 +154,7 @@ Forever
       }
     }
   }     //上面的语句中随然for循环部分啥都没有,但其实三要素都在,initializer为sum:=1,条件部分为if{}else{},第三部分为sum++; 其实大家都在
+  *.对于for循环中的那两个分号,语法要点就是,要么两个都在,要么一个都不能在.
 If
 1.Go中最基本的if语句也是if引导，后面跟条件表达式，注意这块和for相似，条件部分不需要使用圆括号括起(对于for是由两个分号隔开的三部分不需要使用圆括号括起，但是无论是if还是for那个位置都是一样的，都是位于关键字后，起始花括号前)；然后后面就是跟着由一对花括号括括起来的执行语句
 If with a short statement
@@ -146,7 +172,7 @@ If and else
       fmt.Printf("%g >= %g\n", v, lim)
     }
 Exercise: Loops and Functions
-1.这个练习本节最后再做，先将基础概念整完
+1.练习做了,主要学到的倒不是循环和函数的用法, 而是求平方根的方法,牛盾法, 大概的方法是使用公式z-=(z^2-x)/(2z), 使用for循环,循环执行该语句, 直到z值不变或是变动很小时停止,则最后这个值就是我们求得的平方根结果.其中x是被求平方根的值,z通常是1.0, x或x/2.
 Switch
 1.Switch语句其实是if...else...的更短的一种书写形式，但if...else...过多的时候使用switch语句可读性会好一些; switch同if一样,也可以有initializer部分,同条件部分用分号隔开,当然也可以省略initializer部分,具体用不用根据实际情况去定; 使用switch时,当所有条件都不满足时,执行的是default关键字下的语句,这点要注意.
 2.在像C等一些语言中也有swtich语句，在这些语句中，每个case下的执行语句都要有一个break来跳过继续对下面case检测执行。但在Go中不需要在每条case下的执行语句中都加上break语句，实际上是Go已经为我们考虑好了，那个break是程序执行时自动加上去的，不用我们干预，本质上来说还是有的
@@ -154,6 +180,7 @@ Switch
     switch下是变量名,case下是变量名所匹配的值;  switch var {case 1: xxx; case 2: xxx; default: xxx}  //为了写在一行,不同case用分号隔开,但实际能否这样用还没试过
     switch下有初始值;以及用来匹配case的变量;  switch var := expression; var {case 1: xxx; case 2: xxx; default: xxx}
     switch下是空,case下是值为true或false的逻辑表达式; switch {case a>b: xxx; case a<b: xxx; default: xxx}
+    switch后跟逻辑表达式,case值为true或false; switch 3>2 {case true:xxx;case false: xxx}
 *.switch主要用于替代较长的if...else...
 Switch evaluation order
 1.这节主要讲的是如果switch要有多个case时，这些case的评估顺序是啥样的，这个其实都知道，是从上向下的，并且一旦遇到哪个case后面的值匹配成功了，则执行完相应case下面的语句后就不再继续向下匹配其它的case后面的值了，因为之前也说过,Go自动为每个case下面的执行语句的最后面加了break来跳出switch
@@ -170,12 +197,12 @@ Switch with no condition
           fmt.Println("Good evening.")
    }
 Defer
-1.函数前面如果加上defer关键字的话，如果该函数在另外一个函数里面时，在执行到带有defer前缀的函数时，仅仅会将该函数进行预处理，即将变量换成值这类的操作，但并不会立刻执行，直到这个函数的外层函数执行完毕后，才会执行该函数
+1.函数前面如果加上defer关键字的话，如果该函数在另外一个函数里面，在执行到带有defer前缀的函数时，仅仅会将该函数进行预处理，即将变量换成值这类的操作，但并不会立刻执行，直到这个函数的外层函数执行完毕后，才会执行该函数
   *.需要注意的是预处理的仅仅是deferred函数定义的参数部分, 函数体中的变量还是在执行的时候才会替换的,看例子:
   -----
   func DeferStack(){ 
   i := 0 
-  defer func(x int){ fmt.Println(i, x)}(i) //执行时,只有最后括号里的这个(i)被替换了,即预处理后变成了fmt.Println(i,0),而函数体中Println()函数的第一个参数i此步并没有被替换.
+  defer func(x int){ fmt.Println(i, x)}(i) //执行时,只有最后括号里的这个(i)被替换了,即预处理后变成了func(x int){fmt.Println(i,x)}(x=0),而函数体中的语句是在函数真正执行的时候才进行处理的.
   i+=1 
   defer func(x int){ fmt.Println(i, x)}(i) 
   i+=1 
@@ -186,15 +213,23 @@ Defer
 -----
 Stacking defers
 1.如果函数中存在多个defer时，则这多个带有defer的函数会被入栈，栈的原理是后进先出，所以在相应的外层函数执行完后，里面带有derer的函数是被从后向前执行的
+*.从上面DeferStack函数的例子结果中也可看出, DeferStack函数在执行完最后一条语句后并没有退出, 而是等待着里面被defer修饰的子函数都执行完毕后才退出的, 不然也不会出现结果中三个defer函数中i的值都是2.
 Pointers
-1.Go语言也支持指针，经常在C和C++上听说指针
+1.Go语言也支持指针，关于指针的概念之前经常在C和C++上听说
 2.Go中的指针比较简单只有一种声明形式，不支持运算
   *T:  var p *int  //声明一个指针p,p中存的是地址，该地址指向的内存区域存的是int型值(话说内存地址有类型吗?查了一下好像是有,是无符号整型,表示数据存储在内存中的起始位置)
 3.给指针变量赋值的一般形式是: 地址符&加上变量名
   i := 42  p = &i
 4.指针变量前加上*表示的是该指针变量指向内存区域的值
-  *p = 21  //指针变量存放的实际是内存地址,就该例来说p存放的实际上是在内存中为变量i分配的地址；而加上*之后，*p表示的是指针变量p的值(变量i的内存地址)指向的值)
-  *.指针其实很简单，只是比普通的变量多一层而已，我觉得越说多越乱，先这样吧
+  *p = 21  //指针变量存放的实际是内存地址,就该例来说p存放的实际上是在内存中为变量i分配的地址；而加上*之后，*p表示的是指针变量p的值(变量i的内存地址)指向的值). 此时*p其实就是i,所以*p=21就可以理解为i=21.
+  *.对于指针的理解,感觉还要从对变最的理解讲起. 把每个变量后都加一个词,"指向",感觉更易于理解.如
+      var i = 42
+      var p *p
+      p = &i
+      fmt.Println(i) //输出的是变量i的指向,或说成输出的是i地址处存的值
+      fmt.Println(p) //输出的是变量p的指向,或说成输出的是p地址处存的值
+      fmt.Println(*p)//输出的是变量p指向的指向,或说成输出的是p地址处存的值(即i的地址)所指向的值,也就等价于第一个输出中所说的: 输出的是i地址处存的值.
+      **.实际编译时,会将i,p,*p先替换为相应等价的地址, 然后输出该地址所存放的值,这句话感觉是理解变量与指针的关键.
 Structs
 1.tutorial中讲的是struct(结构体)是一个字段的集合，这个可以理解，在C中看过对struct类型的描述，C中其实也是一堆字段的集合，而且这些字段的类型可以是任意的,就目前可以简单的理解成struct体中是一堆没有initializer的变量声明(可能不准确，但目前看是这样子的)
 Struct Fields
@@ -211,7 +246,7 @@ Struct Fields
 *.不同语言中对于同一概念的翻译可能不同，主要的还是明白本质意思
 Pointers to structs
 1.还可以通过struct pointer(结构体指针)来访问struct fields(结构体的字段或叫成员)
-2.当p的类型为struct pointer时，正常情况下应该使用(*p).X才能够访问结构体中的field X,但是Go语言允许我们在不明确表示废弃*前缀的情况下直接使用p.X的方式来访问结构体中的X field(好多初学者其实对于一些概念的描述可能会很迷糊，因为以前没接触过，脑子里没有可供参考的东西，我当时也是，现在再回头看，就要简单的多；比如这点开头说的p的类型为结构体指针，其实要明白，其实说的就是p中存放的值指向的内存地址处存放的数据其类型为结构体，而给结构体指针p前加上*号前缀就表示该结构体内容本身了.举例来说,有10个抽屉,相当于内存中的地址,我将一把锁放在了第3个抽屉,那么 假设声明了var p *锁,则p的值就是3, *p就是那把锁)
+2.当p的类型为struct pointer时，正常情况下应该使用(*p).X才能够访问结构体中的field X,但是Go语言允许我们在不明确表示废弃*前缀的情况下直接使用p.X的方式来访问结构体中的X field(好多初学者其实对于一些概念的描述可能会很迷糊，因为以前没接触过，脑子里没有可供参考的东西，我当时也是，现在再回头看，就要简单的多；比如这点开头说的p的类型为结构体指针，要明白，其实说的就是p中存放的值指向的内存地址处存放的数据其类型为结构体，而给结构体指针p前加上*号前缀就表示该结构体内容本身了.举例来说,有10个抽屉,相当于内存中的地址,我将一把锁放在了第3个抽屉,那么 假设声明了var p *锁,则p的值就是3, *p就是那把锁)
 3.struct value加上&符号，返回的是一个指向struct value的指针(这句话听起来也别扭，首先struct value是个什么东西？(从例子上看其实就是类似于类的实例，这么说不准确，准确来说应该就是类的实例，因为结构体也是一种类型，所谓类型就是类，所以说struct value其实就是类的实例)也不好描述，看例子吧: p=&Vertex{1,2} 这个例子中，Vertex{1,2}相当于描述中讲的struct value; 此时p是一个指针变量，也就是说p中存放的是Vertex{1,2}这个实例在内存中被分配的地址，然后上一节也说了按理说如果要引用Vertex中的值的话，需要用(*p).X/Y,但是Go语言在这块为我们做了处理，即p的*前缀可以省略掉)
 Struct Literals
 1.struct literal,看完例子感觉,所谓的Struct Literals是指通过给结构体类型中字段赋值的方式来得到stucture value,也就是说可以将Structure Literal理解为一种得到structrue value的手段.而学到的新东西是在实例化化的时候，结构体中的所有字段不必完全都赋到值，可以只赋一部分，剩余那部分没赋到的，会根据之前讲过的，按相应类型的"零值"去赋(整型的是0,字符串类型的是""等等吧,这个也有一部分是自己猜的，不过应该没啥大问题),下面是官文中给的例子:
@@ -225,41 +260,46 @@ Struct Literals
     *.这是该小节的第一句话, A struct literal denotes a newly allocated struct value by listing the values of its fields. 其中newly翻译为"重新"而不是"最近",listing翻译为"登记"而不是"列出",整个句子的意思应该更好理解一些
 2.我感觉把Struct Literal叫做结构体的实例化方法或叫创建结构体的对象的方法比较合适(根据给出的例子推想出来的)
 Arrays
-1.数组类型的声明: [n]T   //一个含有n个类型为T的数组(声明一个数组，该数组有n个类型为T的元素)
-  var a [2]string  //定义一个含有2个类型为string的数组a(声明一个数组a,该数组中有2个类型为string的元素)
+1.数组类型的声明: [n]T   //一个含有n个类型为T的数组(声明一个数组，该数组包含n个类型为T的元素)
+  var a [2]string  //声明一个数组a,该数组中有2个类型为string的元素
 2.数组的引用和赋值与其它语言一样，都是使用角标的形式
   a[0] = "Hello"
   a[1] = "World"
 3.声明数组时如果限定了长度，则以后使用该数组时，长度就是固定的了，不可以对数组的长度进行重定义;但最后一句话不是很明白:This seems limiting, but don't worry; Go provides a convenient way of working with arrays.它说的意思是明白，前面说了声明时带有长度的数组后期不可改变大小，但又说这种限制不用担心，Go为我们提供了一种方便的方式来使用数组，这句话指的是什么?指的是后面要说到了声明时可以不定义长度的形式吗?
 4.声明数组时赋值(或者叫声明一个带有初始化器的数组?) [n]T{value1, value2, ...}
-  var primes := [6]int{2, 3, 5, 7, 11, 13}  //这里看出错误了，因为这里的声明用的是短形式:=,所以说打头的关键字var是没有必要的，看了一眼原文也是这样，先不去var,暂且留在这里吧
+  var primes := [6]int{2, 3, 5, 7, 11, 13}  //这里看出错误了，因为这里的声明用的是短形式:=,所以说打头的关键字var是没有必要的，看了一眼原文也是这样，先不去掉var,暂且留在这里吧
 5.总结一下数组的声明赋值常用方法:
   a := [2]int{1,2} //短形式的海象符必须在声明时就赋值
   var a [2]int   a[0]=1  a[1]=2  //使用var可以先声明,后面使用索引的方式赋值
   var a [2]int = [2]int{1,2}  //使用var同样可以连声明和赋值在一块做了
   var a = [2]int{1,2} //使用var可以省略左边声明部分的显式类型说明,因为可以根据右边推断出来
-6.数组的长度不能必须是一个固定的数值,不可以是变量,因为Go是一门静态类型的语言, 所以必须要在编译时知道其长度.如果想声明一个大小不固定的"数组",可以考虑使用下面要说的分片,slice.  //https://stackoverflow.com/questions/46809499/why-cant-you-put-a-variable-as-a-multidimensional-array-size-in-go
+6.数组的长度必须是一个固定的数值,不可以是变量,因为Go是一门静态类型的语言, 所以必须要在编译时知道其长度.如果想声明一个大小不固定的"数组",可以考虑使用下面要说的分片,slice.  //https://stackoverflow.com/questions/46809499/why-cant-you-put-a-variable-as-a-multidimensional-array-size-in-go
 7.官文有这么一句话: "An array's length is part of its type, so arrays cannot be resized",所以当别人问你var animals [3]string中,变量animals的类型时,回答是[3]string, 而非[]string,或string.
 Slices
 1.首先说了array的大小是固定的。接着引出相对而言slice是变化的，slice在其它语言中经常翻译为分片，通过看他的描述，在Go里对slice翻译为分片也是合适的。而分片其实指的是取array的一部分，也就是说slice一般是和array联用,更准确一点说slice的underlying是array;
 2.slice也有类型，为[]T,即未指定大小，[]中未指定分片的大小，也就是说大小是动态的，T一般为相应array中所包含元素的类型;
-3.分片通常的用法是先声明一个数组，然后通过指定数组的上限和下限来为slice赋值
+3.分片通常的用法是先声明一个数组，然后通过指定数组的上限和下限来为slice赋值(或说得到一个slice类型对象)
   *. primes := [6]int{2, 3, 5, 7, 11, 13}
      var s []int = primes[1:4]   //这里面的[]int是可以省略的，也可写作:
      s := primes[1:4]
-4.接着3说，数组的分片一般是包前不包后的，即a[1,4]是指数组a中第1到第3个元素
+4.接着3说，数组的分片一般是包前不包后的，即a[1:4]是指数组a中第1到第3个元素
 *.第三条的例子，可以看出分片s的类型是[]T,这个现在就死记吧，数组的分片(感觉叫切片更生动一些)(不知道将slice和array连起来说准不准确，暂且先这样记吧)，一开始我以为[]T只是因为方便不用刻意的去关心分片的大小，事实上Go可能也是这样考虑的；我尝试着将分片s的类型换成[3]int,因为后面的分片就三个元素嘛，但是执行失败了。而且回显明确告诉我分片的类型是[]T(不能指定slice包含元素的数量)
 Slices are like references to arrays
-1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base:=[10]int{1,2,3,4,5,6,7,8,9,10}这10个数，然后我对该underlying array做了一个切片，比如slice:=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名(这段的描述有点屎了)
+1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base:=[10]int{1,2,3,4,5,6,7,8,9,10}这10个数，然后我对该underlying array做了一个切片，比如slice:=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名
 2.既然slice会直接改变它underlying array中的数据，则其它的slice肯定也会受到影响
 Slice literals
 1.前面有个struct literal从例子中看，struct literal就是一个创建结构体实例或是对象的方法或叫手段,即通过给结构体中字段进行赋值的方法来得到struture value(也就是所谓的结构体实例或对象)
-2.对slice literal官方tour给的描述是:"a slice就像是一个没有长度的array literal"，
-其实不是很理解，暂且将slice literal的结构定义为 "[]T{v1,v2,...,vn}"
+2.对slice literal官方tour给的描述是:"a slice就像是一个没有长度的array literal"， 参考struct literal就很好理解了,其实总结起来就是:
+    0.涉及两个概念 T literal和T value
+    1. T literal是得到T value的一种手段或方法;
+    2. T literal的具体表现形式为: "T{val1,...}"; 
+    *.拿结构体和本节的slice举例来说:
+     假设有结构体type Person struct{ Age int },则Person{18}就是一个Person value,它是通过给结构体定义中的字段赋一个实际值得到的,也就是所谓的Person literal.
+     再说slice, []int{1,2,3}这是一个slice value, 它是通过实际给出slice元素值来得到的, 也就是所谓的slice literal,这种通过给出实际类型值的方式或手段就叫做T literal,得到的结果就叫做T value
 3.声明一个array literal: [3]bool{true, true, false}
 4.声明一个slice literal: []bool{true, true, false}
-*.其中3和4的区别是，3只是简单的声明一个含有三个为bool类型的array并赋值；而4其实可以理解为2步，第一步是创建一个array第二步是基于第一步的array创建一个大小和array完全一样的slice, array[:]. 
-5.对于元素类型为结构体的slice,在声明时初始化需要注意的是,不能像对单个结构体初始化一样,只给部分filed赋值,剩下的field自动获得相应类型的初始值; 必须要将结构体中所有的field都赋值,否则会报错.
+*.其中3和4的区别是，3只是简单的声明一个含有三个为bool类型的array并赋值；而4其实可以理解为2步，第一步是创建一个无名array第二步是基于第一步的无名array创建一个大小和无名array完全一样的slice, array[:]. 
+5.对于元素类型为结构体的slice,在声明时初始化需要注意的是,不能像对单个结构体初始化一样,只给部分field赋值,剩下的field自动获得相应类型的初始值; 必须要将结构体中所有的field都赋值,否则会报错.
   s := []struct {
     i int
     b bool
@@ -271,10 +311,11 @@ Slice literals
     {11, false},
     {13, true},
   }  //这个例子中还有需要注意的地方呢,当初始化array或slice时,如果结尾花括号,},和最后一个元素在同一行,则最后一个元素后的逗号可加可不加, 但如果像该例中这么写,即最后一个元素和结尾花括号不在一行,则最后一个元素后一定要加逗号.
-6.总结一下：参照structure literal, 所谓的slice literal,slice literal就是使用[]T{x,...}的方式得到slice的一种方法
+  *.上面这个例子中slice元素实际上是简写的, 这样想啊, 元素其实是某个类型的实例, 而结构体的实例化语法正常来说应该是T{val...},而这里省了T,直接写的是{val...},拿第一个元素举例,完整的写法应该是: struct{i int; b bool}{2, true},需要注意的是这里面struct"{i int; b bool}"才是类型(字段间我用分号隔开的, 因为这样可以写在一行, 也可以用常规写法, 即每个字段占一行), 而不是"struct",之所以这样说可以抽象一下,slice实例化的语法为[]T{val...},也就是说右方框号,],到左花括号,{,中间的部分的所有内容表示的是元素类型.
+6.总结一下：参照structure literal, 所谓的slice literal就是使用[]T{x,...}的方式得到slice value的一种方法
 7.再多说一句，从之前的struct literal,到array literal, 再到slice literal,其实头两个基本上就是之前讲的变量声明的时候就顺带赋值了，而slice literal虽说也是声明的时候就赋值了，但是不要忘了，slice是要基于array的，这句话是关键。所以再理解slice literal的时候就要分两步理解，第一步是array的创建，第二步是slice的build(叫构建，生成啥的，随便叫吧)
 8.slice也是有类型的，它的类型是"没有长度的数组类型" []T
-9.再说一下slice literal的定义：slice literal就像是一个没有长度的array literal
+9.再说一下slice literal的官方定义：slice literal就像是一个没有长度的array literal
 Slice defaults
 1.如果slice的low bound和或high bound省略的话，则默认会用它们的默认值替代，即，如果low bound省略则用0替代;如果high bound省略的话，则用len(array)替代
     var a [10]int
@@ -287,7 +328,7 @@ s := []int{2, 3, 5, 7, 11, 13}  //这个s是对右侧无名数组的一个分片
 s = s[1:4]  //这个是从上面那句得到的s中取第1，2，3个元素(3,5,7)
 s = s[:2]   //这个是在上面那句s的结果取第0和第1个值(3，5)
 s = s[1:]   //这个是在上面那句的s的结果取第1个值(5)
-*.上面几节也说过slice其实是对array的引用，我理解slice其实存的是地址，而不是值，对slice[1]的修改，其实是对在slice[1]中存储的地址所指向的数据进行修改，所以才会有之前说的对一个slice的修改，可能会影响到其它的slice,如果它们有相同引用的话
+*.上面几节也说过slice其实是对array的引用，我理解slice其实存的是地址，而不是值，对slice[1]的修改，其实是对在slice[1]中存储的地址所指向的数据进行修改，所以才会有之前说的对一个slice的修改，可能会影响到其它的slice,如果它们有相同引用的话. //现在想来, 首先这句话说的没问题, 但又有不恰当的地方,其实所有的变量都是对地址的引用, 只不过slice不同的是系统没有为其分配新内存,而是局限在给underlying array分配的内存范围. 下面的知识会提到如果追加的内容超出了underlying array的范围会重新给underlying array分配一块足够的地方, 但slice本身还是被局限在这块给underlying array新分配的内存上,本质是没变的.
 *.上面那4个s,第2，3，4分别是以上一句为源进行截取，但是下一节会讲到，它们是可扩展的，对于:
   s = s[1:4]来说, s的长度最大扩展到5, 即 s = s[:5], 因为cap(s[1:4])=5;
   s = s[:2]来说, s的长度最大扩展到5,即 s = s[:5], 因为cap(s[:2])=5;
@@ -300,7 +341,19 @@ Slice length and capacity
 1.每个slice都有两个属性，一个叫length,一个叫capacity.
   length的值为当前slice中含有的元素的个数
   capacity的值为当前slice所基于的那个array的长度减去当前slice的low bound
-   *.这么说其实不严谨,当看到create slice with make那一节的例子时, 你会发现,当一个slice是基于另一个slice得到的, 而非基于underlying array时,当前slice的capacity就等于所基于的那个slice的capacity减去当前slice的最小索引.所以对于capacity个人感觉定义为"capacity的值为当前slice所基于的那个array或slice的capacity减去当前slice的low bound"更严谨.  //感觉还是有点小问题, 还需要静下心来再想一下
+   *.这么说其实不严谨,当看到create slice with make那一节的例子时, 你会发现,当一个slice是基于另一个slice得到的, 而非基于underlying array时,当前slice的capacity就等于所基于的那个slice的capacity减去当前slice的最小索引.所以对于capacity个人感觉定义为"capacity的值为当前slice所基于的那个array或slice的capacity减去当前slice的low bound"更严谨.  //这么想其实是没问题的, 总的来说slice还是基于underlying array, 只不过, 如果使用某个slice1进行分片而不是underlying array时, 得到的slice2由于low bound的索引总是从0开始, 所以你在计算slice2的capacity时,就不得不用slice1的capacity去计算.  这句注释如果后面看不明白,可以在纸上写个简单的例子看一下应该就理解了,给个例子吧, 下面这个例子,注释中的数字个数表示len,数字个数加上星号个数表示cap:
+=====
+func TestSlice() {
+  s := []float64{2, 3, 5, 7, 11, 13}  // 2 3 5 7 11 13
+  fmt.Println(s, len(s), cap(s))                       //6  6
+  s = s[1:4]                         //    3 5 7  *  *
+  fmt.Println(s, len(s), cap(s))                       //3  5
+  s = s[:2]                          //    3 5 *  *  *
+  fmt.Println(s, len(s), cap(s))                       //2  5
+  s = s[1:]                          //      5 *  *  * 
+  fmt.Println(s, len(s), cap(s))                       //1  4
+}
+=====
 2.可以通过len(s)来得到分片s的length属性值
   可以通过cap(s)来得到分片s的cap(s)属性值   //看到这明白了goroutines 有一节的代码中的cap()函数是啥意思了
   *.len(s)理解为当前slice的长度; cap(s)理解为当前slice可能的最大长度
@@ -308,14 +361,15 @@ Slice length and capacity
 3.capacity其实可以理解为当前分片最多可以拥有的元素个数，这个个数不要和当前分片的长度相混淆，当前分片的长度指的是当前分片已有元素的个数，而当前分片最多可以拥有元素的个数倾向于分片的扩展性，而这个扩展性是看你当前是基于谁进行的分片,如cap(slice)的值为4,则slice2:=slice[这里的长度不能超过4],因为此时slice2的内容是基于slice来的,所以要注意不是说分片参考的就一定是underlying array, 还有可能参考的是另一个分片.
 4.对于所谓的扩展slice的长度,要从以下几点考虑:
   a.最原始的那个slice或是array,因为此时length和capacity相等且最大;
-  b.你要扩展的是谁,因为它决定了capacity的大小, 你只有知道了它的capacity才能知道你扩展后的slice的length最大是多少
+  b.你要扩展的是谁,因为它决定了capacity的大小, 你只有知道了它的capacity才能知道你扩展后的slice的capacity最大是多少
   originalSlice := []int{1,2,3,4,5}  //原始slice的length和capacity相等为5
   firstSlice := originalSlice[2:4]   //此时firstSlice的length为4-2=2;capacity为原始slice减去low,即5-2=3;所以下面如果想要以firstSlice进行扩展,最大长度不能超过3
   resultSlice := firstSlice[:3]  //此时high索引最大只能到3,因为你是根据firstSlice这个slice取的, 而firstSlice的capacity为3.
+  *.由cap()函数引出的问题, 什么时候会用到这个函数呢? 首先说用到该函数, 其实用的是它的特性, 那么它的特性是啥呢,即可以知道当前slice可容纳的最大元素个数,结合len()函数,即可以知道当前slice可扩展的空间有多大(或者理解为当前slice还剩多少空间). 虽说下面会讲到当使用append()函数向slice追加元素时, 当追加的元素个数超出了slice的capacity后,会重新给underlying array分配一块地儿,但重新分配后,内存地址就改变了. 具体码代码时, 可以根据这段话所描述的特性去使用cap()函数.
 Nil slices
 1.之前讲过如果变量声明的时候(使用关键字var,不能是海象符,使用海象符时一定要进行赋值操作)如果没有初始化器，也就是说如果声明时不赋值，则Go会按类型给相应的变量赋一个值，这个值Go叫它zero value,也就是零值。不管叫啥明白这个意思就好。同样的slice如果声明时不赋值也会默认有一个zero value,为nil.
 2.从例子来看，所谓slice声明时不赋值，指的是没有右边的数组那部分，var s []int,这样的slice,它的len()和cap()都是0，因为这个slice没有underlying array(这个词我还是觉得翻译为基础数组好一些)
-3.一般是用if语句去判断slice是否未初始化.这块就要注意了, "var a []int" 和 "var a = []int{}" 是不一样的,前者是没有初始化,此时a值为nil,而后者的值不是nil, 另外通过实践还从编译器得到一名话,"slice can only be compared to nil",即在使用if语句判断的时候,条件部分的"=="号一边是slice名称,另一边只能是nil.//得到提示使用的例子为:var x []int = []int{} if x==[]int{}{ fmt.Println("nil!")}
+3.一般是用if语句去判断slice是否未初始化.这块就要注意了, "var a []int" 和 "var a = []int{}" 是不一样的,前者是没有初始化,此时a值为nil,而后者的值不是nil, 另外通过实践还从编译器得到一名话,"slice can only be compared to nil",即在使用if语句判断的时候,条件部分的"=="号一边是slice名称,另一边只能是nil.//得到提示使用的例子为:var x []int = []int{} if x==[]int{}{ fmt.Println("not nil!")}
 Creating a slice with make
 1.首先Go提供了一个内建的函数,make,它的返回值就是一个slice；文中还有一句"this is how you create dynamically-sized arrays"也就是make是用来创建动态数组的方式，记得其它语言中当数据的类型为[]T时声明的就是动态数组，但是在Go中，[]T只是slice的类型，数组array的类型必须是[n]T即必须指定大小。还接着上面那句英文，感觉给的例子不是创建的动态数组呀，"a := make([]int, 5)"还是指定了数组的大小了，哎，这块有点不明所以。 //现在感觉呀,golang中所谓的动态数组和C中的还不太一样, golang中的动态数组的动态是有一个大前提的,即在underlying array下的动态, 这么想应该就通了
 2.内建函数make的参数可以是两个，也可以是三个，但是第一个一般都是slice的类型:
@@ -329,13 +383,13 @@ Creating a slice with make
          2.三个参数可以参照两个参数，第三个参数为underylying array的长度，第二个参数为slice的长度
 3.到现在是看出来了，分片的可伸缩性，只要是在underlying array所表达的范围内可以随便折腾; 还有一点需要注意,make函数中,第三个参数slice_caps一定是大于等于第二个参数slice_len的.
 4.再通过例子来了解一下make两个参数和三个参数(下面这个例子举的好!):
-    a = make([]int, 6)  此时虽说是两个参数,但是预处理的时候第三个参数同第3个,即,在执行前原表达式会被改为: a = make([]int,6,6),然后先根据第三个参数创建一个无名数组,这个无名数组有6个0,然后根据第一,二个参数,确定slice的大小 a := [8个0][0:6].此时根据上面的算法,len(a)值为6,cap(a)的值为8-0=8.
-    a = make([]int,6,8),有了上面2个参数的,3个参数的也就不用说了
-*.当slice中元素类型为struct时,搞清在声明时赋值以及先声明后赋值时写法上的区别:
+    a = make([]int, 6)  此时虽说是两个参数,但是预处理的时候第3个参数同第2个,即,在执行前原表达式会被改为: a = make([]int,6,6),然后先根据第三个参数创建一个无名数组,这个无名数组有6个0,然后根据第1,2个参数,确定slice的大小 a := [0:6].此时根据上面的算法,len(a)值为6,cap(a)的值为6-0=6.
+    再来说三个参数的,参照2个参数的逻辑: 假设有a = make([]int,6,8),先根据第三个参数8,创建一个含有8个int类型元素的无名数组对象(该无名数组初始元素为相应类型零值,即此时创建了一个含有8个0的无名数组), 然后根据第1,2个参数创建一个长度为6个元素的slice, 默认该slice从无名数组第0个索引处开始取,所以结果就是len(a)的值为6, cap(a)的值为8.
+*.当slice中元素类型为无名struct时,搞清在声明时赋值以及先声明后赋值时写法上的区别:
   声明时赋值: slice1 := []struct{Name string; Age int}{{"张三",10},{"李四",20}}
   先声明后赋值: slice2 := make([]struct{Name string; Age int},2,4)  
                 slice2[0] = struct{Name string; Age int}{"李四",20}
-  *.在slice1中每个分片元素的类型都是一个结构体,所以在initializer中每个元素都单独使用了花括号括起来;而slice2[0]是给某个结构体元素赋值,所以后面花括号里面直接就是字段值.
+  *.在slice1中每个分片元素的类型都是一个结构体,所以在initializer中每个元素都单独使用了花括号括起来;而slice2[0]是给单个结构体元素赋值,所以后面花括号里面直接就是字段值.
   *.length指的是slice的当前实际长度, cap指的是基于被分片的slice当前slice可能的最大长度  //之前把把capacity翻译为"容量",有时候翻译为"潜力"可能有助于理解,即一个slice的length可能是3,但它有6个长度的"潜力"
 Slices of slices
 1.叫slices of slices，其实就像c或java中的多维数组，使用方法一模一样，都是通过多维索引，看第一眼的时候觉得会难一些，其实不然。
@@ -355,71 +409,74 @@ Appending to a slice
     	fmt.Println(&age[0]) //原始数组第一个元素的地址
     
     	sli := age[0:1]  //原始sli,里面只有一个元素len(sli)=1,cap(sli)=3
-    	fmt.Println(&sli[0]) //因为sli的len,还未超过基础数组的大小,所以输出值同上
+    	fmt.Println(&age[0], &sli[0]) //因为sli的len,还未超过基础数组的大小,所以输出值同上
     
     	sli = append(sli,4) //向sli追加1个元素,此时len(sli)=2,cap(sli)=3
-    	fmt.Println(&sli[0])//因为sli的len,还未超过基础数组的大小,所以输出值同上
+    	fmt.Println(&age[0], &sli[0])//因为sli的len,还未超过基础数组的大小,所以输出值同上
     
     	sli = append(sli,4) //向sli追加1个元素,此时len(sli)=3,cap(sli)=3
-    	fmt.Println(&sli[0])//因为sli的len,还未超过基础数组的大小,所以输出值同上
+    	fmt.Println(&age[0], &sli[0])//因为sli的len,还未超过基础数组的大小,所以输出值同上
     
     	sli = append(sli,4) //向sli追加1个元素,此时len(sli)=4,cap(sli)这个大小目前还不知道,因为不清楚,重新分配后的基础数组在原数组的大小上做加法运算的规则
-    	fmt.Println(&sli[0]) //此时因为len(sli)已超过了3,所以重新分配了基础数组的位置,而sli又是对基础数组地址的引用,因此此处的第0个元素和上面不同了
-    	fmt.Println(&age[0])
-    	fmt.Println(age)
-    	fmt.Println(sli)
+    	fmt.Println(&age[0], &sli[0]) //此时因为len(sli)已超过了3,所以重新分配了基础数组的位置,而sli又是对基础数组地址的引用,因此此处的第0个元素和上面不同了
+    	fmt.Println(&age[0], age)
+    	fmt.Println(&sli[0], sli)
     }
-5.看到这记录一个对比, 使用slice[index]方式赋值的话, index的大小不能超过length; 而使用append(slice,elements)追加值的话, 参照的就不再是length了, 而是capacity, 当追加后的长度未超过该slice的capacity,则slice引用的是原始array在内存中被分配的位置; 一旦超过了capacity,则Go就会重新找一块地放array,然后这个slice的underlying array就不再是原始的那个而是新分配的这个(直观体现就是首元素在内存中的地址不同了).
+5.看到这记录一个对比, 使用slice[index]方式赋值的话, index的大小不能超过length; 而使用append(slice,elements)追加值的话, 参照的就不再是length了, 而是capacity, 当追加后的长度未超过该slice的capacity,则slice引用的是原始array在内存中被分配的位置; 一旦超过了capacity,则Go就会重新找一块地放array,然后这个slice的underlying array就不再是原始的那个而是新分配的这个(直观体现就是首元素在内存中的地址不同了). 具体一点来说, 当sli中的元素个数未超过3时,都是在给age分配的内存里玩, 当超出age的空间了, 就会开辟一片新内存, 然后将age当前数据copy过去,然后将新元素追加到新空间中, 之后再追加就没age啥事了,也就是从append函数导致"out of range"后, age就停止不前了,数据也不会再变了, 一些后续操作都是在新开辟的这块空间上进行的,这也就导致了最终输出age的结果是[1,4,4],而sli的结果是[1,4,4,4].
 Range
-1.for循环中的range形式用于遍历一个slice或是一个map
-2.当使用range遍历一个slice的时候，每次遍历会返回两个值，index和与之对应的value(文中特别强调那个值是slice相应位置的一个copy,说白了就是告诉我们，对slice的遍历并不会影响原slice的内容，即并不是说将0位置的索引值返回后，这个值就从原slice删除了.这一点可以和python中使用readline()或readlines()函数从文件对象中读行形成鲜明对比,如readline()函数是调一次文件对象中就少一个元素,而readlines()调一次文件对象直接就空了)
-3.for循环中对slice使用range的形式: for i, v := range slice { statements}  //需要注意的是在for和range联用时,不能将i,v:=range slice看成是上面讲for循环三个部分的第一部分,而是这样就够了,如果你强行加上i,v:range slice;condition;x++|x--是会报错的,具体后面还要看一下for和range联用的语法中有没有写其它的.
-*.for循环中对map的遍历还没说，因为还没看到map,后面应该有相关的例子,到时再补
+1.for循环中的range形式用于遍历一个array, slice或是一个map
+2.当使用range遍历一个range或slice的时候，每次遍历会返回两个值，index和与之对应的value(文中特别强调那个值是slice相应位置的一个copy,说白了就是告诉我们，对slice的遍历并不会影响原slice的内容，即并不是说将0位置的索引值返回后，这个值就从原slice删除了.这一点可以和python中使用readline()或readlines()函数从文件对象中读行形成鲜明对比,如readline()函数是调一次文件对象中就少一个元素,而readlines()调一次文件对象直接就空了); 而range对map的遍历同样是返回两个值,只不过一个是key,一个是key对应的value.
+3.for循环中对slice使用range的形式: for i, v := range slice { statements}  //需要注意的是在for和range联用时,不能将i,v:=range slice看成是上面讲for循环三个部分的第一部分,而要认为for语法有两种形式,第一种形式就是常规的由两个分号隔开的三段式; 第二种形式就是由range主导的形式.如果你强行加上i,v:range slice;condition;x++|x--是会报错的,具体后面还要看一下for和range联用的语法中有没有写其它的.
+*.for循环中对map的遍历形式同对slice或array的遍历,唯一不同的是slice或array返回的两个值是index和对应的value; 而map返回的是key和对应的value.
 Range continued
 1.刚才说过for循环中的range slice形式，会返回两个值，一个是index,还有一个是和index相对应的值;如果我们只想要index,则可以将value的位置替换为_,反之，如果只想要value,则可以使用_代替index:
   for i, _ := range slice
   for _, value := range slice
-2.如果只想要index值，可以直接将",value"直接省略,即:
+2.如果只想要index值，还可以直接将",value"直接省略,即:
   for i := range slice
 Exercise: Slices
-1.练习部分，下一遍再看吧
+1.做了, 但由于不懂图像相关的知识, 最后也是不明所以.做的时候参考了链接: https://pkg.go.dev/golang.org/x/tour/pic#example-Show
 Maps
 1.map是由多个键值对组成，这个和其它语言中的字典，哈希啥的没区别
 2.map使用的时候有以下几种情况:
  a.声明但未初始化的map,其值为nil,最关键的是未初始化的map不能被赋值:
     
-    var m map[string]int   //之前这句写的是 m := map[string]int 仔细一看海象符出现,则必须要赋值,所以这个表达式就是不合法的
+    var m map[string]int   //之前这句写的是 m := map[string]int 仔细一看海象符出现,则必须要赋值,所以海象符的这个写法是不合法的
     m["age"] = 18     //上面这两句是不正确的写法,因为上句m声明时未被赋值,m的值为nil,此时不能直接给m赋值
    当m值为nil的时候,通常的用法和slice是一样的,即放在if语句中判断其值为nil:
     if m == nil { fmt.Println("nil!")}
  b.声明但未初始化的map,如果也想被赋值,其中一种方法是使用make方法返回一个同样类型的map对象:
     var m map[string]int
-    m = make(map[string]int)
+    m = make(map[string]int)  //注意,此时,中间的是等号,而非海象符
     m["age"] = 16   //经过上句make函数这么一折腾,此时的写法就是正确的
  c.可以直接使用make函数返回一个可被赋值的map对象
     m := make(map[string]int)
     m["age"] = 16  //此时的写法是正确的,因为make函数的参数为map类型时,返回的就是一个可直接操作的map.
  d.声明的时候直接将map进行初始化则后面可以直接给这个map赋值:
-   *.声明的时候直接初始化,应该说的就是后面所说的map literal, 它是得到可操作map对象的一种手段.
+   *.声明的时候直接初始化,应该说的就是上节要讲到的的map literal, 它是得到可操作map对象的一种手段.
     m := map[string]int{"zhangsan":19}
     m["liSi"] = 20  //这种写法是正确的,因为上句m在声明时赋了值,m的值不再是nil,故后面可以直接向m赋值
  e.还需要注意的就是当map的数据类型是稍复杂一点,如结构体的时候,初始化和后面赋值时的写法:
   type Vertex struct { Lat, Long float64 }
-  初始化:
+  声明变量m的同时赋初值:
     var m = map[string]Vertex{
        "zhangsan":Vertex{80.6,-90.9},
        "lisi":Vertex{90.6,-80.9},
     }
+    *.此时初始值中类型名Vertex可以去掉,海象符声明时就赋值也可以省,这种方法就是前面提到过的因式分解法,factored;还可以换种想法, 编译器会自动根据T进行补全. 但使用var和make组合得到的变量,在使用m[key]=value的形式进行赋值时,value实例中,T不能省,因为此时你是单独赋值,编译器没有参考的东西.
   未初始化但使用make函数得到了可操作的map对象:
     var m map[string]Vertex
     m = make(map[string]Vertex)
-    m["Bell Labs"] = Vertex{ 40.68433， -74.39967, }   //重要关注的是这句,即Vertex作为值时的写法
+    m["Bell Labs"] = Vertex{ 40.68433, -74.39967, }   //重要关注的是这句,即Vertex作为值时的写法
   同样,复杂的结构也可作为map中的键:
     type Vertex struct { X,Y int }
     var m  map[Vertex]int
     m = make(map[Vertex]int)   //这句和头一句也可写为一句 m := make(map[Vertex]int) 或声明时就进行初始化,写为 m:= map[Vertx]int{Vertex{2,3}:4}
     m[Vertex{1,2}] = 3
     fmt.Println(m[Vertex{1,2}])  
+    *.无论类型多复杂,只要记住,实例化的语法是"类型{值...}"的形式就可以了.特殊一点的就是声明类型的时候如果一并赋初值了,则此时类型实例化的时候,可以省略类型名,T,只写一对花括号,{}.
+    *.再强调一点, 对于结构体的声明: 如果左右花括号和字段都在一行,则字段间要用分号隔开; 如果左右花括号单独位于一行,每个字段也单独位于一行,则字段间的分隔符为换行(也就是啥都不用加,因为单独位于一行就隐含着换行符的存在)
+                  对于结构体的实例化:字段间要使用逗号隔开,最重要的是如果最后一个字段和右花括号在一行,则最后一个字段后可以不加逗号;如果最后一个字段和右花括号不在一行,则最后一个字段后要追加一个逗号,否则会报错.
 Map literals
 1.map literals指的同上边一样,即在声明时赋值从而得到相应的map对象.之前说的是上面讲的struct literals不同于其它的literals,当时的想法是看代码中先有type Vertex struct {X,Y int},然后下面才是var x := Vertex{1,2}就觉得struct literals和其它类型的literals不同了, 但其实是我想错了, 重要的一点是,所谓T literals的前提是你得先有T才行啊,你有了T下面才能谈T的literals,之前之所以理解错误,原因在于slice,array这些都是内置的类型,可以直接用,而Vertex是我们自定义的类型.
 2.这一节的map literal看例子也是在声明时一并赋值，看一下例子中的部分代码:
@@ -434,7 +491,7 @@ Map literals
     "Google": Vertex{
       37.42202, -122.08408,
     },
-  }  //该例子在对Vertex实例化的时候,语法为Vertex{X值,Y值},对比于匿名结构体的初始化, 要使用struct{变量名 类型}{变量值}的形式,整体去想就好理解了,对自定义的类型进行实例化的语法就是 类型名{具体值}, Vertex就已经是类型名了, 所以其实例对象可以直接为Vertex{值}; 而匿名结构体,因为没有别名用一表示其类型,所以在实例化的时候就要把struct{变量名 类型}写上,然后后面跟上{值},即 struct{变量名 类型}{值}
+  }  //该例子在对Vertex实例化的时候,语法为Vertex{X值,Y值},对比于匿名结构体的初始化, 要使用struct{变量名 类型}{变量值}的形式(当然对于海象符声明变量以及var声明时赋值时,元素实例中的匿名类型可以因为因式分解规则的存在,而不用去写),整体去想就好理解了,对自定义的类型进行实例化的语法就是 类型名{具体值}, Vertex就已经是类型名了, 所以其实例对象可以直接为Vertex{值}; 而匿名结构体,因为没有别名用来表示其类型,所以在实例化的时候就要把struct{变量名 类型}写上,然后后面跟上{值},即 struct{变量名 类型}{值}
 Map literals continued
 1.下面的例子是官文给的,map实例化的时候top-level type可省时的代码:
   type Vertex struct {
@@ -446,7 +503,7 @@ Map literals continued
     "Google": Vertex可写可不写{37.42202, -122.08408},
   }
 *.这里其实主要就是搞不清楚top-level type是个啥玩意儿,一开始认为是在函数外声明的类型就是top-level type,因为go中没有类的概念,所以也谈不到在某个类内部声明.但是通过测试无论是在main函数里面还是外面声明Vertex,m在实例化的时候,相应键值中Vertex关键字都能省.所以之前想的肯定不对,结果上网上搜了搜,有个人还专门为弄不懂这个东西去开了个issue,后面他也是在stackoverflow上提问得到了相对满意的答案(另外该链接还给出了另一个字典值可省略类型名的情况,即在声明字典类型时,map[int]struct{x,y string},这样直接将类型声明嵌到另一个类型声明中,因为该struct结构体没名,故实例化的时候键值处直接{}即可),这个答案链接为: https://stackoverflow.com/questions/47579004/what-can-be-used-in-a-map-literal-instead-of-a-type-name-in-go  大概意思是:
-基本上讲的是当定义了一个接口I时,如果后面类型A实现了I(中的方法),类型B也实现了I(中的方法),则当给一个为[int]I的字典实例化的时候,就要明确的在键值处写为A{},还是B{},因为如果就一个A类实现了接口I(中的方法),则你在实例化的时候写作3:{},则go编译器会根据你声明的定型直接将{}处理为A{},但现在有两个类都实现了接口I,此时就得你显式的给出来这个类型了:
+基本上讲的是当定义了一个接口I时,如果后面类型A实现了I(中的方法),类型B也实现了I(中的方法),则当给一个为[int]I的字典实例化的时候,就要明确的在键值处写为A{},还是B{},因为如果就一个A类型实现了接口I(中的方法),则你在实例化的时候写作3:{},则go编译器会根据你声明的定型直接将{}处理为A{},但现在有两个类都实现了接口I,此时就得你显式的给出来这个类型了:
     type I interface {ok() string}
     
     type A struct{}
@@ -510,6 +567,19 @@ func main() {
 }
 上面代码备注那句在给"zhangsan"赋值时,后面一定要写成Person{20},而不能写成{20}, 对于这个例子我的理解是,在给字典d初始化赋值时,会考虑到字典的键或值的实际类型,然后看这些类型是否为top-level type(按照上面最后一句我自己的理解走),去判断赋值时这个类型关键字是否可省. 而一旦初始化完成了,后面使用得到的对象进行赋值时,就不会考虑那么多了,就直接是拿你写的类型值去和d定义中的比较,正确则执行,不正确则报错,即使用初始化后的对象对字典进行更改时,就没有了推断的过程,只有比较的过程,因此此时的Person必须要写.
 *.对于top-level type的理解见: https://stackoverflow.com/questions/47579004/what-can-be-used-in-a-map-literal-instead-of-a-type-name-in-go,简单来说就是当类型为接口时,实例化时要明确指定类型,因为多个类都可实现同一个接口,所以当你声明一个变量类型为接口时,实例化的时候就一定要指定到底用的是哪个实现该接口的类.
+**.这里对本小节来个总结吧
+   1.先说接口,实例化的时候,类型T一定要存在;
+   2.再说top-level type,这个概念在这小节里最让人摸不着头脑, 但从例子来看,可以忽略到这个概念的存在, 讲的就是上面反复讲到的,声明变量时赋值,则因为有因式分解规则的存在,实例中的类型T可省; 而单独给字典中的某个键赋值时,类型T必须存在.
+**.chatGPT给出的顶级类型描述(没有详细的去验证是否正确):
+  在 Go 语言中，顶级类型（Top-level type）指的是不嵌套在其他类型中的类型，是最顶层的数据类型。Go 语言中的顶级类型包括：
+  基本类型：bool、int、float、complex、string 等。
+  结构体类型：结构体是 Go 语言中的一种复合数据类型,它由一组命名的数据字段组成。
+  数组类型：数组是一种固定长度的数据结构，存储多个同类型的数据。
+  切片类型：切片是一种变长的数据结构，可以动态地存储多个同类型的数据。
+  接口类型：接口是一种特殊的类型，它可以定义一组方法的签名，但不实现这些方法。
+  函数类型：函数是一种可以被调用的代码块，它接受参数并返回一个或多个值。
+  
+  顶级类型是 Go 语言中的基本数据类型，它们用于表示程序中的数据和状态，是编写程序的基础。任何复杂的数据类型都是由这些基础类型组合而成的。
 
 Mutating Maps
 1.强调一点，变量要先声明后使用，或者在使用的时候直接声明，就第二点来说，比如elem和ok之前都没有声明，则可以在使用的时候使用短声明的方式直接声明: elem, ok := m[key]
@@ -520,10 +590,34 @@ Mutating Maps
   d.测试某key是否在map m中: elem, ok = m[key] //用这种形式的前提是elem和ok已经在前面声明了(如果前面没声明,要写成elem,ok := m[key])；就该例来说，如果key在m中则ok的值为true,elem为相应的值，如果key不在m中，则ok为false, elem为m中元素类型的"零值"
 *.有一点特别需要注意: 声明结构体时,如果多个字段的声明在同一行,则字段间的分隔符为"分号"而非"逗号",而在结构体初始化时,实际的字段值间的分隔符为"逗号",而非声明中的"分号".
 Exercise: Maps
-1.练习下一轮的时候再看
+实现代码: 
+*****
+  package main
+  
+  import (
+  	"strings"
+  	"golang.org/x/tour/wc"
+  )
+  
+  func WordCount(s string) map[string]int {
+  	fields := strings.Fields(s)
+  	wordCount := make(map[string]int)
+  
+  	for _, word := range fields {
+  		wordCount[word]++
+  	}
+        //和原文给出的待补全代码相比,这句给改了,因为wc.Test给的是随机字符串,而原文给的是具体的{"x":1}肯定不会过的.
+  	return wordCount
+  }
+  
+  func main() {
+  	wc.Test(WordCount)
+  }
+*****
+
 Function values
-0.functions are values too. //对于理解非常重要的一句话, 函数值是"函数作为值",即有参数类型是函数类型和或返回值是函数类型, 而不是"函数的返回值"
-0.从这节的解释说明来看,function value指的是两个函数: 1是作为参数传给高阶函数的那个函数; 2是作为return返回值的那个函数
+0.functions are values too. //对于理解非常重要的一句话, 函数值是"函数作为值",即有参数类型是函数类型和或返回值是函数类型(换句话说函数也是一种变量类型), 而不是"函数的返回值"
+0.从这节的解释说明来看,function value指的是两个函数: 1是作为参数传给高阶函数(higher-order function)的那个函数; 2是作为高阶函数return返回值的那个函数 //还是上一句概括的更全一些,即function value想表达的就是函数也可以作为函数类型.不仅可以作为另一个函数的参数或返回值,还可以作为某个变量的值,而这个变量可以是在函数里声明的, 也可以是在函数外声明的.
 1.初看，函数既可以作为函数参数，也可以作为函数的返回值, 应该就是其它语言中所谓的高阶函数吧?! //之前说类似于python中的decorator,其实也不一样, python中对于decorator的解释是 参数和返回值都是函数,是和的关系(可以看cnblogs上关于python中decorator的笔记), 而这里的函数值说的是函数也可以作为值进行流转, 可以是和的关系也可以是或的关系, 即函数值出现在哪个环节都行,也可以同时出现.
 2.再看，有一点需要注意的，就是函数作为参数时的写法，这块乍一看不理解，但是分开来想还是可以理解的: func compute(fn func(float64, float64) float64) float64{},分解开看一下:
   func是定义函数的关键字
@@ -563,24 +657,53 @@ Function values
     }
     
     func main() {
-    	fmt.Println(B(A)) //方法一,直接传入函数名,切记函数名不要加(),否则被传入的类型就不是函数A了,而是返回值的类型int
+    	fmt.Println(B(A)) //方法一,直接传入函数名,切记函数名不要加(),否则被传入的类型就不是函数A了,而是函数A的返回值(int类型)
     	x := A             
     	fmt.Println(B(x))  //这个方法基本同上,就是给函数A取了个别名
     	y := func() int {return 86}  
     	fmt.Println(B(y))  //这是官文推荐的方法,即不用func声明函数,而是直接将函数作为一个表达式,最终得到一个函数类型的变量y
     }
-4.假设A是一个高阶函数,其参数一或是返回值为函数B,当时想即然函数B无论如何也是要在函数A中执行的, 那为什么不直接在函数A中直接调用函数B呢,反而多此一举,先将函数B作为函数A的参数,然后再在函数A中对B进行调用?!, 现在我想明白了, 关键点在于"动态"两个字,假设我们明确知道要在函数A中调用的函数B是谁,那么无论是使用高阶函数还是直接在函数A直接调用函数B都是没有问题的. 但问题是, 我们将函数A给抽象成可以在函数体中执行任何函数B的函数,此时就必须要用高阶函数了,因为这个函数B不是特指某个函数.知道了这点,再一想一下常用的map函数,它接受一个数据集,和一个处理数据集的函数, 此时你再想想, 100个人可能有100种处理数据集的想法, 你怎么能做到直接在map函数中调用一个函数逻辑去满足这100个人的处理逻辑呢?此时只能使用高阶函数,将map函数的参数类型设置成函数类型, 这样你就可以传入任何的函数, 从而可以用不同的逻辑处理数据集. 如果golang本小节是要讲高阶函数,其实它举的这个例子对于理解什么时候使用高阶函数是没有帮助的, 这只谈到了用法, 但这个例子执行完过后,脑子里并不知道什么时候会用到这种结构.
+4.假设A是一个高阶函数,其参数一或是返回值为函数B,当时想即然函数B无论如何也是要在函数A中执行的, 那为什么不直接在函数A中直接调用函数B呢,反而多此一举,先将函数B作为函数A的参数,然后再在函数A中对B进行调用?!, 现在我想明白了, 关键点在于"动态"两个字,假设我们明确知道要在函数A中调用的函数B是谁,那么无论是使用高阶函数还是直接在函数A直接调用函数B都是没有问题的. 但问题是, 我们将函数A给抽象成可以在函数体中执行任何函数B的函数,此时就必须要用高阶函数了,因为这个函数B不是特指某个函数.知道了这点,再一想一下常用的map函数,它接受一个数据集,和一个处理数据集的函数, 此时你再想想, 100个人可能有100种处理数据集的想法, 你怎么能做到直接在map函数中调用一个函数逻辑去满足这100个人的处理逻辑呢?此时只能使用高阶函数,将map函数的参数类型设置成函数类型, 这样一来你可以传入任何满足声明条件的函数, 从而可以用不同的逻辑处理数据集. 如果golang本小节是要讲高阶函数,其实它举的这个例子对于理解什么时候使用高阶函数是没有帮助的, 这只谈到了用法, 但这个例子执行完过后,脑子里并不知道什么时候会用到这种结构.
+*.本小节最后想再强调一下声明函数类型以及给函数类型传值的常见用法: 在声明函数类型时,通常形参和返回值是没有名称的,只有相应的类型,因为目的已经达到了, 我函数里想要几个参数,参数类型是啥,返回值类型是啥,意思已经表达清楚了. 而给这个函数类型传值时,一般就要给形参命名了, 因为通常情况下我们要在函数体中对形参进行引用.其实可以通过上面讲过的所有类型的声明和实例化方式去理解函数类型的声明与赋值,函数的声明就如上面说的,用最简单的形式表达清楚要素; 而函数的赋值说白了就是把函数类型给写完整了, 即参数类型该补的补上, 函数体中的语句该补的补上.见例子:
+  func FunctionAsArg(f func(int) string) {  //函数类型形参及返回值部分仅给出要满足的类型
+  }
+  var fn = func(x int) string { strconv.Itoa(x) }  //传值的函数将形参名以及函数体都补全了
+  FunctionAsArg(fn(888))  //实际调用
 Function closures
-1.什么是closure?
+1.什么是closure(可以参考javascript中的闭包, 搜mdn closure)?
   ::closure是一个函数值，我感觉再精确一点，closure就是一个作为(返回)值的函数；但是还有一个约束，就是这个函数返回值的body部分引用了body外的变量，body外应该指的就是和return同级的一些变量；这句话还可以和上一句一样说的更精确一些，closure其实就是一个无名函数，它作为函数的返回值，return的参数。即函数的返回值也是一个函数，但是还有一点需要说明的是不是随便一个被返回的无名函数都叫closure,这个无名函数体内还要引用和return同级的变量才可以；总结一下closure的特点：
   a.closure函数是一个无名函数;
   b.closure函数是某个函数的返回值;
   c.这个内部的无名函数体中要引用父函数中的变量 
   d.closure一般作为return的参数
+  *.再补充一点,拿js中的closure来对说, 闭包和垃圾回收相关联, 简单来说由于返回的函数引用了其所在函数中的变量, 导致这个外部函数的内存没有被回收,从而导致多次调用返回的这个内部函数可能会产生不同的结果. 举例来说, 外部函数定义了一个变量a:=0,而内部函数只有一条语句为a+=1,假设被返回的函数类型值为 return f(),则你会发现,同一个函数,第一次调用f()得到的值是1,第二次得到的值是2.
+  =====
+  package main
+
+  import (
+    "fmt"
+  )
+
+  func TestClosure() func(){
+    a := 0
+    return func(){
+      a += 1
+      fmt.Println(a)
+    }
+  }
+
+  func main(){
+    f:=TestClosure()
+    f()  //output 1
+    f()  //output 2
+    f()  //output 3
+  }
+
+  =====
 2.这节通过例子还是有两点需要注意的：
   a.同时给多个变量赋值，这个其实也不算新东西:
        pos, neg := adder(), adder()    //准确来说应该叫同时声明多个变量并赋值
-  b.下面这个例子讲到了精髓,在下面的例子中,所谓的function closure并不是adder()这个函数, 而是它的返回值"func(x int) int",而重点在于返回值中的函数引用了outer的变量sum,而closure function的作用可以理解为: 将外部函数adder理解为一个类,将每次adder()理解为得到一个实例, 类的实例说白了就是在将这个类复制到另外一块内存上嘛.使用adder()多次赋值就会得到多个实例,这些实例之间没有交集,是在不同的内存区域上, 但对相同实例的多次调用时,上一次的调用会影响下一次,因为两次调的是同一个实例嘛,所以下一次调用时会引用上一次得到的sum;(这么说可能不是真正的设计逻辑,但是对于前期理解还是有一点帮助的)//这段话要是不明白根据官网例子的结果多推敲一下就明白了
+  b.下面这个例子讲到了精髓,在下面的例子中,所谓的function closure并不是adder()这个函数, 而是它的返回值"func(x int) int",而重点在于返回值中的函数引用了outer的变量sum,而closure function的作用可以理解为: 将外部函数adder理解为一个类,将每次adder()理解为得到一个实例, 类的实例说白了就是在将这个类复制到另外一块内存上嘛.使用adder()多次赋值就会得到多个实例,这些实例之间没有交集,是在不同的内存区域上, 但对相同实例的多次调用时,上一次的调用可能会影响下一次的调用,因为两次调的是同一个实例嘛,所以下一次调用时会引用上一次得到的sum;(这么说可能不是真正的设计逻辑,但是对于前期理解还是有一点帮助的)//这段话要是不明白根据官网例子的结果多推敲一下就明白了
   func adder() func(int) int {
   	sum := 0
   	return func(x int) int {
@@ -598,9 +721,9 @@ Function closures
   		)
   	}
   }   
-  *.你可以将adder()理解为类, pos,neg := adder(), adder()相当于类adder的实例化,得到两个实例pos和neg, 此时因为是两个实例,所以操作pos时对neg是没有影响的, 反之亦然, 但正如上面例子所说, 多次操作同一个实例时,如果多次调用都会用到同一个变量(引用closing function中的),则前面调用时产生的结果会影响会面调用时该变量的初始值,原因很明显, 同一个实例中,同一个变量在内存中的地址是固定的.//这段话也可以理解为function closure(函数闭包)的使用场景
-*.上面关于function closure的说法应该不完全正确, 感觉只是其中的一种应用形式.//但function values一节说function values可以用于函数参数或函数返回值, 而这一节又说在function closure中引用closing function中的变量,所以只有匿名函数作为返回值才满足可以在函数体中调用closing function中变量的情况.
-*.也就是说function closure指的是:"a.内嵌于函数A中","b.作为return参数"并且"c.引用A中变量"的"d.匿名函数"B
+  *.你可以将adder()理解为类, pos,neg := adder(), adder()相当于类adder的实例化,得到两个实例pos和neg, 此时因为是两个实例,所以操作pos时对neg是没有影响的, 反之亦然, 但正如上面例子所说, 多次操作同一个实例时,如果多次调用都会用到同一个变量(引用closing function中的),则前面调用时产生的结果会影响后面调用时该变量的初始值,原因很明显, 同一个实例中,同一个变量在内存中的地址是固定的.//这段话也可以理解为function closure(函数闭包)的使用场景
+*.上面关于function closure的说法应该不完全正确, 感觉只是其中的一种应用形式.//但function values一节说function values(function value从形式上看其实就是一个完整的函数)可以用于函数参数或函数返回值, 而这一节又说在function closure中引用closing function中的变量,所以只有匿名函数作为返回值才满足可以在函数体中调用closing function中变量的情况(这句话说的不完全对, 内嵌函数也可以有名,只不过内嵌函数不能用func的形式声明,只能用海象符的形式,如inner:=func(){}).
+*.也就是说closure function指的是:"a.内嵌于函数A中","b.作为return参数"并且"c.引用A中变量"的"  //返回值的形式可以是reutrn func(){} 也可以是先用海象符声明inner:=func(){}, 然后再return inner.即,可返回有名函数也可返回匿名函数
 **.在看net/http/server.go的源码时发现了函数的另一种用法:
     import "fmt"    
     
@@ -619,14 +742,19 @@ Function closures
       //var a app = app([]int{1,2,3})
       //fmt.Println(a)
 }
-*.通过上面这两个例子可以看出,当我们自定义一个类型的别名时, 还可以通过 别名(实际类型实例) 的形式得到一个实例.
+*.通过上面这两个例子可以看出,当我们自定义一个类型的别名时, 还可以通过 别名(实际类型实例) 的形式得到一个实例.  //再强调一下, 函数类型的实例,从字面看就是把函数类型补充完整(主要体现在形参有名了,也有函数体了).
+*.另外当变量类型相对复杂时, 我们可以使用type关键字定义一个别名,在之后的语句中,使用这个别名来代替相应的类型:
+  func x(f func(int)string) {} 等价于下面两句
+  type F func(int)string
+  func x(f F){}
+*.目前来看, 某类型对象, 某类型实例, 某类型值这三个概念说的是一个玩意儿, 说的就是T value, 而得到T value的手段通常是T literal.
 
 Exercise: Fibonacci closure
-1.练习部分下一轮再说
+1.使用closure法和array法两种方法实现,代码已放到cnblog上
 Methods and interfaces
 Methods
 1.Go语言没有类这个概念
-2.虽说Go没有类的概念，但接下来引出Go语言有方法的概念，我们知道方法这个词一般是对类中函数的称法；既然Go没有类，那么Go中的方法是怎么实现的呢?简单来说就是在原有函数定义的基础上，在func关键字与函数名之间加一个在Go中被称为receiver的参数，这么个组合在Go中就叫做方法
+2.虽说Go没有类的概念，但接下来引出Go语言有方法的概念，我们知道方法这个词一般是对类中函数的称法；既然Go没有类，那么Go中的方法是怎么实现的呢?简单来说就是在原有函数定义的基础上，在func关键字与函数名之间加一个在Go中被称为receiver的参数，这么个组合在Go中就叫做(给某个类型定义了一个)方法. 再说细一点就是方法和它的接收器类型其实是捆绑在一起的, 这么说的原因是,通常, 方法中的语句都会引用类型定义中的字段.当然不引用也没关系,如方法中就是输出一个常数,这在语法上也是没问题的.
 3.从实例来看，这个receiver仅仅是为函数体提供引用数据，再说白点就是receiver中定义的数据，在相对应的函数中都可以使用
 4.下面这段代码叫做:Abs方法有一个类型为Vertex名称为v的接收器:
   type Vertex struct {
@@ -640,7 +768,7 @@ Methods
 func main() {
   v := Vertex{3, 4}
   fmt.Println(v.Abs())
-}   //从调用形式来看，和kotlin中类的扩展意思差不多，可以看一下引用，是将Abs()作为v这个类的方法去引用的，而且Abs()函数体可以使有v类中的成员
+}   //从调用形式来看，和kotlin中类的扩展意思差不多，可以看一下引用，是将Abs()作为v这个类的方法去引用的，而且Abs()函数体可以使用v类中的成员(或叫字段)
 5.一个简单的例子:
     package main
     import "fmt"
@@ -699,7 +827,7 @@ Methods are functions
 Methods continued
 1.前面讲的方法，接收器的类型是struct,其实对于非struct类型也是可以的
 2.receiver的类型必须是在method所在的包内声明，在其它包中声明的类型(包括内建的包)不能作为本包method中receiver的类型  //举例来说, 像int, float64这样的内建类型,因为它们不是在你定义方法的那个包中声明的, 所以你不可以直接将它们作为接收器类型,如果确实想用其它包中或是内建的类型, 首先要保证该类型在本包内可访问(这主要是针对非内建包,因为内建的许多类型所在的包都是默认导入的),然后再使用"type 别名 非本包内声明的类型名"的方式,在本包内声明一下, 然后再使用这个 "别名" 作为某方法的接收器类型就可以了.
-3.定义一个类型，使用关键字"type,后接类型名，最后接类型" ,如:type myfloat float64
+3.定义一个类型，使用关键字"type,后接类型别名，最后接类型" ,如:type myfloat float64
   type MyFloat float64
   func (f MyFloat) Abs() float64 {
     if f < 0 {
@@ -708,25 +836,56 @@ Methods continued
     return float64(f)
   }
 *.通过这节官文中的例子可以知道,在实例化一个类型时, 还可以通过 类型名(实例)的形式, 拿上面这个小例子来说, 你要得到一个MyFloat类型的变量,可以写做 mf:=MyFloat(10);再比如var name struct{Name string} = struct{Name string}(struct{Name string}{"张三"})
+**.在实例测试本小节的时候,发现了一个自己的误区, 之前认为"type X T"这种结构中, X仅仅是T的别名,也就是说在自己的印象中X等价于T. 但实际上并不是这样的, X是作为新类型单独存在的,是新声明的. X和T相同的地方为可以被同一个实例赋值,因为本质上都是T类型; 不同的地方在于二者作为receiver去引用方法的时候,X就是X,T就是T.因为虽说X和T的本质相同, 但要注意的是关键字type声明的其实是一个新的类型,而并不是某个类型的别名. 而你在定义方法的时候,接收器只能是一个,所以在调用方法的时候,一定要注意使用的接收器类型是X还是T,不能混用.
+  =====
+  package main
+
+  import (
+    pig "hello.world/one/animal/two"
+    "fmt"
+  )
+  type X pig.Fn
+  func main(){
+  
+    var f pig.Fn = func(x int) pig.Person {  //类型一定是pig.Fn,不能是X
+      s := make([]struct{Name string;Age int},1)
+      s[0] = struct{Name string; Age int}{Name:"张三",Age: x}
+      return s
+    }
+  
+    result:= f.Output(40)  //如果f类型为X,则这句会报错,因为方法Output的接收器类型是pig.Fn
+    fmt.Println(result[0])
+  }
+  =====
+  *.根据上面的例子可以知道, 虽说接收器类型的定义要和方法的定义在同一个包中, 但对方法的引用,是可以在另一个包里进行的.  //注意方法名首字母和接收器类型名首字母要大写,这是Exported name一节讲的最基本的东西了
 Pointer receivers
 1.这一节的主题叫"指针接收器"，该指针和c中的指针意思是一样的，后面应该会讲Go里没有指针之间的运算
-2.其实重要的是要理解指针的概念，指针的概念弄明白了，这一节自然也就没啥了.首先内存说起，内存是一个地址空间，可以把内存想象成一个大房子，里面有N个房间，每个房间都有自己的编号,1,2,3...,再来说变量，编程语言中声明一个变量，其实就是在内存中给这个变量分配一块空间，空间大小由变量的类型决定。变量声明其实最终这个变量得到的是一个内存中的地址，拿上面的房间举例来说就是，var a int,对应下来可能就是将第一间房间的房号1给变量a,而第1，2，3，4间房是分配给a的空间，以后再给变量a赋值时其实是先定位到1这个位置，然后向1234这四个房间记数据，从a中取值也是，先定位到1这个位置，然后把数据取出来；下面该说指针了，这个指针对应的就是这个位置1，说白了就是指针其实就是内存中的地址。而指针变量就好理解了，就是这个变量中存的是指针，再换个说法变量中存的是内存中的地址。而指针变量前加上*，指的就是指针变量中的地址指向的值，这句说的不太明白，举例来说，变量a在内存中的地址是1，变量a的值是"abc",有一个指针变量b,b中存的是a的地址，则b的值是1，*b是"abc"(即指针变量b的值a所指向的内存空间的内容)
+2.其实重要的是要理解指针的概念，指针的概念弄明白了，这一节自然也就没啥了.首先说内存，可以把内存想象成一个大房子，里面有N个房间，每个房间都有自己的门牌号,1,2,3... .再来说变量,编程语言中声明一个变量，其实就是在内存中给这个变量分配一块空间，空间大小由变量的类型决定。变量声明其实最终这个变量得到的是一个内存中的地址，拿上面的房间举例来说就是，var a int,对应下来可能就是将第一间房间的房号1给变量a,而第1，2，3，4间房是分配给a的空间(具体分配几间房是由变量类型决定的)，以后再给变量a赋值时其实是先定位到1这个位置，然后向1234这四个房间记数据，从a中取值也是，先定位到1这个位置，然后把数据取出来；下面该说指针了，这个指针对应的就是这个位置1，说白了指针就是内存中的地址。而指针变量就好理解了，就是这个变量中存的值是指针，再换个说法,变量中存的是内存中的地址。而指针变量前加上*，指的就是指针变量中的地址指向的值，这句说的不太明白，举例来说，变量a在内存中的地址是1，变量a的值是"abc",有一个指针变量b,b中存的是a的地址，则b的值是1，*b是"abc"(即指针变量b的值,a,所指向的内存空间的内容)
 *.指针这个东西其实只要明白了内存结构，还有声明变量的实际情况就很简单，有时间要回看一下王爽的16位汇编。上面这些描述不是太准确，只能帮助理解一下
-3.Go中指针最重要的一点就是，接收器如果是指针引用，则会修改指针变量值所指向的实际内容。下次再引用该指针变量值的时候，该指针变量值的指向就已经是修改后的了；如果接收器就是普通类型的变量，则方法中引用该接收器变量内容实际上是先对该内容做个备份，然后引用的是备份的内容。下次再使用该接收器的变量时还是原值，因为之前根本就没有对接收器的原始值做修改
-*.这一节说的就比较不太好了，后面有机会这块用心再总结一下
+3.Go中指针最重要的一点就是，接收器如果是指针引用，则会修改指针变量值所指向的实际内容。下次再引用该指针变量值的时候，该指针变量值的指向就已经是修改后的了；如果接收器就是普通类型的变量，则方法中引用该接收器变量内容实际上是先对该内容做个备份(将变量指向的内存中的值复制一份,再重新分配一块内存存放这个备份)，然后引用的是备份的内容。下次再使用该接收器的变量时还是原值，因为之前根本就没有对接收器的原始值做修改
+*.这一节说的就比较不太好了，后面有机会这块用心再总结一下  //之所以感觉不好,是因为没有从内存的角度去说.从内存角度考虑的话,如果是对房间号为1的变量进行引用,则值引用是再申请个房间号2,然后把1中的内容复制到房间2里,后面的操作都是在房间2中进行的,不影响房间1中的值,后面再使用相应的变量调用方法,方法中引用变量的值还是房间1的; 而指针引用则不同, 所有操作都直接在房间1里操作,这就导致后面再使用相应变量调用方法时,可能变量中的字段值和上一次调用该方法时,方法中引用的字段值就不同了.
 4.这节的例子，如果Scale接收器的类型为Vertex则最后的值是5，如果是*Vertex最后的值是50   //我的理解是，本质上还是对类的操作，我们可以将类型的声明理解为"模板"，将类的实例化理解为"复制一份模板并将相应的字段初始化"，指针类型的接收器特点是:"直接修改"初始化后的模板"(后面称其为实例)数据"，而普通类型的特点是"将该实例再复制一份，然后在复制后的实例上做修改，即原实例的数据不受影响"，此时再去看这小节的例子就可以理解了，再啰嗦一句:指针作接收器是在给实例分配的内存区域上直接做修改；普通类型作接收器是将实例再复制一份到内存的另一个区域，然后对复制后的这个实例做修改，并不会影响原实例；
-5. receiver type如果是指针的话，不能是*int,*float64这些，必须是 type a float64,这里*a可以作为receiver type; 我不知道原文件咋翻译  //因为上面也提到过,一个方法的接收器类型必须是在该包声明的才行,内建的类型如果想要作为接收器类型需要再封装一层,type 别名 内置类型,此时这里的"别名"可以做接收器类型;其它包中的类型同理也要这么做.
+5. receiver type如果是指针的话，不能是*int,*float64这些，必须是 type a float64,这里*a可以作为receiver type; 我不知道原文件咋翻译  //因为上面也提到过,一个方法的接收器类型必须是在该包声明的才行,内建的类型如果想要作为接收器类型需要再封装一层,type 别名 内置类型,此时这里的"别名"可以做接收器类型;其它包中的类型同理也要这么做.  //有了上面内容的铺垫,这里的"别名"用的不恰当, type X T,这里X就是一个新的类型,只不过和T都可被同一个实例赋值,但在使用上,尤其是定义方法上, X就是X, T就是T,不能换着用.
 6.func (v *Vertex) Scale(f float){}读作:定义在*Vertex类型上的方法
 7.接收器的类型为指针的话，对该针指的指向进行修改，修改的是原实例的数据，即后面再引用该指针的时候，使用的值是之前修改过的；但接收器的类型为普通类型的话，则修改的是这些原实例的备份，所以对实例的备份上的数据做修改肯定不会影响原实例的数据；普通函数的参数类型就属于这种(修改的是副本)
 Pointers and functions
 1.这节主要看的是例子，method用function实现，其实也就是将method的receiver部分给放到function参数的位置    //需要注意的是Scale()函数中第一个参数值为&v,因为指针变量存的实际上是另一个类型的地址，所以这里用到了&符号
+                            //记得下面会讲到,当某个类型作为接收器存在时,该接收器类型的实例引用方法时,既可使用值引用也可使用指针引用,不用考虑实际方法定义中接收器类型写的是值还是指针. 也就是说编译器在实际编译时,并不直接看你的引用形式, 而是先去看看你调的方法声明中接收器是什么类型. 如果你引用中的接收器类型变量写反了(应该是值引用你写的指针引用,反之),则编译器会自动帮你改过来; 但作为函数形参时,形参类型是值引用, 则调用时就必须用值引用;是指针引用,调用时就必须是指针引用.
+*.试着从编译器的角度去理解变量,因为编译后的代码中是不存在变量名这个东西的, 也就是在编译的时候代码中的变量名实际上都被替换成了内存地址,此时fmt.Println(a),可以写成fmt.Println(内存中地址),这就好理解了,打印的是"内存中地址"处存的内容; 再来说指针, 假设有:var p *int; var int a=1; p=&a,则:
+    fmt.Println(a) -> fmt.Println(给a分配的内存起始地址)
+    fmt.Println(p) -> fmt.Println(给p分配的内存起始地址)
+    fmt.Println(*p) -> fmt.Println(给p分配的内存地址处存放的内存地址(即指针变量p的值))
+    *.另外需要注意的一点是在给函数中指针类型的形参变量传值时,这个形参变量实际上也是新建的,作用域为函数内部的一个变量.我想表达的意思是:
+      func TestMethod(p *Person){}
+      var p1 = Person{}
+      TestMethod(&p1)  //TestMethod函数中形参p的地址不是&p1, &p1这个地址只是给作用域为TestMethod这个函数内部声明的变量p赋的值.写这个例子的原因是测试的时候认为p的地址就是&p1,结果函数体中输出的变量值和自己想象的不一样. 后面再看这段的时候可能就不明白我当时的场景到底是怎样的了, 这里也不写了, 但只要记住这个道理就行了.
 Methods and pointer indirection
-0.这节讲的是使用"函数+函数参数"组合,调用函数时,参数定义是pointer型就必须传pointer类型的值,不能传value类型的值; 而"接收器+方法"组合, 当接收器类型为pointer类型时,既可以给接收器传pointer类型值,也可传value类型值.
+0.这节讲的是使用"函数+函数参数"组合,调用函数时,参数定义是pointer型就必须传pointer类型的值,不能传value类型的值; 而"接收器+方法"组合, 当接收器类型为pointer类型时,既可以给接收器传pointer类型值,也可传value类型值;反之当接收器类型为value类型时, 同样是传pointer类型值也行,传value类型值也行.
 1.function中的参数是啥类型，调用该function时参数类型绝不能写错(这个不像receiver中的类型，明明类型是指针或是普通类型，但调用的时候既可以使用普通类型也可以指针进行调用，Go优化了这部分逻辑)  //我写这句话其实是为了强调一开始讲指针时的一个调用例子，即本应该是(*p).X,但在Go中直接写p.X就好！但是如果指针作为函数参数而非接收器时，在调用函数时，该参数一定要用指针调用的形式而不能用普通变量调用形式(其实关键点就是那个&符号，指针参数有，而普通类型的参数没有)
   var v Vertex
   ScaleFunc(v, 5)  // Compile error!
   ScaleFunc(&v, 5)  // OK
-2.上面1说了，当方法的接收器类型为指针时，引用方法的时候，接收器可以使用value(普通类型),也可以使用pointer(地址)  //猜测Go在处理指针类型的接收器调用函数时，如果你没在指针变量前加&的话，Go会隐式的帮你加上，这个行为猜测是编译阶段编译器处理代码时给自动加上的；但如果指针作为函数参数时，猜测由于Go语言没有在编译阶段加上这个逻辑，所以在函数调用时，如果函数参数为指针类型则一定要使用&符号，其实感觉函数参数如果是指针类型也可以处理一下，无非是处理之前先检测一下类型呗，当然啊这句注释完全是为了好理解的一个猜测.
+2.上面1说了，当方法的接收器类型为指针时，引用方法的时候，接收器可以使用value(普通类型)类型值,也可以使用pointer(地址)类型值  //猜测Go在处理指针类型的接收器调用函数时，如果你没在指针变量前加&的话，Go会隐式的帮你加上，这个行为猜测是编译阶段编译器处理代码时给自动加上的；但如果指针作为函数参数时，猜测由于Go语言没有在编译阶段加上这个逻辑，所以在函数调用时，如果函数参数为指针类型则一定要使用&符号，其实感觉函数参数如果是指针类型也可以处理一下，无非是处理之前先检测一下类型呗，当然啊这句注释完全是为了好理解的一个猜测. 
   var v Vertex
   v.Scale(5)  // OK
   p := &v
@@ -744,13 +903,13 @@ Methods and pointer indirection
     func main() {
         var p = &x
     	
-    	fmt.Println(x)
-    	fmt.Println(p)
-    	fmt.Println(&x)
-    	fmt.Println(&p)
-    	fmt.Println(*p)
-    	fmt.Println(*(&x))
-    	fmt.Println(**(&p))
+    	fmt.Println(x)        //5
+    	fmt.Println(p)        //x的地址
+    	fmt.Println(&x)       //x的地址
+    	fmt.Println(&p)       //p的地址
+    	fmt.Println(*p)       //5
+    	fmt.Println(*(&x))    //5
+    	fmt.Println(**(&p))   //5
     }
     输出为:
     5
@@ -762,7 +921,7 @@ Methods and pointer indirection
     5
 Methods and pointer indirection(2)
 0.这节讲的是使用"函数+函数参数"组合,调用函数时,参数定义是value型就必须传value类型的值,不能传pointer类型的值; 而"接收器+方法"组合, 当接收器类型为value类型时,既可以给接收器传value类型值,也可传pointer类型值.
-0.总结一下该小节和上一小节就是定义在函数参数中的类型,必须精确传相应类型值; 而定义的接收器类型,在给其传值时,可以随便传value型或pointer型,也就是说Golang在检测到你调的是方法时,会先去看一下你定义中接收器类型是value还是pointer, 然后再去处理你实际传给接收器变量的类型,如果你传的和定义的类型相同,则就这样了,如果不同(即定义的是value型而给其传的是pointer型, 反之),则自动帮你转换一下.
+0.总结一下该小节和上一小节就是定义在函数参数中的类型,必须精确传相应类型值; 而定义的接收器类型,在给其传值时,可以随便传value型或pointer型,也就是说Golang在检测到你调的是方法时,会先去看一下你定义中接收器类型是value还是pointer, 然后再去处理你实际传给接收器变量的类型值,如果你传的和定义的类型相同,则就这样了,如果不同(即定义的是value型而给其传的是pointer型, 反之),则自动帮你转换一下.
 1.上面也提过，function参数是啥类型调用时就得使用啥类型
   var v Vertex
   fmt.Println(AbsFunc(v)) // OK
@@ -778,9 +937,9 @@ Methods and pointer indirection(2)
         a.接收器为value类型,则如果使用&p进行调用，则编译器会将&p转化为*(&p)
         b.接收器为pointer类型，则如果使用v进行调用,则编译器会将v转化为&p
     2.接1说，但是函数定义中的参数如果是value类型则传参时必须是value类型，如果是pointer类型则必须传pointer类型  //这个就不说了上面都有例子
-  /*当接收器类型为指针时,在调用相应的方法时,无论你是使用指针类型进行调用还是使用值调用,调用结果是一样的,都遵循"方法定义时所使用的接收器类型". 换句话说,当接收器炎指针类型时,如果你使用指针类型调用,正好,这是常规逻辑; 如果你使用的是值调用,则在真正执行的时候,编译器也会根据相应的方法在定义时前面的接收器类型,给你的值调用前加上个"&",然后再进行执行. 也就是说,当接收器为指针类型的变量时, 你在调用相应的方法时,无论是使用的值调用还是指针调用,最后执行的语句都是一样的,即都是指针调用,因此得到结果也是一样的.就下面的例子而言,ZS声明时的类型为普通Person类型,当你引用的时候写的是:
-ZS.multiply() 时, 在执行前会检测multiply()方法定义时的接收器类型,将该句处理为:(&ZS).multiply(),然后再执行.
-而当你写的是: (&ZS).multiply()时,同样在执行前还是会检测multiply()定义时接收器的类型,发现没问题,则预处理对它啥也不做,原样执行.
+  /*当接收器类型为指针时,在调用相应的方法时,无论你是使用指针类型进行调用还是使用值调用,调用结果是一样的,都遵循"方法定义时所使用的接收器类型". 换句话说,当接收器为指针类型时,如果你使用指针类型调用,正好,这是常规逻辑; 如果你使用的是值调用,则在真正执行的时候,编译器也会根据相应的方法在定义时前面的接收器类型,给你的值调用前加上个"&"(既然说到编译器,则这么说就不恰当了,更恰当一点的说法是编译器会自动帮你校正接收器对象的地址),然后再进行执行. 也就是说,当接收器为指针类型的变量时, 你在调用相应的方法时,无论是使用的值调用还是指针调用,最后执行的语句都是一样的,即都是指针调用,因此得到结果也是一样的.就下面的例子而言,ZS声明时的类型为普通Person类型,当你引用的时候写的是:
+ZS.multiply() 时, 在正式编译前会检测multiply()方法定义时的接收器类型,将该句预处理为:(&ZS).multiply(),然后再进行编译执行.
+而当你写的是: (&ZS).multiply()时,同样在编译前还是会检测multiply()定义时接收器的类型,发现没问题,则预处理对它啥也不做,原样编译.
 也就是说: 关键点在于golang在调用方法的时候,会根据方法在声明时接收器的类型去调整你实际调用时使用的变量类型.
     func (p *Person) multiply() {
     	p.name = p.name + "-"
@@ -814,14 +973,14 @@ ZS.multiply() 时, 在执行前会检测multiply()方法定义时的接收器类
     }*/
 
 Choosing a value or pointer receiver
-1.这一节说出了在声明method时使用指针作为接收器类型的两点原因：一是，可以直接修改pointer指向的值；二是，避免了方法调用时要先做备份，然后对备份修改时的性能损失(接收器类型为value时,使用value类型的变量对方法进行调用时,要先将value类进行copy,得到一个value类型副本,然后在副本上进行操作嘛,这样一来,如果value类型数据较大,则性能损失比较严重. 话又说回来了,各有优缺点, 使用value做为接收器时,对同一个变量多次调用时,前面的调用不会对后面的调用产生影响,因为每个value类型变量在调用相应的方法时都会先copy一个原value类型变量的副本)
-2.通常来说给某个作为接收器变量类型定义方法时,要么该接收器类型都是value,要么都是pointer,不建议部分方法的接收器类型为其value型,部分的为其pointer型.即如果有func (a A) x,则以后类型A只能以value类型作为方法的接收器, 不能出现func (a *A) y这种形式, 反之为然. //本节并没有说明为什么不能混用,说在下面几节能找到原因. 我写代码实际测了一下,编译这块并没有什么问题,一个是(a A),一个是(a *A)编译执行也都是没问题的. //看例子应该特指的就是某个类型实现接口中的多个方法时,接收器要么都是A,要么都是*A,推荐是一个方法是A,另一个方法是*A,但下面有个链接也举例说了这个推荐是误导性的.无论最后结论什么样,当前下面第3点总结的这些行为先记住.
+1.这一节说出了在声明method时使用指针作为接收器类型的两点原因：一是，可以直接修改pointer指向的值；二是，避免了方法调用时要先做备份，然后对备份修改时的性能损失(接收器类型为value时,使用value类型的变量对方法进行调用时,要先将value类进行copy,得到一个value类型副本,然后在副本上进行操作嘛,这样一来,如果value类型数据较大,则性能损失比较严重(量大复制粘贴的时间就长). 话又说回来了,各有优缺点, 使用value做为接收器时,对同一个变量多次调用时,前面的调用不会对后面的调用产生影响,因为每个value类型变量在调用相应的方法时都会先copy一个原value类型变量的副本)
+2.通常来说给某个作为接收器变量类型定义方法时,要么该接收器类型都是value,要么都是pointer,不建议部分方法的接收器类型为其value型,部分的为其pointer型.即如果有func (a A) x,则以后类型A只能以value类型作为方法的接收器, 不能出现func (a *A) y这种形式, 反之为然. //本节并没有说明为什么不能混用,说在下面几节能找到原因. 我写代码实际测了一下,编译这块并没有什么问题,一个是(a A),一个是(a *A)编译执行也都是没问题的. //看例子应该特指的就是某个类型实现接口中的多个方法时,接收器要么都是A,要么都是*A,推荐是一个方法是A,另一个方法是*A(从"推荐"到这个位置的这句话放在这啥意思,这次看没搞明白?),但下面有个链接也举例说了这个推荐是误导性的.无论最后结论什么样,当前下面第3点总结的这些行为先记住.
 In general, all methods on a given type should have either value or pointer receivers,这句话里,on a given type这里的type应该就是特指的接口类型,all method指的是接口中定义的N个方法, 后面either...or...中自然指的就是value和pointer接收器类型了
 3.为了弄清上一条2所说的在编写代码时最好(同一个类)接收器的类型(value,pointer)不要混用,总结了一下:
     /*
     1.当未引入接口类型时,某个方法的接收器类型无论是value型还是pointer型,在调用的时候你都可以使用value型或pointer型进行调用(具体为啥上面已有详解).
     2.当引入接口类型时,变数就来了, 这里要分为两种情况:
-        a.不显式的引入接口类型变量(或称为不将接口类型与接收器类型相关联), 此时可以忽略接口对方法进行调用,而且无论方法定义时用的接收器类型是value还是pointer,调用时还是上面讲的常规调用,即使用value或pointer都可以.
+        a.不显式的引入接口类型变量(或称为不将接口类型与接收器类型相关联), 此时可以忽略接口对方法进行调用,而且无论方法定义时用的接收器类型是value还是pointer,调用时还是上面讲的常规调用,即使用value或pointer都可以.  //现在想来, 这一点和没说区别不大
       type V struct {X,Y int}
       type I interface {ok() int}
       func (v V) ok() int{  //这里的接收器无论是V还是*V,由于主函数中没有引入接口类型I,而是直接调用的方法,所以,见下面注释
@@ -890,11 +1049,11 @@ In general, all methods on a given type should have either value or pointer rece
   }
 
 */  
-结论:那么到底为什么不能混用呢? 既然上面这段代码已经证明了,既使V和*V混用去实现一个接口,只要在给接口变量i赋值时赋指针值即可,因为r在调ok()时改的就是r的副本,在调yes()时就是在r原位置改的.所以逻辑都是通的怎么就不能混用了呢(现在再去读原文,应该理解为"不推荐"混用,而非"不能"混用)?  在stackoverflow找了个相关的链接,状态好的时候可以看一下,可能会有答案,同时里面还给出了什么时候使用value receiver什么时候使用pointer receiver( https://github.com/golang/go/wiki/CodeReviewComments#receiver-type): https://stackoverflow.com/questions/27775376/value-receiver-vs-pointer-receiver/27775558#27775558    这个链接又说可以混用,说原文说不能混用是误导别人: https://github.com/golang/tour/issues/97
+结论:那么到底为什么不能混用呢? 既然上面这段代码已经证明了,既使V和*V混用去实现一个接口,只要在给接口变量i赋值时赋指针值即可,因为r在调ok()时改的就是r的副本,在调yes()时就是在r原位置改的.所以逻辑都是通的怎么就不能混用了呢(现在再去读原文,应该理解为"不推荐"混用,而非"不能"混用)?  在stackoverflow找了个相关的链接,状态好的时候可以看一下,可能会有答案,同时里面还给出了什么时候使用value receiver什么时候使用pointer receiver( https://github.com/golang/go/wiki/CodeReviewComments#receiver-type): https://stackoverflow.com/questions/27775376/value-receiver-vs-pointer-receiver/27775558#27775558    这个链接又说可以混用,说原文说不能混用是误导别人: https://github.com/golang/tour/issues/97  //现在只能把不推荐混用的原因理解为上面所说的, 一混用有的在原位置改,有的在复本改,最后就乱套了.具体是不是后面有机会遇到高人解释再说吧
 Interfaces
-1.首先Interface是一种类型，在定义Interface类型的时候，body中是N多方法的集合，需要注意的是:body中的这些方法只有方法名及相应的返回值类型，并没有方法的具体实现
+1.首先Interface是一种类型，在定义Interface类型的时候，body中是N多方法的集合，需要注意的是:body中的这些方法只有方法名,形参类型及相应的返回值类型，并没有方法的具体实现
   type Abser interface { Abs() float64 }
-2.根据例子来看，interface类型的用法一般是：首先要明确一点，interface类型body中的不是function,而是method(即带有receiver的function);其次和interface这节没关系，要说的是method的常用调用方法是 "receiver.method_name()",方法最常用的形式大概是"多个同名不同receiver类型的方法"，虽说调用的形式都是相同的,但编译器会根据receiver的不同，从而选择相应的method执行，这个看看本节的例子很好明白
+2.根据例子来看，interface类型的用法一般是：首先要明确一点，interface类型body中的不是function,而是method(即带有receiver的function);其次和interface这节没关系，要说的是method的常用调用方法是 "receiver.method_name()",方法最常用的形式大概是"作为不同receiver类型的方法"，虽说调用的形式都是相同的,但编译器会根据receiver的不同，从而选择相应的method执行，这个看看本节的例子很好明白
 3*.对于理解比较重要的一句话是:"A value of interface type can hold any value that implements those methods"，翻译过来是"给接口类型赋的值，可以是实现接口中方法的任何值"，如果前面method相关章节中没有好好看，好好理解的话，这句好可能会有些不明所以；我们知道所谓的方法(method)，就是带有接收器(receiver)的函数(function)，而其中有一些描述方法的话，大概意思是"接收器(receiver)类型实现的方法(method)"; 然后再看上面的那句话，应该就能明白了，举个例子:
   a.如果定义了一个接口类型Abser,里面的方法特征是: Abs() float64,就这一个方法
   b.定义一个Abser类型的变量a  "var a Abser"
@@ -903,7 +1062,7 @@ Interfaces
 Interfaces and implemented implicitly
 1.我们平时所说的"类型实现接口"具体来说,是指"类型实现接口中定义的方法"
 2.在"类型实现接口方法"时，是隐式的，没有显示的关键字来说明"类型实现接口方法"
-3.类型对接口的隐式实现，好处在于将定义与实现分离了，也就是说对于接口的定义你可以放在任何包中，然后在不同的包中你可以对接口有不同的实现(这块还是要再啰嗦一下，一定要注意从接口的声明，到使用的步骤:1.肯定是先定义接口;2.实现接口中的方法，这时要注意Go中的方法其实就是函数加个接收器，而接收器的形式是"接收器名 接收器类型"；3.定义接口类型的变量，这里要尤其注意，这里的"接口类型"指的是实现接口中的方法的"接收器类型"，即如果接收器类型是int,你在定义接口变量时给了一个float类型，编译时是会报错的(这里用int和float举例是不恰当的,因为上面说过,只有在本包中定义的类型才能作为接收器类型,而int,float内建类型并非是在本包中定义的,这里只是为了举例,虽说不恰当,明白道理就好)；4.其实接口这块还是有一点点绕的，接口中的一个方法，在实现时，可以根据"receiver类型"的不同有多个实现，而在给接口变量赋值时，变量值的类型一定是已经实现了接口中方法，否则会出错，这个可以参考上一节“Interfaces”的例子来理解一下
+3.类型对接口的隐式实现，好处在于将定义与实现分离了，也就是说对于接口的定义你可以放在任何包中，然后在不同的包中你可以对接口有不同的实现(这块还是要再啰嗦一下，一定要注意从接口的声明，到使用的步骤:1.肯定是先定义接口;2.实现接口中的方法，这时要注意Go中的方法其实就是函数加个接收器，而接收器的形式是"接收器名 接收器类型"；3.定义接口类型的变量，这里要尤其注意，此时的"接口类型"值应该是实现接口中的方法的"接收器类型"对象，即如果接收器类型是int,你在定义接口变量时给了一个float类型，编译时是会报错的(这里用int和float举例是不恰当的,因为上面说过,只有在本包中定义的类型才能作为接收器类型,而int,float内建类型并非是在本包中定义的,这里只是为了举例,虽说不恰当,明白道理就好)；4.其实接口这块还是有一点点绕的，接口中的一个方法，在实现时，可以根据"receiver类型"的不同有多个实现，而在给接口变量赋值时，变量值的类型一定是已经实现了接口中方法，否则会出错，这个可以参考上一节“Interfaces”的例子来理解一下
 *.因为接口用的还少，目前看来感觉接口就是"定义一个或多个方法，但是并没有实现"，好处是你可以将这个接口放在任何包里，因为本来也不带实现代码，所以在哪个包里放着都一样；使用时,你可以在不同的包里导入该接口定义所在的包,然后对接口里的方法有不同的具体实现，且被实现的方法中"receiver类型"也可以是不一样的；说白了就是灵活性增强了。现在虽然说勉强会用接口了，但是因为实现的代码少，总是隐隐觉得不安，觉得理解的还不够透彻。
 Interface values
 1.这节的标题叫"Interface values"，相应原文大概要表达的意思:a.interface value可以被认为是一个由"值"和"值相对应的实体类型"组成的"元组"， 说白了就是(value, type)  //这个(value, type)只是为了让我们好理解的一个假想,举个例子吧, 
@@ -916,13 +1075,13 @@ Interface values
     i.ok()
     上面代码中,所谓的(value,type)指的就是(i, V), 所以说一个接口可以有多个不同的接口值(如X,Y,Z实现了接口I中的ok()方法,则此时的接口值有四个(i,V),(i,X),(i,Y),(i,Z))
 2.这里面还有一个字符串叫"underlying concrete type"， 这个玩意可以用上面接口例子中的内容去理解，即接口中只定义了方法名，下面要实现该方法，而方法是有接收器(receiver)的，一旦有类型实现了接口中的方法，再给相应接口类型的变量赋值时，只能赋这些实现了接口中方法的类型，用其它类型的值就会报错，而这里开头说的"underlying concrete type"指的就是这个实现接口中方法的接收器(receiver)类型. 
-3.最后一段话初看者其实不好理解，说的是在"interface value"上调用一个方法，会在"interface value"相对应的"underlying type"上执行相同方法名。这句话现在看很好理解, 假设I是一个接口, ok()是它里面定义的一个方法, 而类型V实现了ok()方法(或说V是ok()方法的接收器类型),当声明一个接口类型变量var i I = V时, 使用接口类型i调用ok()方法,i.ok(), 实际上执行的是V.ok(). 这么设计也好理解,因为i虽说是I类型,而ok()方法又是I中定义的, 但I中的这个ok()方法只有一个名,没有实际的逻辑.所以最终调用ok()方法的还是上面所谓的这个"concrete type",就本例来说是V.
+3.最后一段话初看者其实不好理解，说的是在"interface value"上调用一个方法，会在"interface value"相对应的"underlying type"上执行相同方法名。这句话现在看很好理解, 假设I是一个接口, ok()是它里面定义的一个方法, 而类型V实现了ok()方法(或说V是ok()方法的接收器类型),当声明一个接口类型变量var i I = V时, 使用接口类型i调用ok()方法,i.ok(), 实际上执行的是V.ok(). 这么设计也好理解,因为i虽说是I类型,而ok()方法又是I中定义的, 但I中的这个ok()方法只有一个名,没有实际的逻辑.所以最终调用ok()方法的还是上面所谓的这个"underlying concrete type",就本例来说是V.
 Interface values with nil underlying values
-0.Java中令人构病的空指针问题,在Go中是通过在方法body开始处加上一个if判断, 判断如果接收器实例是nil,则执行相应操作,if后才是相应的逻辑,以此来避免空指针问题.
+0.Java中令人构病的空指针问题,在Go中是通过在方法body开始处加上一个if判断, 判断如果接收器实例是nil,则执行相应操作,只有if判断实体类型不是nil后, 才会执行相应的方法的操作,以此来避免空指针问题.
 0.这里遇到的问题,即双等号两边的操作数问题, 两边的操作数要是同一类型的,否则会出错. 最常见的, 假设  int() == float64()这就不行,再深一点的 int() == nil这也不行,因为整型里不包含nil.也就是说要不双等号两边都是同类型的变量, 如果一边是变量一边是值,则这个值也一定要属于这个变量类型的范畴
 0.underlying concreate为nil,则interface value不是nil,因为上一节说了, interface value指的是由"(underlying concreate value, underlying concreate type)"组成的二元组
   *.结合下一节,nil interface value,可以得出一个结论: 当接口类型变量被赋值了(即接口类型变量有underylying concreate type了),则接口类型值为一个二元组; 当接口类型变量只声明未赋值,则其值就是nil.
-1.这节的目的其实是想让我们明白:在Go中,可以很简单的处理空指针问题. 但是对于新手来说还要延伸一部分内容出来才好. 首先按小节要表达的,underlying concreate值为nil,换句话说就是: 我们声明了或map或array或slice或指针类型的变量; 并且实现了接口中的方法; 但问题是我们在将这些值0值类型为nil的变量赋给接口类型变量前,没有给这些zero值为nil的变量赋值. 这就导致了在使用接口类型变量调用方法时,如果方法body中引用了underlying concreate实例值时会报空指针, 举例来说:
+1.这节的目的其实是想让我们明白:在Go中,可以很简单的处理空指针问题. 但是对于新手来说还要延伸一部分内容出来才好. 首先按小节要表达的,underlying concreate值为nil,换句话说就是: 我们声明了或map或array或slice或指针类型的变量; 并且实现了接口中的方法; 但问题是我们将实现了接口中方法的类型实例赋给接口类型前,只是对该实例进行了声明,并没有赋值,以至于此时的实例值为nil. 这就导致了在使用接口类型变量调用方法时,如果方法body中引用了underlying concreate实例值时会报空指针, 举例来说:
 type I interface { M() }     //1.声明了一个接口类型I,里面有一个方法M(),该函数无返回值类型
 type T struct { S string }   //2.定义了一个将要用来实现接口I(中的方法)的结构体变量T,里面有一个字符串类型字段T
 func (t *T) M() {            //3.指针类型T实现了接口I(中的方法M())
@@ -934,12 +1093,12 @@ func (t *T) M() {            //3.指针类型T实现了接口I(中的方法M())
 }
 func main(){
   var i I                   //4.定义接口类型变量i,未初始化
-  var t *T                   //5.定义结构体类型变量T,未初始化
+  var t *T                   //5.定义结构体指针类型变量T,未初始化,所以变量t为指针类型零值,nil.
   i = t                     //6.给接口类型变量i初始化,初始化值为t
-  i.M()                     //7. 此时i.M(),实际上执行的是T.M() 而此时因为T没有初始化,且其为指针类型,所以相当于是指针类型的0值调的M(),即 nil.M()
+  i.M()                     //7. 此时i.M(),实际上执行的是T.M() 而此时因为T没有初始化,且其为指针类型,所以相当于是指针类型的0值调的M(),即 nil.M(), 其实nil.M()本身是没问题的, 语法是正确的, 也就是说如果我在方法中没有引用实体对象中字段的话,是不会报错的; 报错的原因就是方法中的语句引用了实体对象中的字段, 而你压根没给零值为nil的实体类型对象赋值,这就导致了空指针错误.  //零值为nil的这些类型才会产生空指针错误, 零值不是nil的,不会产生空指针错误, 而是使用相应字段的零值进行运算,不会报错.
 }
-2.通过上面这个例子我们可以知道,不用在所有的方法开头都加一个 "if t == nil {}" 的判断, 只有当t可能为nil时,即t的类型的0值是nil时,才需要加这句来避免空指针问题,其它类型不用这么做. 但又出现一个问题,其它类型,即0值不是nil的变量如何判断其没有被赋值呢,也就是说以结于0值不是nil的这这些接收器类型,我如何使用if来判断接收器没有被初始化,这里最常见的就是如何判断结构体没有被初始化,方法很简单,但有注意的地方:
-    if t == T{} {}   //简单来说这是这么写, 一打眼看是正确的, 但因为运算符的优先级问题, 我们需要给T{}加上括号才行,即正确的写法为:
+2.通过上面这个例子我们可以知道,不用在所有的方法开头都加一个 "if t == nil {}" 的判断, 只有当t可能为nil时,即t的类型的0值是nil时,才需要加这句来避免空指针问题,其它类型不用这么做. 但又出现一个问题,其它类型,即0值不是nil的变量如何判断其没有被赋值呢,也就是说对于0值不是nil的这这些接收器类型,我如何使用if来判断接收器没有被初始化,这里最常见的就是如何判断结构体没有被初始化,方法很简单,但有注意的地方:
+    if t == T{} {}   //简单来说这是这么写, 一打眼看是正确的, 但因为运算符的优先级问题, 我们需要给T{}加上括号才行(等号用来判断两个变量值是否相等, 而T{}不加括号的话认为是T的一个新实例,也就是说两个结构体比较是否相等的话,其实比的是两个结构体中的字段值是否相同,相等.而例子中如果T{}不加括号的话, 表示带有默认字段值的类型T的新实例; 也就是说此时是用t的零值和T的新实例进行比较, 二者是两个维度的东西,其实这个答案细节自己也不是很明白,这是自己对chatGPT回答的理解),即正确的写法为:
     if t == (T{}) {}  //当然因为结构体的零值其实里面的字段也是相应的零值,我们可以不写,写上也不算错.参考链接: https://freshman.tech/snippets/go/check-empty-struct/
 
 2.interface value如果保存的实体类型的值是nil,则这个interface value也不是空的。通过例子来看:
@@ -953,34 +1112,36 @@ func main(){
     	var i I
     	var t1 *T
     	i = t1
-    	if t1 == nil {   //此处为t1 == nil时,条件是成立的,因为结构体指针t1没有被赋值,如果换成i,则i == nil是不成立的.但是从输出结果来看i和t1输出的都是<nil>,这块有点不太理解内部是怎么实现的.  上一节interface value也说了,interface value不是一个值,而是一个由当前underlying concreate value与 underlying concreate type组成的一个二元组. 这点要特别注意,不要说接口值输出的是nil,就认为 "接口变量 == nil" 是成立的, 正如上面说的, 接口变量值其实是一个二元组,而非一个具体类型的值!
+    	if t1 == nil {   //此处为t1 == nil时,条件是成立的,因为结构体指针t1没有被赋值,如果换成i,则i == nil是不成立的.但是从输出结果来看i和t1输出的都是<nil>,这块有点不太理解内部是怎么实现的(到目前为止根据接口值一节来看, i的值并不是一个具体值,是一个二元数组, 所以这里理解为i的值为(nil, *P),比较的时候比的是二元组, 输出的时候输出的是实体类型对象值).  上一节interface value也说了,interface value不是一个值,而是一个由当前underlying concreate value与 underlying concreate type组成的一个二元组. 这点要特别注意,不要说接口值输出的是nil,就认为 "接口变量 == nil" 是成立的, 正如上面说的, 接口变量值其实是一个二元组,而非一个具体类型的值!
     		fmt.Println("nil!")
     		fmt.Println(i)
     		fmt.Println(t1)
     	}
     }
 
+*.Golang中类型pointer, map, slice(array的零值为相应元素类型的零值,如var a [3]int, 输出a的值为[0,0,0]), channel, interface, function 的零值为nil.
 Nil interface values
 1.标题所谓的"nil interface values"说白了就是定主的了接口类型变量,var i I,但没有给i赋值,此时i会被编译器赋值,nil. 这种情况下使用i直接调用接口中的方法,如上面所说的i.ok(),则会产生一个run-time错误,其因想想也简单, 此时没有和i挂购的concrete type, 你执行谁去?。这和有没有类型实现I中的方法没有关系, 假使V类型实现了I中的方法, 但你在var i I之后, 没有给i赋值V也没用啊.
   var i I  //定义接口变量i
   i.方法()  //此时用i调用实现的方法时,由于接口类型的i没有被赋予一个concrete type就直接调用接口中的方法了, 因此会抛出运行时异常)
 The empty interface
-1.空接口比较好理解，指的是按口里面没有定义方法，即就是一个type I interface{ }, 空接口可以保存任何类型的值，因为任何类型都至少实现了0个方法
-2.空接口常用于编码处理一些未知类型的值，例如fmt.Print函数,它的参数类型为"a ...interface{}",看着好像就一个形参,a,类型为空接口interface{},但你要注意空接口前面还有三个点呢, 表示任意多,即这里表示任意多个空接口类型的值, 而所有类型都实现了空接口,所以说白了就是fmt.Print这个函数中放啥类型都行, 多少都无所谓.
+1.空接口比较好理解，指的是按口里面没有定义方法，即形如type I interface{ }, 空接口可以保存任何类型的值，因为任何类型都至少实现了0个方法
+2.空接口常用于编码处理一些未知类型的值，例如fmt.Print函数,它的参数类型为"a ...interface{}",看着好像就一个形参,a,类型为空接口interface{},但你要注意空接口前面还有三个点呢, 表示任意多,即这里表示任意多个空接口类型的值. 而所有类型都实现了空接口,所以说白了就是fmt.Print这个函数中放啥类型都行, 多少都无所谓.
 3.上两句都可以不看了，说白了就是如果之前定义了一个变量I为空接口类型， type I interface{}， 而且定义了一个参数为空接口类型的函数，则调用这个函数时，可以使用任何值作为这个函数的参数，无论这个值是什么类型，因为前面说了，任何类型都至少实现了0个方法. 假使再在这个空接口类型前加上三个点,就不仅是可以传任何类型值,而且数量还可以是任意多.
 ***
 接口这一节主要是要弄清几个单词的内容:
 1.Interface values      // 根据上面的总结, 当给接口变量赋值后,其值为: (value, type); 当未给接口变量赋值时,其值为nil.
-2.nil underlying values   //简单来说就是给接口变量赋值了, 但赋的值是未初始化且其类型的零值为nil. (underlying type指的是实现了接口中方法的那个类型, underlying value自然指的就是实现了接口中方法的那个类型的值了, 而现在这个值是nil,说明我们给这个underlyig type变量只声明了, 未赋值. 这么说是不完全正确的,正确的应该是: 对于slice类型和map类型,和其它类型的指针类型(即类型为map[T]S, []T, *int, *float64等是正确的),因为一般的类型你只声明不赋值都会有一个0值,这个零值除了刚说的那几种是nil外,都不是nil.
+2.nil underlying values   //简单来说就是给接口变量赋值了, 但赋的值是未初始化且其类型的零值为nil. (underlying type指的是实现了接口中方法的那个类型, underlying value自然指的就是实现了接口中方法的那个类型的值了, 而现在这个值是nil,说明我们给这个underlyig type变量只声明了, 未赋值. 这么说是不完全正确的,正确的应该是: 对于零值为nil的类型. 因为一般的类型你只声明不赋值都会有一个0值,这个零值除了刚说的那几种是nil外,都不是nil.
 3.nil interface values   //通过看官文的例子,首先,对于nil interface values来说,大的概念还是interface value, 而interface value 说白了就是var i I中的i, 而nil interface value指的就是声明了接口变量,但没有给接口变量赋值,此时的接口变量的默认值就是nil,和上面有没有某个类实现了接口中的方法无关. 而调用没有初始化的接口会报错.
 4.empty interface   //这个没啥说的就是接口定义时没有定义方法
 ***
 Type assertions
-1."类型断言"的语法为: " i.(T) ", 其中i是接口类型变量,T是某个类型, 官文解释为: 看看T是否为i的实体类型. 通俗一点来讲就是: 看当前接口变量i值的类型是否为T, 如果是则将T类型的值返回, 如果不是直接就抛出致命错误. //通过看官文的例子, 觉得空接口类型有些时候挺有用的, 因为在后面可以根据需要给空接口类型的变量赋任何类型的值. 我想到的一个类型断言使用场景: 有多个类型X,Y...都实现了接口I中的方法, 然后在代码中使用i.(X|Y...)去判断最近一次给接口i赋的值的类型是否为X|Y... .
+0.type assertion判断当前接口类型值i中存放的underlyint concrete type value的前提是上面该underlying concreate type已经实现了接口中的方法.
+1."类型断言"的语法为: " i.(T) ", 其中i是接口类型变量,T是某个类型, 官文解释为: 看看T是否为i的实体类型. 通俗一点来讲就是: 看T是否实现了接口i中的方法, 如果是则将T类型的值返回, 如果不是直接就抛出致命错误. //通过看官文的例子, 觉得空接口类型有些时候挺有用的, 因为在后面可以根据需要给空接口类型的变量赋任何类型的值. 我想到的一个类型断言使用场景: 有多个类型X,Y...都实现了接口I中的方法, 然后在代码中使用i.(X|Y...)去判断最近一次给接口i赋的值的类型是否为X|Y... .
   *.其中有个特殊情况就是有多个类型都实现了接口I,但并未将任何一个相应类型的值赋给接口变量i,按照上面讲的, 此时i就是nil interface value.
 2.上面1中说的是我想到的场景,而落实到代码上时,有两种形式:
-  a.1个返回值: t := i.(n)   如果最近一次接口变量i的值类型为n,则将最近一次赋给i的值赋给t,否则发生panic.
-  b.2个返回值 t,ok := i.(n) 如果最近一次接口变量i的值类型为n,则将最近一次赋给i的值赋给t,将布尔值true赋给ok, 否则将n的零值赋给t,将false赋给ok,并且不会发生panic
+  a.1个返回值: t := i.(n)   如果最近一次接口变量i的值实体类型为n,则将最近一次赋给i的值赋给t,否则发生panic.
+  b.2个返回值 t,ok := i.(n) 如果最近一次接口变量i的值实体类型为n,则将最近一次赋给i的值赋给t,将布尔值true赋给ok, 否则将n的零值赋给t,将false赋给ok,并且不会发生panic
 *.再加一句吧, 上面已经说了类型n必须是实现接口I中方法的.如果你随便用一个未实现接口I中方法的类型去替代n,则会报错告诉你,你所用的这个类型未实现接口I.
 3.算是对该小节的一个练习,比较烂,自己的各种想法都在里面, 有机会给整理简洁些:
 package main
@@ -1023,10 +1184,31 @@ func main() {
     其次,关键点在于接口变量赋值语句,拿上例来说就是var z X = a1,也就是说对于t:=z.(Animal)考察的是a1的类型是否为Animal; T还有可能是另一个接口,比如t:= z.(Y),此时考察的是接口变量z值(a1,Animal)的concreate类型Animal是否也实现了接口Y,如果是,则将a1返给t.
     最后,返回两个值的就不说了, 说白了就是T不是接口变量i值的concreate type,也不会报错, 只是返回相应类型的零值和false.
   //*.特殊情况,当T也是接口类型时,无论接口变量i值的concreate type有无实现这个T,编译阶段都不会报错, 报错发生在运行阶段.
+*.对于i.(T)这种形式, 考察的是最近一次赋给接口变量i的值类型是否为T; 或者说最近一次赋给接口变量i的值类型是否也实现了接口类型T(后一句是似T为接口类型的场景).
+*.使用场景: 你拿到一个接口类型变量i后, 要根据最近一次赋给它的值的类型是否为T(针对第二种情况就是赋给i的这个值是否既实现了接口T又实现了接口i)去判断是否要做某些操作.
+*.目前在理解type assertion时可以采用倒序的方式,即已经知道了i的值,拿下面代码举例: 
+type Person struct{Name string; Age int}
+type I interface {OutName() string; OutAge() int}
+func (p *Person) OutName() string{
+   return p.Name
+}
+func (p * Person) OutAge() int {
+   return p.Age
+}
+
+func main(){
+  var i I
+  var p *Person = &Person{Name:"张三"; Age: 10}
+  i = p  //因为i是接口值,其是一个二维数组,此例为"(&Person{Name:"张三";Age:10}, *Person)".而下面这句查的正好是当前i这个二维数组中的类型是否为*Person,是的话就把&Person{Name:"张三";Age:10}和true返回来; 如果不是,则返回的是*Person的零值nil和false.   
+  if val, ok := i.(*Person); ok {
+    fmt.Println(val, ok)
+  }
+}
+*.上面这段代码的例子其实现实中用的不多, 因为如果我们的需求是返回当前接口i中存放的underlying type value,但由于上下文很繁索, 我们只知道有N个类型已经实现了接口中的方法, 但不知道当前存的到底是哪一个类型的实例,此时我们就可以用到下面Type switches小节要讲到的方法了, 说白了就是穷举,把可能的实例都写出来, 从上往下捋,哪个是用哪个,全都不是还有default在那兜着呢.
 
 Type switches
 0.Type switch其实就是让我们可以连续的进行type assertion.
-0.所有case后面跟的"一定"要是在前面已经实现了接口i的类型名,这是前提, 而swtich i.(T)判断的其实是最后一我接口变量i的underlying concreate type是谁.
+0.所有case后面跟的"一定"要是在前面已经实现了接口i的类型名,这是前提, 而swtich i.(T)判断的其实是最后一次赋给接口变量i的underlying concreate type是谁.
 /*这里的switch的作用是在一个结构中判断当前接口变量i的underlying concreate type是啥(假设已经有多个类型已经实现了接口中定义的方法)的值. 而每个case T,就是一个判断条件.当接口变量i的underlying concreate type为某个关键字case后面的T时,执行相应case下的代码.如果接口变量i的underlying concreate type和任何一个关键字case后的类型都不匹配,则执行default关键字下面的代码.
 而在落实到代码上时, 又分为两种情况:
   a. 当switch条件部分没有定义接收变量时,仅仅是做类型的匹配以及执行匹配上类型的代码块;
@@ -1071,13 +1253,13 @@ Type switches
         type Q struct {S int}
         
         func (t T) ok() int { return 666}
-        func (q Q) ok() int { return 666}
+        func (q Q) ok() int { return 888}
         
         func main() {
         	var i I
         	t := Q{2}
         	i = t
-        	switch v:=i.(type){  //这里将i.(type)的返回值赋给变量v,后面在case或default语句块中可以引用这个变量v. 在这里因为case T没有被匹配上了,所以变量v的类型和值同i,即, var v Q = Q{2}, 这里要注意了,如果你要说i的类型为I就没啥意义了, 要用i的underylying type和underylying value才有意义.
+        	switch v:=i.(type){  //这里将i.(type)的返回值赋给变量v,后面在case或default语句块中可以引用这个变量v. 在这里因为case T没有被匹配上,所以变量v的类型和值同i,即, var v Q = Q{2}, 这里要注意了,如果你要说i的类型为I就没啥意义了, 要用i的underylying type和underylying value才有意义.
         	case T:
         		fmt.Println("T")
         		fmt.Println(v)
@@ -1091,6 +1273,20 @@ Type switches
     *.上一节讲"类型推断"时,可以有两个变量, 但该swtich结构中只能有0个或1个变量.
     *.另外,如果想判断某个变量到底是什么类型,可以通过fmt.Printf("var_name = %T\n",var_name)的方法;还可以通过引入reflect包,然后使用fmt.Println("var1 = ", reflect.TypeOf(var1))或fmt.Println("var1 = ",reflect.ValueOf(var1).Kind()).比如type X []int, 有一个变量的类型是X, 则头两种输出的类型是X, 第三种输出的是[]int, 其实比较二三也可看出,三比二多调了一个kind()方法(变量类型输出的方法参考自: https://www.geeksforgeeks.org/different-ways-to-find-the-type-of-variable-in-golang/)
 */
+*.所谓静态类型的语言,指的是变量的类型在编译阶段就要确定的, 是啥类型就是啥类型;而动态类型语言中, 在运行时可以动态更改.举例说明:
+    package main
+    
+    import "fmt"
+    
+    func main() {
+    	var i interface{}
+    	i = 42
+    	fmt.Printf("The type of i is: %T\n", i)
+    	i = "hello"
+    	fmt.Printf("The type of i is now: %T\n", i)
+    }
+    *.拿这段G为代码来说, i = 42 ,此时它的类型是int, 后面i="hello",此时它的类型是字符串类型. 这在静态类型的语言中是不允许的, 也就是说如果上面这段代码逻辑在静态类型语言中, 编译阶段就会报类似多个类型的值赋给同一个变量的错误. //另外对动态类型语言可以理解为:拿一段代码(就拿上面这段代码来看就合适), 从上向下执行, 在执行过程中, 同一变量可以是不同类型(具体参考本段最后一句话). //或者理解为静态语言中,一个变量一生只能有一种类型,而且是在编译阶段就确定好的; 动态类型则相反, 一生可以有多个类型,具体都可能是啥类型, 要在执行阶段看,所谓在执行阶段看就是把代码从上向下执行过程中, 给同一个变量赋不同类型的值.  最重要的一点,动态语言中不是说你可以给某个类型的变量随便赋其它类型的值,只是说这个语言有这个特性,某些情况下可以这么做,还是拿上面这个例子来说, 如果一开始i的类型不是interface{},而是int,你就不能给i赋一个字符串类型的"hello"
+
 
 Stringers
 1.这节主要讲的是fmt包中定义了一个名为Stringer的接口,type Stringer interface {String() string},而fmt包中所有的打印函数以及某些包的打印功能在打印类型实例时,会先看一下该实例的类型有没有实现Stringer接口,如果实现了,则直接调用该实例的String()方法; 如果没实现则直接把该类型实例输出. 重点来了, 所以如果我们想要自定义A类型值和B类型值的打印内容,就可以使用A和B分别实现Stringer接口的String()函数,这样我们在使用类似于fmt.Println(A,B)的时候,实际上执行的是A.String(), B.String().下面通过一个例子看一下
@@ -1102,10 +1298,62 @@ Stringers
         fmt.Println(a, z)  //该句在实际执行的时候,其实执行的是a.String()和z.String()
 *.官文中还讲了实现String()方法以达到自定义输出内容格式,在写go代码时十分常见.
 Exercise: Stringers
-1. 下一轮统一看Exercise
+1. 我的代码:
+   =====
+   package main
+
+   import "fmt"
+   import "strings"  //*
+   import "strconv"  //*
+   
+   type IPAddr [4]byte
+   
+   // TODO: Add a "String() string" method to IPAddr.
+   func (ip IPAddr) String() string {
+       s := make([]string,4)                 //*
+       for ind,val := range ip {             //*
+   	    s[ind] = strconv.Itoa(int(val))  //*
+   	}
+   	return strings.Join(s,".")           //*
+   }
+   func main() {
+   	hosts := map[string]IPAddr{
+   		"loopback":  {127, 0, 0, 1},
+   		"googleDNS": {8, 8, 8, 8},
+   	}
+   	for name, ip := range hosts {
+   		fmt.Printf("%v: %v\n", name, ip)
+   	}
+   }
+   =====
+   ChatGPT的代码:
+   =====
+   package main
+
+   import "fmt"
+   
+   type IPAddr [4]byte
+   
+   // TODO: Add a "String() string" method to IPAddr.
+   func (ip IPAddr) String() string {
+     return fmt.Sprintf("%d.%d.%d.%d", ip[0],ip[1],ip[2],ip[3])  //*
+   }
+   func main() {
+   	hosts := map[string]IPAddr{
+   		"loopback":  {127, 0, 0, 1},
+   		"googleDNS": {8, 8, 8, 8},
+   	}
+   	for name, ip := range hosts {
+   		fmt.Printf("%v: %v\n", name, ip)
+   	}
+   }
+   =====
+
+   总结: 还是ChatGPT的代码更少, 更易理解,我的代码,多引入了两个包, 还一堆转换.
+   *.另外之前只接触了fmt.Println函数输出变量时,会调变量.String();这节又接触了fmt.Printf函数在格式化输出时逻辑为先调用变量.String()替换掉双引号中的格式符, 然后再进行格式化输出.拿上面这个例子来说, 先将"%v: %v\n"中的两个v给替换掉,name为string类型变量,其默认就是原样输出,此时变为"loopback: %v\n",再看ip,其实现了Stringer接口,调用相应的String函数后,使用返回值进行替换,近而得到"loopback: 127.0.0.1\n",最后对这个替换后的字符串进行格式化输出,\n被解释为换行.googleDNS的输出原理同loopback.
 Errors
 1.在go中, 内建类型中非有一个叫error的接口,其定义为: type error interface { Error() string },我们在使用fmt包中的打印函数打印error类型值时,默认先看一下其underylying type是否实现了error接口,如果实现了,则调用underlying type的Error()方法.如果没实现,则原样输出error实例.
-2.到目前为止接触了两个比较常用的接口,一个是之前讲的fmt包中的Stringer接口,还有一个就是上一条说的内建的error接口,通过实践发现, 在使用fmt包的打印函数时,先找的是Error()函数, 然后才是找String()函数.见例子:
+2.到目前为止接触了两个比较常用的接口,一个是之前讲的fmt包中的Stringer接口,还有一个就是上一条说的内建的error接口,通过实践发现, 在使用fmt包的打印函数时,先找的是Error()函数, 然后才是找String()函数(这句话主要想表达, 即使没有返回error接口类型的变量, Error()方法也可能会被调用).见例子:
   a.当错误返回值类型为error类型时:
      此时,返回值类型肯定是已经实现了Error()方法了,不然是不可能成功执行的,此时fmt包的输出语句调用的肯定是返回值类型的Error()方法,即使现在同时存在返回值类型的String()方法:
 
@@ -1127,7 +1375,7 @@ Errors
     
     func main() {
     	fmt.Println(Test(5))   // 5 <nil>   //5大于0,返回的是5和nil,由于nil没有作为任何类型的接收器, 所以原样输出了
-    	fmt.Println(Test(-5))   // 0 Error-error, not a positive!  //-5小于0,返回的是V指针,所以最终实际执行的是&V{"error, not a positive!"}.Error()这个方法.这里要说明的是,虽然上面也定义了*V类型的String()方法,但它的优先级没有Error()高(最后一句是猜的,但从实际的测试结果来看,这样解释目前是合理的).
+    	fmt.Println(Test(-5))   // 0 Error-error, not a positive!  //-5小于0,返回的是V指针,所以最终实际执行的是&V{"error, not a positive!"}.Error()这个方法.这里要说明的是,虽然上面也定义了*V类型的String()方法,但它的优先级没有Error()高(最后一句是猜的,但从实际的测试结果来看,这样解释目前是合理的). //本次读到这的理解并不是Error()方法的优先级高, 完全是因为你返回的是接口类型error, 而对接口类型的处理实际上处理调用其基础实体类型值
     }
 
   b.当错误返回值类型为非error类型时:
@@ -1193,9 +1441,10 @@ Errors
     	fmt.Println(Test(5))    //输出同a例
     	fmt.Println(Test(-5))   // 0 String-error, not a positive!这的输出就不一样了,因为只实现了String()方法,没有找到Error()方法,所以最终调的是&V{"error, not a positive!"}.String()
     }
+*.本章总结起来就是: fmt包打印变量时, 先看变量有没有实现error接口,有的话优先调用; 没有的话再看有没有实现Stringer接口,有则调用,没有则原样输出.  //这句说的其实是当变量为非error接口类型时,当变量是error接口类型时,调的肯定是Error方法了,此时不存在如果没有实现Error方法就调用String方法的情况,因为既然返回的类型是接口类型,则这个返回的实例肯定在前面就已经实现Error方法了, 否则编译都通不过.
 
 3.再就是最重要的,这个Errors到底用在什么场景下:
-  而使用方法其实上面这几个例子已经提到了,只不过在main()函数中不同:
+  而使用方法其实上面这几个例子已经提到了,函数返回N个值(通常是2个),然后根据类型为error的那个返回值是否为nil, 然后做进一步的处理:
     func main() {
         a,b = Test(5)
         if b == nil {
@@ -1205,12 +1454,44 @@ Errors
         }
     }   //也就是说在函数返回后, 会先通过错误返回值判断一下操作是否成功了,成功执行啥操作,不成功执啥操作.
 4.还有一点需要注意的: 官文说的对于error接口nil返回值为执行成功,非nil为执行失败,这其实是一个让你在编码的时候遵守的一个约定.你可以不遵守这个约定, 比方说你就是要返回0表示成功,这也是没有问题的, 只不过如上面第3点所写的if判断那块,改为相应的值即可.但你这样写的话,会让其他不了解你代码风格的人产生困惑,这个人必须要看你的代码才能明白. 而nil表示成功,非nil表示失败,是大多数人在编码是遵守的一个约定,你按约定写, 别人一看就明白.
-5.另外我发现,别人写的源码,基本上Error()方法的接收器类型都是指针,我想了想,pointer receiver和value receiver的区别说白了就是否在声明类型时被分配的那块内存原位置改; 当Error()中有修改接收器类型fields的语句时,建议使用value receiver,因为后面该类型再调Error()方法时不会受之前调用的影响; 当Error()中只有像fmt.Println()这种输出语句,无修改fields的语句时,建议用pointer receiver,可以减少copy复本的那步,提高性能.另外,还有一个原因是按照约定如果成功返回值为nil, 而并不是所有类型都包含nil值,所以大多数情况下使用指针类型
+5.另外我发现,别人写的源码,基本上Error()方法的接收器类型都是指针,我想了想,pointer receiver和value receiver的区别说白了就是否在声明类型时被分配的那块内存原位置改; 当Error()中有修改接收器类型fields的语句时,建议使用value receiver,因为后面该类型再调Error()方法时不会受之前调用的影响; 当Error()中只有像fmt.Println()这种输出语句,无修改fields的语句时,建议用pointer receiver,可以减少copy复本的那步,提高性能.另外,还有一个原因是按照约定如果成功返回值为nil, 虽然不是所有类型都包含nil值,但所有类型的指针类型都是nil.所以大多数情况下使用指针类型
+*.fmt包里的Sprintf函数也要多注意下, 它用来格式化字符串,返回值是字符串类型,特点是并不输出内容; Printf函数会处理格式化字符,也会输出,处理像"%v,\n"这种特殊字符;最常用的Println函数用来输出变量以及常量字符串啥的; Sprint函数用来将多个连接数(可以是变量,也可以是字符串等)连接为一个字符串并返回,并不输出.
 Exercise: Errors
-1.下一轮做该练习
+1.代码如下:
+=====
+    package main
+    
+    import (
+    	"fmt"
+    )
+    
+    type ErrNegativeSqrt float64
+    
+    func (e ErrNegativeSqrt) Error() string {
+    	return fmt.Sprintf("cannot Sqrt negative number: %v", float64(e))
+    }
+    
+    func Sqrt(x float64) (float64, error) {
+    	if x < 0 {
+    		return 0, ErrNegativeSqrt(x) //注意这句类型转换的方法: 新类型名(待转换类型实例)
+    	}
+    	z := 1.0
+    	for i := 0; i < 10; i++ {
+    		z = z - (z*z-x)/(2*z)
+    	}
+    	return z, nil
+    }
+    
+    func main() {
+    	fmt.Println(Sqrt(2))
+    	fmt.Println(Sqrt(-2))
+    }
+
+=====
+*.至于该练习中的疑问: 为什么fmt.Sprint(e)会导致无限循环,而fmt.Sprint(float64(e))这样转一下就不会呢, 知识点其实上面讲过, fmt包中的打印函数在输出时,调用的是Error方法和String方法, 此时e的类型是ErrNegativeSqrt,而该类型实现了Error()方法,所以会导致无限的重复执行下去.而将e转换为float64类型后, 因为float64类型没有实现Error方法,所以不会发生无限循环的情况.
 Readers
 1.小节标题为"Readers"可以理解为读取器
-2.io包中，有一个名为Reader的接口，并且在io包中对该Reader接口作了实现: func (T) Read(b []byte) (n int, err error) {}; (官文说Go的标准库中包含了许多对这类接口的实现，说白了就是包含许多相应的方法(methods), 所谓实现不就是实现接口中的方法嘛)。该Read()的理解：它的返回值有2个，一个是进入[]byte中元素的个数(整型)，另一个是错误值(error接口类型)。官文说Read方法是位于带有数据的byte分片中([]byte),然后监控每次进入[]byte的元素个数，返回时将本次进入[]byte中的元素个数以整型返回，并且返回一个类型为error接口类型的错误值，如果没有错误返回nil,如果没有元素进入，则返回的两个值，一个是0，一个是EOF。通过这节带的例子最好理解了:
+2.io包中，有一个名为Reader的接口，并且在io包中对该Reader接口作了实现: func (T) Read(b []byte) (n int, err error) {}; (官文说Go的标准库中包含了许多对该接口的实现，说白了就是io包中还定义了许多其它类型, 这些类型都实现了Readers接口中的Read方法)。该Read()的理解：它的返回值有2个，一个是进入[]byte中元素的个数(整型)，另一个是错误值(error接口类型)。Read方法的作用有两个:1.填充其slice类型的形参变量2.计录填充的个数. 对形参变量的填充一般都是从索引0开始的, 而每次填充完的这个形参变量存在的意义就是等待后面的语句从它里面读取内容,而至于每次要读取几个元素,就要看返回值了. 返回时将本次进入[]byte中的元素个数以整型返回，并且返回一个类型为error接口类型的错误值，如果没有错误返回nil,如果没有元素进入，则返回的两个值，一个是0，一个是EOF。通过这节带的例子最好理解了:
 import ("fmt"; "io"; "strings")
 func main() {
     r := strings.NewReader("Hello, Reader!")
@@ -1235,9 +1516,138 @@ b[:n] = ""
 从结果中解读:循环第一次执行，n, err := Read(b)这句执行完成后，b中被读入8个字节，因为没有任何错误，也没有到达字符串的结尾，所以n = 8 err = <nil>，b中的字节为"Hello, R"这8个字符的ascii值；到此第一次循环导致的头两行输出应该没啥疑问; 继续，此时"Hello, Reader!"这个字符串中的字符仅剩下"eader!"这6个字符了；当第二次循环执行完n, err := Read(b)后，字符串剩余的6个字符被读入数组b，从前向后进行覆盖填充，所以你会看到结果输出的字节最后两个是一样的，因为第二次读取只剩下6个字符了，覆盖填充的时候，只能覆盖数组b的头6个字节；到这第三四行的输出应该也没啥疑问的了；继续，此时字符串为空了，第三次执行循环，当n, err := r.Read(b)执行完成后，因为没有字符进入数组b,所以Read()自然监听数组b的进入字符数是0，则n = 0,因为已经到了字符串的结尾，所以err = EOF,此时字节数组b中还是第二个循环中的内容，所以打印出来的ascii值和第二次循环是一样的。
 *.感觉有一点需要注意一下，就是第二次明明就将字符串中的字符给读取尽了，但是得到的错误值还是<nil>而不是EOF,所以暂且猜测，一次读取时，只要还能读取到数据，虽然已将字符串读空了，但此时的err返回值依然是<nil>,只有在某一次循环中，从指定对象中一个字符也读不出来的时候，才会返回err为EOF
 Exercise: Readers
-1.已看, 基线是实现io.Reader接口,该接口只定义了一个方法,Read(b []byte) (n, err).
+1.代码:
+=====
+  package main
+  
+  import "golang.org/x/tour/reader"
+  
+  type MyReader struct{}
+  
+  func (mr MyReader) Read(b []byte) (int, error) {
+    for i:= range b{
+      b[i] = 'A'
+    }
+    return len(b), nil
+  }
+  func main() {
+    reader.Validate(MyReader{}) //循环建立n个长度不定的slice S,每次将当次循环的slice作为参数传给Validate形参调用的Read方法中, 得到返回值n,err后,遍历S[:n],看看是不是每个元素都是'A',是的话继续下一次测试,所有测试都做完且没问题, 返回'OK'. 如果是我就这样设计, 但源码中的测试逻辑不是这样的.
+  }
+=====
 Exercise: rot13Reader
-1.已看, 这节引入了流中流的概念.即将ReaderA传给ReaderB.然后就是rot13是啥意思;以及io.Copy()方法的实现.总的来说这个练习要看新引入的方法代码实现,否则就一个调用代码不知道具体实现过程,总是有点弄不明白.
+0.实现一个io.Reader接口常见方式为:
+  a.先声明一个结构体,该结构体中必包含的两个字段:一个是用来记录当前传输的总字节数,totolCounter int; 另一个字段用来存放原始slice的字节数,f []byte.
+      type Book struct{
+        totalCounter int
+	f []byte
+      }
+  b.使用a声明的结构体作为接收器实现Read方法:
+    func (bo *Book) Read(b []byte) (int, error){
+      n := len(b)
+      if bo.totalCounter >= len(bo.f){
+        return 0, io.EOF
+      }
+      //正常来说n就等于b的长度, 但当拷贝到最后了,bo.f中剩余的字节数填不满b了,则要改一下n的值
+      if bo.totalCounter+n > len(bo.f){
+        n = len(bo.f)-bo.totalCounter
+      }
+      //返回拷贝的字节数
+      copied = copy(b, bo[bo.totalCounter: bo.totalCounter+n])
+      bo.totalCounter += copied
+      return copiedd, nil
+    }
+*.看一下完整的代码,下面代码中Read()方法的实现是自己写的, 上面b点所描述的Read()方法是ChatGPT优化过的:
+=====
+    package main
+    
+    import (
+      "io"
+      "fmt"
+    )
+    
+    type Book struct {
+      totalCounter int
+      f []byte
+    }
+    func (bo *Book) Read(b []byte) (int,error){
+      //返回值为0,io.EOF或 n, nil 或 n,非nil
+      nowCounter := 0   //用于返回当次调用填充的字节数
+      bolength := len(bo.f)  //获取被传文件的总字节数
+      if bo.totalCounter >= bolength {
+        return 0, io.EOF
+      }
+    
+      //下面的逻辑为正常填充b,以及处理中途可能出现error的情况
+      for i:=0; i< len(b);i++ {
+        //每次赋值时都要再判断一次到底bo.f传没传完
+        if bo.totalCounter >= bolength {
+          if nowCounter > 0{
+            return nowCounter, nil
+          }
+        }
+        b[i] = bo.f[bo.totalCounter]  //每次都从b[0]开始填充,每次填充的字节为bo.f[counter]
+        nowCounter += 1  //只有填充好了,才会给nowCounter加1
+        bo.totalCounter += 1  //最后给总的传送字节数加1
+      }
+      return len(b), nil //正常情况下返回b的总长度和nil
+    }
+    
+    func main(){
+      book := Book{f:[]byte{1,2,3,4,5,6,7,8,9,10}}
+      s := make([]byte,3)
+      result := make([]byte, 10)
+      for {
+        n, err:=book.Read(s)
+        //到结尾了,直接退出for循环
+        if n == 0 && err == io.EOF {
+          break
+        }
+        if n >0 && err != nil {
+          result = s[:n]
+          fmt.Println(result)
+          panic(err)
+        }
+        if n > 0 && err == nil {
+          result = s[:n]
+          fmt.Println(result)
+        }
+      }
+    }
+=====
+1.代码:
+=====该段代码来源https://gist.github.com/edwardmp/3aca97114eb19089e18d
+    func (r *rot13Reader) Read(p []byte) (n int,err error) {
+    	n, err = r.r.Read(p)
+    	for i := 0; i < n; i++ {
+    		if (p[i] >= 'A' && p[i] <= 'M') || (p[i] >= 'a' && p[i] <= 'm') {
+    			p[i] += 13
+    		} else if (p[i] >= 'N' && p[i] <= 'Z') || (p[i] >= 'n' && p[i] <= 'z') {
+    			p[i] -= 13
+    		}
+    	}
+    	return
+    }
+=====该段代码是ChatGPT给出的,但给的代码最后一句有问题,应将return n,nil改为return n, err 具体原因也已写明,
+func (r *rot13Reader) Read(p []byte) (int,error) {
+	n, err := r.r.Read(p)
+	for i := 0; i < n; i++ {
+		if (p[i] >= 'A' && p[i] <= 'M') || (p[i] >= 'a' && p[i] <= 'm') {
+			p[i] += 13
+		} else if (p[i] >= 'N' && p[i] <= 'Z') || (p[i] >= 'n' && p[i] <= 'z') {
+			p[i] -= 13
+		}
+	}
+	//不是nil说明出问题了, 不是io.EOF说明没到文件尾,即该if的作用是当拷贝中途出现问题了,将当前已经处理好的元素个数与错误内容返回
+	//现在看到这个if是多余的, 因为无论如何返回的都是return n, err.直接在调用函数处先判断err是否为io.EOF来看是否数据传完了; 没传完的话, 再判断是否为非nil,来看是否出问题了.
+	if err != nil && err != io.EOF {
+		return n, err
+	}
+	//除了上面这个if给出的情况外, 其它情况是由该return返回,也就是两种情况,一种是正常处理完没到结尾,返回n,nil.另一种情况是处理完了,返回0,io.EOF
+	return n,err 
+	//*.使用ChatGPT给出的代码这块返回的是n,nil,这会导致main函数中的io.Copy()语句一直阻塞在那,因为io.Copy函数是以拿到io.EOF来判断是否拷贝完毕的,所以这块要用return n, err 而非 return n, nil
+}
+=====
+*.所以相比而言,第一段代码相对来说更优秀
 Images
 1.这节我之前认为是一个exercise了,其实不是, 但它只是介绍了go中image包,而不是讲解相应的语法
 Exercise: Images
@@ -1255,9 +1665,51 @@ Type Parameters
 Generic Types
 0.这节的侧重点是"通用类型",即啥类型都可以; 而从应用角度来看,泛型类型主要是用于非primitive类型外的其它类型, 如结构体,数组,分片.原因也很简单, 像int, float这样的你没法给它限定类型,因为它本身就是类型的最小单位; 而struct, array, slice这些它们可以看作是一个大类型,里面又包含了许多小类型,因此这里的泛型主要是扩展这些大类型里面的小类型可以是"泛型",即啥类型都行. 
   *.上一节我用的更多的一个词是"限制", 因为明明是T, 你非要说并不是啥T都行,要满足comprable的T才可以; 这节我用了一个词叫扩展, 拿array举例, 之前声明一个array,里面的元素类型是固定的某个类型, 而用上泛型后, 每次都可以是任意的类型.
-Goroutines
+=====该范围中是对specification中关于泛型类型的一个翻译,没翻译完===
+类型参数声明
+A type paramter list declares the type paramters of a generic function or type declaration.
+一个"类型参数列表" 声明了 一个'泛型函数'或是一个'类型声明'的 "类型参数" //说白了就是限制函数中的形参类型以及 普通type声明的普通类型.  "类型参数列表"拆成两部分就好理解了 "类型" 和 "参数列表", 后者是用来修饰前者的,说修饰不如说限制更好一些, 具体的实际上来看就是说在你实例化给变量传值时,这个实例必须要满足修饰这个类型的参数列表才行.
+The Type parameter list looks like an ordinary function parameter list except that the type parameter names must all be present and the list is enclosed in square brackets rather than parentheses.
+"类型参数 列表"表面看上去就像普通函数的参数列表(有参数名和相应的类型,但又不同,"类型参数"中叫 "参数名 参数名必须满足的限制"), 不同的是"类型参数"中参数名必须全部显式的给出(我们平时在单独声明函数时形参名可省可不省,看你在body中是否引用它; 而当函数类型作为类型参数时,形参只需要给个类型名就好,不需要给定形参名;而"类型参数"就相当于普通函数里的形参名, 但它不能省略,一定要存在,话说你省略了也就没法引用了)并且这个列表是由方括号括起来的, 而为普通函数中的圆括号.
+"类型参数"声明的语法:
+  TypeParameters = [IdentifierList TypeConstraint,...]
+
+All non-blank names in the list must be unique. Each name declares a type parameter which is a new and different named type that acts as a place holder for an unknown type in the declaration.
+类型参数列表中的非空类型名不能重复,必须是唯一的. 这个名字的作用是: 声明一个类型参数,说是类型参数,实际上就是声明了一个新的类型, 而这个类型参数(或叫新的类型)它的位置和普通类型的位置一样(参考使用var进行变量声明以及形参中类型的位置),但意义不同它此时表示一个未知类型,因为泛型指的本就不是一个具体类型,得在调用传值时,才能知道这个T具体表示的是什么类型.
+The type parameter is replaced with a type argument upon instantiation of the generic function or type.
+也就是说泛型的用处一般在两处:变量声明 和 函数参数
+  变量声明: var x T 只有在给x赋一个实例值的时候,才会用相应实例的类型替换掉类型参数T
+  泛型函数: 只有在泛型函数实例化的时候,才会根据具体传值的类型对类型参数T进行一个替换
+常见的类型参数列表形式:
+  [P any]
+  [S interface{~[]byte|string}]
+  [S ~[]E, E any]
+  [P Constraint[int]]
+  [_ any]
+
+Just as each ordinary function parameter has a parameter type, each type parameter has a corresponding (meta-)type which is called its type constraint.
+就像每一个"普通函数参数(形参)"都要有一个相应的"(形参)类型"一样, "类型参数"也有一个相应的"元类型",我们通常把这个"元类型"叫做"类型参数"的限制.
+*.使用一个小例子解释一下常见的概念:
+  type A[X B] struct {    //声明一个泛型类型A,它的类型参数为X,限制为这个X必须要实现B
+      x X
+  }
+
+A parsing ambiguity arises when the type parameter list for a generic type declares a single type parameter P with a constraint C such that the text C forms a valid expression
+在声明泛型类型的时候还需要注意的一点是,有些时候当我们声明一个"只有一个"类型参数和相对应的参数限制时, 由于类型参数和对应的限制符合Go的语法规则而被规有为其它的意思, 为了避免这种情况的发生,有两种解决办法, 一种是将参数限制放到interface{}中; 另一种是在参数限制后面追加个逗号.
+
+声明一个方法时, 接收器类型也可以使用泛型,但写法上有注意:当接收器类型为泛型类型时, 不能只写泛型类型名, 也要将其类型参数写上, 但此时类型参数不必非得和泛型类型声明时写的一样,但必须唯一, 还有一点相应类型参数后的参数限制不用写:
+   如有一个泛型类型定义为: type A[B C,D E],则在声明一个方法时,接收器类型的正确写法为: func (a A[B,C]) MethodName(){} 类型参数必须写上
+        func (a A[o,p]) MethodName(){} 类型参数名不必和声明时的一致
+
+在泛型类型T的类型参数列表中, 类型参数的限制不能直接或间接的引用T
+
+"类型参数限制"就是一个接口,这个接口定义了"类型参数"都可以是哪些类型
+=====
+*.类型参数可以看作是创建泛型类型的一种手段. 如func FuncName[T Cons] 创建的泛型函数. func (T Cons) MethodName(T){}创建的泛型方法,以及type T[T cons]创建的泛型类型.
+*.泛型是在Go2中才引进的, 在Go1中是通过接口的方式间接的去实现泛型,也就是实现接口中方法的那些类型都可以作为接口类型的underlying type.
+GoroUtines
 1.轻量级线程
-2.通过delve调试来看, main()函数其实也是新建协程执行的. 也就是说main()函数在执行前,被处理成 go main()了,然后执行的时候,先进一个主线程,这个主线程执行main()函数所在的协程.
+2.通过delve调试来看, main()函数其实也是新建协程执行的. 也就是说main()函数在执行前,被处理成 go main()了,然后执行的时候,先建一个主线程,这个主线程执行main()函数所在的协程.
 
 import (
 	"fmt"
@@ -1409,7 +1861,7 @@ Breakpoint 1 set at 0x4b6a46 for main.say() ./main.go:16
 (dlv) threads
 * Thread 138301 at 0x4b6a46 ./main.go:16 main.say     //线程 138301
   Thread 138307 at 0x47045d /root/golang/go/src/runtime/sys_linux_amd64.s:145 runtime.usleep
-  Thread 138308 at 0x4b6a46 ./main.go:16 main.say    //线程 13838
+  Thread 138308 at 0x4b6a46 ./main.go:16 main.say    //线程 138308
   Thread 138309 at 0x4b6a46 ./main.go:16 main.say    //线程 138309
   Thread 138310 at 0x4b6a46 ./main.go:16 main.say    //线程 138310
 (dlv) goroutines
@@ -1427,8 +1879,8 @@ Breakpoint 1 set at 0x4b6a46 for main.say() ./main.go:16
   Goroutine 12 - User: ./main.go:16 main.say (0x4b6a46) (thread 138310)                                   //协程8
 [12 goroutines]
 
-5.多个协程运行在同一个地址空间，所以访问数据时注意synchronous问题,基础的是要用到sync包中的函数,这个后面会讲到
-6.并发主要用的是runtime包.所以掌握这个包很重要. 刚学的是runtime包里的GOMAXPROCS(n)函数,作用是设置最多启用几个线程来执行go程序中的协程(即你在用dlv调试下断时,最多可以看到有N个线程在处理,这里的线程不包括系统调用的,但runtime库中对于GOMAXPROCS的描述是设置处理该go应用并发工作的最大cpu核心数.我现在的理解: 对于该设置我们能看到的就是在dlv下断最多能看到有n个线程在执行我们的函数, 但要明白的是cpu的核心数是一定的, 而同一时刻一个cpu最多就能处理其核心数的线程, 如我的是4核cpu,也就是说同一时刻我的机器只能同时处理4个线程,而你设置GOMAXPROCS为大于4的数其实可能还会降低程序的执行效率呢, 因为要进行线程切换, 所以该函数默认的值就是你cpu的核心数, 这样能达到最大效率, 所以我们一般情况下只会设置n的值小于cpu的核心数, 如1,此时go运行时只会起一个用户线程, 此时不用考虑同步的问题).配合delve调试程序的b,c,threads,goroutines来检察设置不同的线程数时,线程和协程的实际情况.需要注意的是,这里面的n,不包含调用系统功能的那些线程.也就是说你在threads里看到的线程数可能要大于你设置的数字n.而怎么看线程执行的是系统调用呢, 我现在的技巧就是从threads中看文件名称带sys前缀的这个线程就是系统调用. 另外1.png讲的是进程,线程,cpu分片的基本概念,网上找的,感觉好理解就截图存下了
+5.多个协程运行在同一个地址空间，所以访问数据时注意synchronous问题,基础的是要用到sync包中的函数,这个后面会讲到  //其实synchronization,同步,这个词对新接触并发的同学来说很不友好, 啥叫同步呀, 就是大家一块做某件事, 而新同学的注意力(至少我自己是这样)并没有放在大家一起做的这个事儿是访问同一个变量(或说成访问同一个内存地址)上, 所以新同学会对同步这个词可能会有些不明所以.
+6.并发主要用的是runtime包.所以掌握这个包很重要. 刚学的是runtime包里的GOMAXPROCS(n)函数,作用是设置最多启用几个线程来执行go程序中的协程(即你在用dlv调试下断时,最多可以看到有N个线程在处理,这里的线程不包括系统调用的,但runtime库中对于GOMAXPROCS的描述是设置处理该go应用并发工作的最大cpu核心数.我现在的理解: 对于该设置我们能看到的就是在dlv下断最多能看到有n个线程在执行我们的函数, 但要明白的是cpu的核心数是一定的, 而同一时刻一个cpu最多就能处理其核心数个线程, 如我的是4核cpu,也就是说同一时刻我的机器只能同时处理4个线程,而你设置GOMAXPROCS为大于4的数其实可能还会降低程序的执行效率呢, 因为要进行线程切换, 所以该函数默认的值就是你cpu的核心数, 这样能达到最大效率, 所以我们一般情况下只会设置n的值小于cpu的核心数, 如1,此时go运行时只会起一个用户线程, 此时不用考虑同步的问题).配合delve调试程序的b,c,threads,goroutines来检察设置不同的线程数时,线程和协程的实际情况.需要注意的是,这里面的n,不包含调用系统功能的那些线程.也就是说你在threads里看到的线程数可能要大于你设置的数字n.而怎么看线程执行的是系统调用呢, 我现在的技巧就是从threads中看文件名称带sys前缀的这个线程就是系统调用. 另外1.png讲的是进程,线程,cpu分片的基本概念,网上找的,感觉好理解就截图存下了
 7.time.Sleep()是协程阻塞的而非线程阻塞的(也就是说如果一个线程运行多个协程时,某个协程中虽然有Sleep语句, 但相应执行它的线程可以继续执行线程队列中的其它协程, 但是我现在还没有想到如何写代码能直观的看到).go中main()函数虽说没有前缀go,但其实也是运行在协程中的.
 8.另外,在使用delve时,下断点的位置很重要,可能参考第4点中的那些例子.
 
@@ -1465,7 +1917,7 @@ Channels
 5.默认情况下，发送和接收数据都是阻塞的，直到另一方准备好,所以可以利用管道的这个特性来实现syncronization:
 
     var result int = 0
-    func sum(c chan int, d chan int) {  //d参数完全是为了判断协程是否都执行结束才加上的, 但看了下面switch中判断结束的语句有点自欺欺人,就是通过result是否为100000来判断的,如果中途出现问题了,没有执行完毕,返回的也是100000,那就不好玩了,有点掩耳盗铃的味道.
+    func sum(c chan int, d chan int) {  //d参数完全是为了判断协程是否都执行结束才加上的
     	result = <- c
     	result += 1
     	switch result{
@@ -1495,19 +1947,19 @@ func main() {
 func main() {
   ch := make(chan int,1)  //建立缓冲为1的通道
   ch <- 3  //因为缓冲为1,所以此时3能正常的发到通道里,这句不会阻塞, 无论有没有其它协程正在等着接收, 因为声明的通道中有一个空座, 我能坐下, 逻辑上是通的
-  fmt.Println("don't display!")  //最终这句能被执行
+  fmt.Println("displayed!")  //最终这句能被执行
 }
 
-6.貌似Go中我们不可以自己管理线程, 咋利用多核? //上一小节说了,如果是在多核机器上运行默认用的就是多核,因为GOMAXPROCS默认值就是cpu的逻辑核心数.但默认用多核也不一定好,有些时候单线程要比多线程速度快.
+6.貌似Go中我们不可以自己管理线程, 咋利用多核? //上一小节说了,如果是在多核机器上运行默认用的就是多核,因为GOMAXPROCS默认值就是cpu的逻辑核心数.但默认用多核也不一定好,有些时候单线程要比多线程速度快,这要看代码逻辑是cpu密集还是io密集了.
 Buffered Channels
 1.通道声明时可以设置make第二个参数为通道的buffer: c := make(chan int, 2)
 2.一直向通道中发送内容，直接达到通道设置的buffer数
-3.从通道接收内容，直接通道中内容为空
-4.看一个死锁的例子:   ch := makee(chan int, 1)
+3.从通道接收内容，直到通道中内容为空
+4.看一个死锁的例子:   ch := make(chan int, 1)
                       ch <- 1
                       ch <- 2
-                      *.此时1发送到了通道的缓冲区中等待被接收，ch <- 1就执行过了，而此时ch通道缓冲区就1,已经满了,又没有其它协程从通道接收1,所以2就一直等待着发往ch,但因为没有变量接收1，所以就卡死在这了，解决方法是将make中的缓冲参数改为2
-*.从4可以看出, buffer channel死锁的情况: 1.缓冲区已经满了, 没语句接收, 此时还向缓冲区发送数据的语句就会阻塞造成死锁; 2.缓冲区已经空了,没语句向里面发了, 但还有语句一直等着从里接收数据,这个语句就会阻塞造成死锁.  //重要的一句, 阻塞的只是语句所在的协程,最主要的就是阻塞在main协程中, 一阻塞程序就deadlock了, 但阻塞在其它协程中程序还是能正常结束的,因为主协程退出了,其它子协程也就自动消亡了,但此时被阻塞的协程是否有影响就要看实际的程序逻辑了
+                      *.此时1被发送到了通道的缓冲区中等待被接收，ch <- 1就执行过了，而此时ch通道缓冲区大小就是1,已经满了,又没有其它协程从通道接收1,所以2就一直等待着发往ch,但因为没有变量接收1，所以就卡死在这了，解决方法是将make中的缓冲参数改为2,或是在新协程中定义一个用来从ch通道接收数据的变量
+*.从4可以看出, buffer channel死锁的情况: 1.缓冲区已经满了, 没语句接收, 此时还向缓冲区发送数据的语句就会阻塞造成死锁; 2.缓冲区已经空了,没语句向里面发了, 但还有语句一直等着从里接收数据,这个接收的语句就会阻塞造成死锁.  //重要的一句, 阻塞的只是语句所在的协程,最主要的就是阻塞在main协程中, 一阻塞程序就deadlock了, 但阻塞在其它协程中程序还是能正常结束的,因为主协程退出了,其它子协程也就自动消亡了,但此时被阻塞的协程是否有影响就要看实际的程序逻辑了
 *.协程这块要注意几点: 1.语句是线程阻塞吗?是协程阻塞吗? 而在协程中应用通道,则还要注意: 主协程向通道发送内容后,有其它协程接收它吗?等等  
 Range and Close
 1.range是个关键字,在通道这的用法是i:=range channel; close是个函数,在通道这的用法是close(channel)  //之前讲的range slice可以有两个值
@@ -1549,7 +2001,7 @@ Range and Close
         	go num(ch)
         	for v:= range ch {   
         		fmt.Println(v)
-        	} //跟上面的那段代码相比,就这个for循环不一样,看着更简单了,我们只需要从通道ch中接收值,并处理值(在这里是直接输出),不需要关心通道的关闭问题(这应该是写错了,应该是不需要关心for循环的退出问题).猜测实际执行逻辑和a中的差不多, 只不过range函数将对通道状态的检测以及检测到通道关闭后退出循环都封装好了.也就是说:ror v:=range ch {fmt.Println}在执行前会被编译器预处理成: for tmp,v := <- ch { if tmp!=true{break}fmt.Println(v)}
+        	} //跟上面的那段代码相比,就这个for循环不一样,看着更简单了,我们只需要从通道ch中接收值,并处理值(在这里是直接输出),不需要关心通道的关闭问题(这应该是写错了,应该是不需要关心for循环的退出问题).猜测实际执行逻辑和a中的差不多, 只不过range函数将对通道状态的检测以及检测到通道关闭后退出循环都封装好了.也就是说:for v:=range ch {fmt.Println}在执行前会被编译器预处理成: for v,tmp := <- ch { if tmp==false{break};fmt.Println(v)}
         }
 *.总结一下上面两个例子,无论从管道接收数据用的是range形式,还是<-形式,sender一定要用close()函数关闭通道才行(下面马上就会说到sender端不一定要调close(),调它是因为主协程中从通道接收数据的代码位于for循环中, 你不在发送端找时机关闭通道来通知主协程中for里的接收语句,则主协程里的for循环就会一直循环下去,就该例子来说, 还会造成死锁,因为当0-9这10个数发送后num协程就退出了,而主协程中for循环中的语句还在等着接收.又回到最初的主题了,在发送端调不调close()还要看具体逻辑.但无论怎么样还是调一下好,即使程序执行完这部分内存会被自动回收.);不同的是v,ok <- ch形式需要自己根据ok的值去退出循环,而range形式则不用(具体为啥不用,上一句也有猜测)
 *后来我将上面的代码改了一下,向通道发送的还是0-9这10个数字,但是我想发送到第5个就停止发送了,我就在num()函数for循环中又加了个if,结果一开始报错"panic: close of closed channel",看一下到底是怎么回事吧,上代码:
@@ -1569,7 +2021,7 @@ Range and Close
         	go num(ch)
                 for {
         	v,ok:= <- ch
-        		if ok == true{
+        		if ok == true{           //这块if...else...的逻辑虽然没问题, 但习惯上感觉先写边界条件语句然后再写普适语句更好, 就本例来说你先把退出条件写上, 然后再写输出语句其实更好一些.
                    		//fmt.Println(ok)
         	        	fmt.Println(v)
         	        } else{
@@ -1593,24 +2045,69 @@ Range and Close
     	v:= <- ch   //这里只接收了一次值,打印结果是0,没有报错
     	fmt.Println(v)
     }
-所以说发送端调不调close()去关闭管道,要看代码的实际逻辑, 通常是像上面代码提到的,接收端如果是在一直等待从管道接收数据,如将接收语句放在for循环中,则即发送端即要有close()的调用,接收端也要有通道状态的检测(或者直接用range).
+所以说发送端调不调close()去关闭管道,要看代码的实际逻辑, 通常是像上面代码提到的,接收端如果是在一直等待从管道接收数据,如将接收语句放在for循环中,则既要在发送端调用close()函数关闭通道,也要在接收端检测当前通道的状态(或者直接用range).
 3.只有sender可以关闭通道，receiver不可以.如果使用receiver关闭了通道,则sender向已关闭的通道中发送数据会发生panic.
 4.receiver可以使用"v,ok := <-ch"形式，通过ok的值是true还是false判断通道是否关闭
-5.可以使用"for i := range c"的形式来连续的从通道接收值
-6.一般不需要sender调用close()函数关闭通道，只有当sender没数据要发了,而接收端的阻塞状态会影响整体逻辑时(如上面所说的接收端语句位于主协程的for循环中, 如没有收到关闭指令会造成死锁)才需要调用close()函数,从而接收器在检测到发送端已经关闭了通道时,能够做出相应的影响,如结束for循环,让程序退出. //这点和第2大点重复了,但先不删.
+5.可以使用"for v := range ch"的形式从通道中连续的接收值
+6.一般不需要sender调用close()函数关闭通道，只有当sender没数据要发了,而接收端的阻塞状态会影响整体逻辑时(如上面所说的接收端语句位于主协程的for循环中, 如没有收到关闭指令会造成死锁)才需要调用close()函数,从而接收器在检测到发送端已经关闭了通道时,能够及时做出响应,如结束for循环,让程序退出. //这点和第2大点重复了,但先不删.
 Select
-1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句(之前认为select也是从上到下循环的检测case,检测到哪个case条件满足了就执行相应的语句,但通过它说如果多个都满足随机选一个执行,就感觉机制应该是某一检查时刻查看所有case下的通道数据情况,如果有1个,则执行相应case下的语句,如果有多个通道都收到数据了,则随机选一个,执行相应case下的语句.如果按之前想的不停的循环switch下的case,则即使多个通道都有内容了,也是当前循环到谁谁执行,并不是随机.话又说回来了,按照这个逻辑好像也有随机的意思) //需要注意的是这里为什么c通道执行完成后不用执行close()函数? ::因为用close()函数关闭通道的情况是,接收端一直处于接收状态,如果不通知接收端通道已关闭没有内容,如果接收端运行在主协程中则会造成死锁.而本节的例子,由于有两个通道,虽然当i=10时不再给c通道发送内容了,但会向quit通道发送内容,而且最后程序还正常退出了.还是那句话,用不用close()要看实际情况,具体上面range and close那小节也提到了
+1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句(之前认为select也是从上到下循环的检测case,检测到哪个case条件满足了就执行相应的语句,但通过它说如果多个都满足随机选一个执行,就感觉机制应该是某一检查时刻查看所有case下的通道数据情况,如果有1个,则执行相应case下的语句,如果有多个通道都收到数据了,则随机选一个("随机"这两个字提醒我们在实际写代码时,两个case后面的通道执行虽然有先后顺序, 但可能在两个通道都完成接收或发送值了,线程还没执行到select这,所以当线程执行到select这时,之前两个通道谁先执行完谁后执行完的顺序就没意义了,因为此时两个case都处于ok状态,所以具体执行谁是随机的),执行相应case下的语句.如果按之前想的不停的循环switch下的case,则即使多个通道都有内容了,也是当前循环到谁谁执行,并不是随机.话又说回来了,按照这个逻辑好像也有随机的意思) //需要注意的是这里为什么c通道执行完成后不用执行close()函数? ::因为用close()函数关闭通道的情况是,接收端一直处于接收状态,如果不通知接收端通道已关闭没有内容,如果接收端运行在主协程中则会造成死锁.而本节的例子,由于有两个通道,虽然当i=10时不再给c通道发送内容了,但会向quit通道发送内容,而且最后程序还正常退出了.还是那句话,用不用close()要看实际情况,具体上面range and close那小节也提到了
 2.注意for{select{}}的连用，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句   //是因为return的执行导致fibonacci()函数执行完毕,而该函数也是主协程的最后一条语句,因此主协程正常结束,整个程序也就正常结束了,即使不关闭通道也不会发生主协程死锁的情况,因此不用加
 3.另外在这节还学到了,接收通道的内容不一定要有变量,如print(<-c), case <-c,这两个语句都是成立的;另外,还可以直接使用匿名函数,如 go func() {}() //注意最后的括号一定要有,前面的表示匿名函数,你只有加上最后的一对(),才叫对匿名函数的调用
 Default Selection
 0.网上搜的,还可以定义单向通道,用来生成只读或只写的通道, 只读通道: var readOnly <-chan int; 只写通道: var writeOnly chan <- int
 1.这个简单，类似于switch中的default,即其它语句都不满足的情况下执行default下的语句，具体执行是每次线程执行到该协程时如果如果其它case都不满足的话都会执行一遍default下的语句  // 大机制上来说，select本就类似于多条件分支语句switch
-2.time.Tick()    //这两个都是定时器,都是在指定时间间后隔返回当前时间,区别看源码后再聊
+*.看来select不是阻塞的,即必须有一个case满足才能往下执行,而是执行到select后, 看看当时如果所有case后的条件都不满足就过了(有default的话执行default下的语句),所以大多数情况下, select都被放到for循环中,这样可以保证必须有一个case满足,最后在相应case语句块结尾放处放上关键字break,结束掉for循环.
+*.还有很重要的一点, break除了能结束for循环,还能结束select块,也就是说当select语句块内嵌于for循环中时,我们如果想在select中结束掉for循环,此时不能在case或default下的语句块中使用break关键字,而要用return. 因为由于break位于select中,所以它此时结束的仅仅是select而非外层的for循环,而return则会直接退出当前函数的执行.
+  ====
+  package main
+
+  import (
+    "fmt"
+  )
+  
+  func main() {
+    ch1:= make(chan string)
+    ch2 := make(chan string)
+  
+    for{
+      select {
+        case <-ch1:
+          fmt.Println(1)
+        case <-ch2:
+          fmt.Println(2)
+        default:
+          fmt.Println(3)
+	  return      //此时for循环其实是main函数的最后一个语句, 我们想要退出for循环让整个程序结束,此时要用return,但常规来说, 我们见到for都会想到用break来结束掉for循环,而实际情况是当break在select下时,它结束的只是select,并不会影响到select外部的for循环,就本例来说如果将return换成break,在执行default下的语句时,break中断的仅仅是select语句块,最终的结果就是死循环了,因为此时这段代码没人能让for循环停下来.
+      }
+    }
+  }
+  ====
+*.官文中break关键字的用法说了:A "break" statement terminates execution of the innermost "for", "switch", or "select" statement within the same function. //也就是说首先,关键字break可被用于for,switch和select语句块, 另外如果存在互相嵌套的情况下, break只会结束最里层的语句块. 但也有方法结束外层的语句块, 方法是在外层语句块前加个标签,然后在break后面加上标签名:
+func main() {
+  ch1:= make(chan string)
+  ch2 := make(chan string)
+
+Outerloop:            //注意这句
+  for{
+    select {
+      case <-ch1:
+        fmt.Println(1)
+      case <-ch2:
+        fmt.Println(2)
+      default:
+        fmt.Println(3)
+	break Outerloop   //这里明确表示要结束的是哪个位置的语句块,如果没写Outerloop这个label,则该代码中for永远不会停止执行.
+    }
+  }
+}
+:label可以作为goto, break,continue的目标;label语法其实是: label:statement,也就是说上面的代码其实可以写在一行: Outerloop: for {... break Outerloop}
+2.time.Tick()    //这两个都是定时器,Tick是每隔多久返回当时的时间(会多次返回); 而After是多久之后返回当时的时间(只返回一次).
 3.time.After()
 4.time.Sleep()
 Exercise: Equivalent Binary Trees
 sync.Mutex
-1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题.而具体的用法是:新建一个结构体,里面有一个特殊的字段类型是sync.Mutex.其它字段自己加.然后调的时候,先实例化这个结构体,最后调的时候将结构体中的变量放在Lock()和Unlock()方法中间,基本就完事了.
+1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题.而具体的用法是:新建一个结构体,里面有一个特殊的字段类型是sync.Mutex.其它字段自己加.然后调的时候,先实例化这个结构体,最后调的时候将结构体中的变量放在Lock()和Unlock()方法中间,基本就完事了.  //原理是多个协程在执行同一个函数时,因为1000个协程同时执行Lock()方法时,同一时刻只有一个协程可以继续向下,剩下999个就只能等着, 等到这个协程执行完相应的操作,然后调用Unlock()后,999个协程中的一个幸运儿里的Lock()才会执行完毕,一直这样循环,这样就会导致这个对象里Lock()和Unlock()中间变量的操作同一时刻只有一个协程可以改变.
 3. defer这个在这里其实没啥讲头,它的作用就是在输出结构体中变量值时先拿到锁, 等拿到值之后,最后不要忘了解锁(这么说太局限性了,该函数的作用说白了就是不阻塞当前函数的执行, 并且当其所在函数执行完成后,再执行defer后面的函数, 说不好听的defer的作用就是"擦屁股")
 Exercise: Web Crawler
 ===================================

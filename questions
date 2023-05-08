@@ -1,0 +1,19 @@
+1.关于有符号整型和无符号整型取值范围的:
+    https://learnku.com/articles/50948
+    https://blog.csdn.net/sqlquan/article/details/120033816
+    https://www.callicoder.com/golang-basic-types-operators-type-conversion/
+2.go面试笔记:
+    https://learnku.com/go/t/65436
+
+
+3.什么情况下推荐使用什么排序算法: https://www.cnblogs.com/lianrenjujishou/p/17097813.html
+
+4.把chatGPT如何使用python和golang进行接口调用写完,以及不进行接口调用,而是使用浏览器无头模式访问, 然后元素匹配进行新内容的提取,这样不花钱.
+
+5.这年头, 一定要会做小程序以及公众号, 这两个地方的流量太大了
+
+6.接口设计原则, 或叫什么时候想到要去设计接口,也可以说接口的特点是什么?
+  *.Image这节的内容感觉就是让思考并掌握接口的实际使用方法
+7.泛型这块重点是类型参数限制的书写,这块还没弄明白之前不要轻易的使用泛型进行编程 
+
+8.老生常谈的问题: 如何通过调试的方式从本质上看清进程,线程,协程到底是什么?以及它们三者在运行时的上下文切换
