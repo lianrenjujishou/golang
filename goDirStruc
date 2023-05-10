@@ -1,0 +1,223 @@
+Golang开发
+ //构建开发环境
+ a.下载Golang二进制文件并配置好环境变量PATH
+   0.下载二进制文件并解压到自定义目录
+   1.编辑linux启动时会自动执行的脚本文件,有很多, 如/etc/profile
+   2.最后加上export PATH=$PATH:/path/of/go/bin
+ b.设置代理以处理国内特殊的网络环境导致的某些包下载失败的问题
+   法一:go env -w GOPROXY=https://proxy.golang.com.cn,direct
+        go env -w GO111MODULE=on  //https://maelvls.dev/go111module-everywhere/
+   法二: proxychains
+
+----------
+新手使用Golang写代码时, 目录组织的几个阶段:
+*.前提: 新建一个目录, 你所有的代码都存放在该目录中, 这个目录用术语表达的话就是"项目", 假设这个目录叫做myFirstProject.
+第一阶段: 只想让Golang代码跑起来, 简单的输出字符串,"Welcome to Golang world!"
+  实现: 此阶段我们只需要在myFirstProject目录下新建一个扩展名为".go"的文件且该文件的第一行内容必须为"package main(因为这是一个可执行文件,所以第一行的包名必须是main.如果你写的是一个要被第三方代码调用的库, 包名可以为其它任意有意义的名字)".虽说该文件名可以为任意名, 但通常来说我们都会将可执行文件的源码文件命名为main,即:
+=====
+目录结构为:
+  └── myFirstProject
+    └── main.go
+main.go文件内容为:
+  package main    //由于是可执行文件,首先包名必须为main
+  
+  import "fmt"
+  
+  func main(){
+    fmt.Println("Welcome to Golang world!")
+  }
+=====
+*.从这一阶段起就要涉及到多文件之间的调用了, 对于多文件之间相互调用的一个前提是我们要使用"go mod init 包名"命令将myFirstProject声明为一个模块.之后的所有阶段都假设我已经生成了一个模块, 模块名为"yangyi/gogogo"
+第二阶段:同样是写一个可执行的demo, 代码中有多个不同功能的函数, 当然我们可以把这些函数都放在main.go这一个文件中, 然而, 虽然说是demo,但我们也想把类别不同的功能函数分别放到不同的源文件中, 这样给别人一种你的demo代码组织的很清晰. 问题是所有的分类文件我都想使用main包, 这是一种特殊情况, 因为我们知道通常情况下, 同一个包的多个源文件之间代码是可以直接调用的, 不用使用import关键字, 但这一规则对于main包来说有其特殊性, 正常情况下, 当main包只有一个源文件时,我们构建二进制文件用命令"go build main.go", 但当main包有多个源文件,并且这多个源文件之间有相互的代码调用时, 我们就不能使用"go build main.go"了, 而是要使用不带源文件的命令: "go build -o outputName"; 如果不想生成二进制文件而是直接运行, 则可以使用"go run ."或"go run *.go"(不适用于windows) //参考链接: https://www.pixelstech.net/article/1621090998-Run-code-with-multiple-files-in-the-same-main-package-in-GoLang
+实现:在myFirstProject目录下新建文件main.go, A.go, B.go.其中
+  A.go中包含一个outputA函数, 该函数输出字母"A";
+  B.go中包含一个outputB函数, 该函数输出字母"B";
+  main.go中调用outputA函数和outputB函数;
+=====
+目录结构为:
+  └── myFirstProject
+      ├── A.go
+      ├── B.go
+      └── main.go
+main.go文件内容为:
+  package main
+  
+  import "fmt"
+  
+  func main(){
+    fmt.Println("Welcome to Golang world!")
+    outputA()
+    outputB()
+  }
+A.go文件内容为:
+  package main
+  
+  import "fmt"
+  
+  func outputA(){
+    fmt.Println("A")
+  }
+B.go文件内容为:
+  package main
+  
+  import "fmt"
+  
+  func outputB(){
+    fmt.Println("B")
+  }
+可用的执行命令: go build | go run .  | go run *.go
+不可用命令: go build main.go
+=====
+第三阶段:这一阶段相当于是对第二阶段的一个改进, 将不同类别的源码放到myFirstProject下不同的文件夹(这里的文件夹用术语来说的话就叫做"包")中, 而模块下只包含一个名为main.go的main包, 在main包中使用import的形式将包导入到main包里,然后使用相应的名称进行调用. 
+实现: 在myFirstProject目录下新建:
+  一个名为main.go的文件,导入包A和包B,然后调用OutputA函数与OutputB函数
+    *.注意,区别于第二阶段中的同一包中引用函数时,无论首字母是大写还是小写
+  一个名为A的文件夹,包含A.go文件
+  一个名为B的文件夹,包含B.go文件
+  *.当使用import导入包时,通常后面引用包时用的是源文件第一行中指定的包名,所以为了在使用import导入包时所见即所得, 通常让包名和包所在文件夹使用同一个名字
+=====  
+目录结构为:
+  └── myFirstProject
+      ├── A
+      │   └── A.go
+      ├── B
+      │   └── B.go
+      ├── go.mod
+      └── main.go
+main.go文件内容:
+  package main
+  
+  import (
+    "fmt"
+    "yangyi/gogogo/A"
+    "yangyi/gogogo/B"
+  )
+  
+  func main(){
+    fmt.Println("Welcome to Golang world!")
+    A.OutputA()
+    B.OutputB()
+  }
+A.go文件内容:
+  package A
+  
+  import "fmt"
+  
+  func OutputA(){
+    fmt.Println("A")
+  }
+B.go文件内容
+  package B
+  
+  import "fmt"
+  
+  func OutputB(){
+    fmt.Println("B")
+  }
+=====  
+第四阶段:代码中想引用外部模块中的代码,也就是说如果想在自己的项目中调用别人写的代码库. 原则就是所有远程模块都要出现在go.mod文件中. 最简单的方法是直接在代码中使用"import 远程包",然后在myFirstProject目录下执行go mod tidy, 此时会自动检测myFirstProject目录及子目录下的源码中, import有没有导入不存在于本地的包, 如果有则进行下载,并将相应信息更新到go.mod中; 另一种方法是, 在myFirstProject目录下手动执行"go get 远程包名", 此时会下载远程包所在的整个模块,并且将代码中用到的外部包信息写入go.mod文件中. 这两种方法中, 显然第一种要好一些, 全自动管理, 第二种只适用于当你知道缺少个别的远程包时,手动下载, 如果多个代码中引用了不同的远程包, 你要一个个找, 然后进行下载, 显然太鸡肋了,其实第二种方法完全没有必要.
+实现: 在myFistProject目录下新建:
+  main.go文件, 该文件中会导入本地不存在的外部包
+=====
+目录结构:
+  └── myFirstProject
+      ├── go.mod
+      └── main.go
+main.go文件内容:
+  package main
+  
+  import (
+    "fmt"
+    "github.com/gin-gonic/gin"
+  )
+  
+  func main(){
+    h := gin.Default()
+    fmt.Println(h)
+  }
+执行"go get 远程包"或"go mod tidy"之前go.mod文件内容:
+  module yangyi/gogogo
+  
+  go 1.20
+执行之后go.mod文件内容:
+  module yangyi/gogogo
+  
+  go 1.20
+  
+  require github.com/gin-gonic/gin v1.9.0
+  
+  require (
+  	github.com/bytedance/sonic v1.8.0 // indirect
+  	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
+  	github.com/gin-contrib/sse v0.1.0 // indirect
+  	github.com/go-playground/locales v0.14.1 // indirect
+  	github.com/go-playground/universal-translator v0.18.1 // indirect
+  	github.com/go-playground/validator/v10 v10.11.2 // indirect
+  	github.com/goccy/go-json v0.10.0 // indirect
+  	github.com/json-iterator/go v1.1.12 // indirect
+  	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+  	github.com/leodido/go-urn v1.2.1 // indirect
+  	github.com/mattn/go-isatty v0.0.17 // indirect
+  	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+  	github.com/modern-go/reflect2 v1.0.2 // indirect
+  	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+  	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+  	github.com/ugorji/go/codec v1.2.9 // indirect
+  	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
+  	golang.org/x/crypto v0.5.0 // indirect
+  	golang.org/x/net v0.7.0 // indirect
+  	golang.org/x/sys v0.5.0 // indirect
+  	golang.org/x/text v0.7.0 // indirect
+  	google.golang.org/protobuf v1.28.1 // indirect
+  	gopkg.in/yaml.v3 v3.0.1 // indirect
+  )
+*.当我们将代码中不需要的外部依赖包删除时, 也要执行一下go mod tidy将相应的外部依赖包信息从go.mod中剔除掉
+=====
+第五阶段: 写一个可被本地调用的模块. 区别于写一个可执行程序, 回顾一下我们写可执行程序时,模块根目录下通常只有一个main包, 这个包就是可执行程序的入口. 但此时我们要写的是一个库,而非可执行程序,所以就不能用main作为包名了, 而是用除main外的其它有意义的包名, 其它方面就和写可执行程序时目录结构一样了. 这块当时还有一个小疑问, 即"import后的路径即可以是模块名也可以是模块下的包名?",现在想来这样是正确的, 换个角度去想, 无论是模块还是包说白了对应的都是一个目录, 而这个目录下的特点就是所有.go文件的第一行都相同. 这么一想就无论谓import后跟的是模块名还是包名了.这个疑问是当时写可执行程序代码时产生的, 如果你import的是一个可执行程序项目, 则import后就只能跟包名, 虽说跟模块名也行,但模块下就一个main包没有多大意义. 参照gin项目, 它的模块名为github.com/gin-gonic/gin, 而在该模块目录下的.go文件头一行都是package gin, 你可能要说模块根目录下的包名要和模块名的最后一部分相同, 这就错了, 一开始确实是这样想的, 模块下的包名可以是任意的, 只是为了让别人在调用的时候简单一些, 所以一般取模块名最后一部分作为模块根目录下的包名(对于库来说是这样的, 对于可执行程序来说, 模块根目录下的模块为main).
+实现: 首先新建两个模块, 一个叫myFirstApplication,一个叫myFirstLibrary.
+  myFistLibrary目录,模块名为"yang/yi",根目录下包含pig.go文件, 包名为yi,有一个FavFood函数,输出"南瓜"
+  myFirstApplication目录,模块名为yangyi/gogogo,包含main.go文件,该文件导入"yang/yi"包,并调用该包中的FavFood()函数.
+  *.正常情况下,我们调用远程模块都是现下载, 下载到$GOPATH/pkg/mod下($GOPATH默认为当前用户家目录), 而引用本地包还不太一样, 简单来说就是要在myFirstApplication下使用go mod edit -replace指令将yang/yi模块名替换为myFirstLibrary在本地的目录(想想也可以理解,啥模块呀包呀说白了不都是一个目录嘛).然后再执行go mod tidy,此时go.mod中有两条指令, 一条是replace指令, 一条是require指令,这样一操作,我们就可以在代码中调用"yang/yi"这个包中的函数了.  //参考链接: https://go.dev/doc/tutorial/call-module-code
+=====
+目录结构:
+  ├── myFirstApplication
+  │   ├── go.mod
+  │   ├── go.sum
+  │   └── main.go
+  └── myFirstLibrary
+      ├── go.mod
+      └── pig.go
+myFirstApplication中在执行替换及整理之前go.mod的文件内容:
+  module yangyi/gogogo
+  
+  go 1.20
+myFirstApplication中在执行替换及整理之后go.mod的文件内容:
+  module yangyi/gogogo
+  
+  go 1.20
+  
+  replace yang/yi => ../myFirstLibrary
+  
+  require yang/yi v0.0.0-00010101000000-000000000000
+myFirstApplication中main.go的文件内容:
+  package main
+  
+  import (
+    "yang/yi"
+    "fmt"
+  )
+  
+  func main(){
+    fmt.Println(yi.FavFood())
+  }
+myFirstLibrary中go.mod的文件内容:
+  module yang/yi
+  
+  go 1.20
+myFirstLibrary中pig.go的文件内容:
+  package yi
+  
+  func FavFood() string{
+    return "南瓜"
+  }
+=====
