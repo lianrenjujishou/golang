@@ -1,0 +1,3111 @@
+//想起来了,一开始这个内容是跟着youtube上的一个教程学的
+*-----Comment Your Javascript Code-----*
+0.注释的作用主要是对你写的代码的一个解释说明
+1.在执行js代码时注释会被忽略掉(或叫跳过)
+2.常见的注释有单行注释和多行注释.
+ 2.1.单行注释:
+   特点:
+     0.以双斜线开始,不可跨行;
+   细分:
+     行内注释:  var number = 1; //即代码后面加注释
+     打头注释: //整行都是注释,即以"//"打头的行
+
+ 2.2.多行注释
+   特点: 0.以/*开始, 以*/结束,中间所有的内容都被看作注释;
+         1.注释可跨越多行;
+   例子: /* abc
+            def
+	    ghi
+	    "/*"与"*/"不一定要对齐,我这里对齐写是因为看着好看
+	 */
+*-----Data Types and Variables-----*
+0.javascript提供了7种数据类型: 
+  undefined, null, boolean, string, symbol, number, object
+
+  undefined: 声明了但未赋值
+    var x; //这里只声明了变量x,但未赋值
+    console.log(x) //此时输出x的值就是undefined
+    *.值和类型都是undefined?
+  null:
+    var x = null;
+    console.log(x);
+  boolean:只有两个值, true 和 false
+  string:由引号引起来的一系列字符
+    var name = "张三";
+    var place = "波罗诺";
+  symbol:
+  number:
+  object
+  var x;
+  console.log(x)
+1.三种声明变量的方式(https://stackoverflow.com/questions/762011/whats-the-difference-between-using-let-and-var):
+      a.使用var关键字进行声明;  //var是variable的缩写
+        var myName = "Jack"; 
+	myName = 9;  //对变量重新赋值
+      b.使用关键字let;
+        let ourName = "Jack";
+	ourName = 8; //对变量重新赋值
+      c.使用关键字const;
+        const pi = 3.14;
+      *.再说下var,let,const这三个关键字声明变量的特点:
+        <a>.值是否可变:var和let声明的变量值是可变的;const声明的值是不可变的也就是我们经常所说的常量(我们所说的常量英文里的描述通常是"不可变的变量",也就是主基调说它是一个"变量",又有一个限定词,"值不能改变的"变量).  //注意变量声明时要使用关键字var,let,const,但重新赋值时直接写"变量名 = 新值"即可,并且"新值"的类型与变量定义时的值类型可不同.
+	<b>.函数中声明变量时的作用域(即都能在哪引用这个变量):var为整个函数,let为其所在的{}:
+	块 block  
+	{
+	 N条语句
+	}
+	有几对hua括号就有几个块(block)
+	   ---例子---
+	   function run() {
+	     var foo = "Foo";
+	     let bar = "Bar";  //注意它的作用域
+
+	     console.log(foo, bar);
+
+	     {
+	       var moo = "Mooo";
+	       let baz = "Bazz";
+	       console.log(moo, baz);
+	       //console.log(bar)
+	     }
+	     console.log(moo);
+	     console.log(baz);
+	   }
+	   run();
+
+	   /*console.log(x);  //导致脚本终止执行
+	   
+	   var y;
+	   console.log(y);  //输出值为undefined, 脚本正常执行
+
+	   null不会自动赋给某个变量 
+	   */
+	   ---结束---
+	  window{
+	    name="张三";  //console.log(window.name)
+	    age = 18;  //console.log(window.age)
+	    addr = "";
+	    foo = "Foo";
+	  } 
+	<c>.函数外声明变量时,var定义的变量会被被添加为window对象的一个属性(无关键字声明的变量也会成为window对象的一个属性), 而let定义的变量则不会
+	   ---例子---
+	   var foo = "Foo";
+	   let bar = "Bar";
+
+	   console.log(window.foo);  //因为window属于浏览器中的一个对象,因此要在浏览器中运行才行
+	   console.log(window.bar);
+	   ---结束---
+	<d>.函数中,使用var定义的变量,变量的引用位于定义之前也不会报错,而是被评估为undefined; let定义的变量则必须是声明位于引用之前,否则运行报错:
+	   ---例子---
+	   function run() {
+	     console.log(foo);//foo的引用位于其定义var foo前也不会出错
+	     var foo = "Foo";
+	     console.log(foo);
+	   }
+	   run()
+
+	   function checkHoisting() {
+	     console.log(foo);
+	     let foo = "Foo";
+	     console.log(foo);
+	   }
+	   checkHoisting()
+	   ---结束---
+	   /*
+	   function name(){
+           }
+           name()
+           
+           var x = function(){  //匿名函数 console.log(slfkjadkfj) }
+           x()
+           
+           
+           [function(){  //匿名函数 console.log(slfkjadkfj) }]
+           a[0]()
+	   */
+	<e>.正是因为var的作用域要比let广,所以定义变量时var出bug的概率要高于let:
+	   ---例子---
+	   var funcs = [];
+	   for(let i = 0; i < 3; i++) {   //将var改为let结果就正确了
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   }
+
+	   for (var j = 0; j < 3; j++) {
+	     funcs[j]();
+	   }
+
+	   
+
+	   /*
+	   funcs数组中存放的是三个匿名函数,如果使用var i的话,这三个匿名函数绑定的就是同一个变量i; 而使用let i则这三个函数每一个绑定的都是不同的i;
+	   因为var在整个过程都有效,而函数在运行的时候才会对里面的变量进行评估,因此funcs中三个函数里的i都是3;
+	   //函数被作为元素追加到数组中时,函数中的变量先不被替换, 只能在函数被调用时才会进行相应变量的替换以及运算等.
+	   {
+	     var i = 0;
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   }
+	   {
+	     var i = 1;
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   }
+	   {
+	     var i = 2;
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   }
+	   var i = 3;
+	   因为let只在其当前的块中起作用,所以可以理解为:
+	   {
+	     let i = 0;
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   {
+	     let i = 1;
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   {
+	     let i = 2;
+	     funcs[i] = function() {
+	       console.log("My value: " + i);
+	     };
+	   }
+	   let i = 3;
+	   */
+	   ---结束---
+	<f>.var允许对同一变量进行重复声明, 而let不允许:   //这是Firefox的行为, Chrome则是var和let都可以重复声明同一个变量名
+	   ---例子---
+	   var bar = "3";
+	   var bar = "4";
+	   console.log(bar);
+
+	   let foo = "3";
+	   let foo = "4";
+	   console.log(foo);
+	   ---结束---
+*-----Storing Values with Assignment Operator-----*
+0.最好在每个语句后面都以分号结尾, 不加也行,只不过加上的话,可以更直观的看到每条语句的结尾.但要注意的是,如果要加的话,并不是每一行末尾都加,就现在看来流程语句语法本身的语句是不用加的:
+	   ---例子---
+	   var a;
+	   var b = 2;
+
+	   for(){ 
+	   } //这两行属于for的语法结构,结尾不用加分号,但{}里面的语句要加
+
+	   if(){
+	   } //这两行同for一样,属于if的语法结构,结尾不用加分号,但{}里面的语句要加
+
+	   *.如果for和if里面的语句还嵌套for和/或if语句,同理,语法结构的那两行末尾也不用加
+	   ---结束---
+1.本节的主题所谓的赋值操作符,说白了就是我们常说的等号,=
+2.而"赋值操作符"的作用说白了就是给变量赋值,上面已经说过变量赋值了,这里再强调一下常见的用法:
+	   ---例子---
+	   var a;
+
+	   var b;
+	   b = 3;
+
+	   var c = 4;
+	   c = "张三";
+
+	   console.log(a) //只声明未赋值,因此a的输出为undefined
+	   console.log(b) //先声明,后赋值,所以b是有值的,为3;
+	   console.log(c) //声明的同时对变量赋值,后面又对变量重新赋值,输出的是对变量最后一次赋的值; 需要注意的是,变量多次赋值时,值的类型可以不同.
+	   ---结束---
+3.null与undefined的区别(http://net-informations.com/js/iq/nuvsun.htm):
+  a.首先null是一个值,它的类型为object,只不过这个object类型的值里面啥都没有,是空的;
+           ---例子---
+	   var a;
+	   var b = null;
+
+	   console.log(a) //值为undefined
+	   console.log(b) //值为null
+
+	   console.log(typeof a) //undefined的类型为undefined
+	   console.log(typeof b) //null的类型为object
+	   ---结束---
+  b. 当变量只声明,未赋值时,变量的值为undefined类型值undefined;而null通常是起占坑的作用,即后面可能会给变量x赋一个值, 但现在还不知道赋啥,可以先写一句var x = null; 后面可以通过if语句来判断x的值是否为null来知道变量x是否已经被重新赋值了(即如果x的值不是null了,则肯定是被重新赋值了).
+	   ---例子---
+	   var a;
+	   console.log(a);
+	   console.log(typeof a);
+
+	   var b = null;   //b是object类型
+	   b = 6
+	   if(b==null){
+	     console.log("b还没有被重新赋值")
+	     b = 4
+	     console.log("b的新值为: " + b)
+	   }
+
+	   //null是object, 特点对象里啥都没有,是空的, 容qi, 空的.
+	   var arr = [1,2,3,4]  //声明一个数组,并赋初始值为1,2,3,4
+	   console.log(typeof arr)  //object
+	   console.log(arr) //[1,2,3,4]
+	   arr = null  //用来清空对象类型的变量,可以把object类型的变量想象为一个容器
+	   console.log(arr)  //null
+	   console.log(typeof arr) //object
+	   ---结束---
+  c.未赋值的变量其值为undefined, 如果函数中的形参未被赋值,则其值为undefined, 无return语句的函数的函数返回值为undefined(即每个函数都会有返回值,当显式的指定了return返回语句时,return后面的值就是函数的返回值; 当未指定return返回语句时,默认为reutrn undefined)
+           var name = "高天";
+	   function hi(any){
+	     console.log("hi, " + any)
+	   }
+
+	   hi()
+	   hi(name)
+
+	   function name(){   //函数的返回值
+	     return 1234
+	   }  //函数返回值为1234
+
+	   function name(){}  //函数的返回值为undefined
+	   ---例子---
+	   var a;
+	   console.log(a)
+
+	   function test(x){  //函数参数形参和实参, 形参:定义函数时括号里的变量名; 实参是在调用函数时传给形参的值或变量
+	     console.log(x)
+	   }
+	   test()
+	   test(3)
+
+	   function hello(){
+	     var b = 4;
+	     return b;
+	     console.log("我是不会输出的")
+	   }
+	   var result = hello()  //var result = 4
+	   console.log(result)
+	   //console.log(hello())
+
+	   function hello1(x){
+	     var b = 4;
+	     return arguments  //
+	   }
+	   result = hello1("张三","李四")  //函数参数都会被放到arguments中,即使定义函数时未指定形参
+	   console.log(result)
+	   //console.log(hello1())
+	   ---结束---
+  d.使用未声明的变量会报错, 使用声明但未赋值的变量返回值为undefined
+	   ---例子---
+	   console.log(x) //因为x未被定义,脚本到这就终止了
+	   console.log("这句是不会被执行的")
+
+	   var y;
+	   console.log(y)
+	   ---结束---
+  e.比较两个变量是否相同有两个操作符,两个等号,==, 和三个等号,===.在javascirpt中null和undefined,从表面意思上理解都有"无"的意思,所以 null==undefined的结果是true. 而三个等号表示严格比较,此时null是object类型而undefined是undefined类型,所以null===undefined的结果是false.
+	   ---例子---
+	   console.log(null===null);  //true
+	   console.log(undefined===undefined); //这两个undefined都表示的值,因为类型是不能比较的 true
+	   console.log(null===undefined) //false
+	   console.log(null==undefined) //true, 相等的原因https://262.ecma-international.org/5.1/#sec-11.9.3
+	   ---结束---
+  f.当进行算数运算时, null值被评估为0, 而undefined值被评估为NaN
+	   ---例子---
+	   var x;
+	   console.log(x + 100); //结果为NaN
+
+	   var y = null;
+	   console.log(y + 100); //结果为100
+	   ---结束---
+  g.值null是json中的有效值, 而值undeifned不是
+*-----Initializing Variables with Assignment Operator-----*
+0.说白了就是使用等号给变量赋值
+	   ---例子---
+	   var b = 9;   //var用来声明变量b,使用=9对b进行初始化
+	                //通常读作声明一个变量b并赋初始值为9
+	   ---结束---
+*-----Uninitialized Variables-----*
+0.未初始化的变量简单来说就是"只声明未赋值"的变量,其默认初始值为undfined
+	   ---例子---
+	   var a;
+	   var b;
+	   var c;
+	   console.log(a)
+	   console.log(b)
+	   console.log(c)
+	   ---结束---
+1.变量参与的运算,a.当操作数都是数值类型时,会自动进行算数运算;b.当操作符都是字符串时,会将字符串进行连接.
+	   ---例子---
+	   var a = 5;
+	   var b = "I am "
+
+	   a = a + 1
+	   b = b + "Jack"
+
+	   console.log(a)
+	   console.log(b)
+	   ---结束---
+*-----Case Sensitivity in Variables-----*
+0.在javascript中, 变量名和函数名是大小写敏感的,所谓大小写敏感指的是name与Name是不同的变量或函数名.
+	   ---例子---
+	   let name = "Lucy";
+	   let Name = "Lily";
+
+	   console.log(name)
+	   console.log(Name)
+
+	   function name(){
+	     console.log("Lowercase")
+	   }
+	   function Name(){
+	     console.log("Uppercase")
+	   }
+	   name()
+	   Name()
+	   ---结束---
+1.在给变量命名时,如果你想的变量名由多于1个单词组成,则可以用驼峰命名法,即第一个单词的首字母小写,其它单词的首字母大写: myNameIsGaoTian
+*-----Adding Numbers-----*
+0.js中数字加法运算
+	   ---例子---
+	   var sum = 10 + 10;  //声明变量的同时,使用加法表达式的值进行赋值
+	   console.log(sum)
+
+	   var sum = 10;  //运算和声明分着写形式
+	   sum = sum + 10;
+	   console.log(sum)
+
+	   var sum = 10; //sum=sum+10还可写作sum+=10
+	   sum += 10;
+	   console.log(sum)
+
+	   var sum;  //变量声明\赋值\运算均分开写的形式
+	   sum = 10;
+	   sum +=10;
+	   console.log(sum)
+	   ---结束---
+*-----Subtracting Numbers-----*
+0.js中的数字减法运算
+	   ---例子---
+	   将上一节例子中的加号变成减号即是该节的例子
+	   var sum = 10 - 10;  //声明变量的同时,使用减法表达式的值进行赋值
+	   console.log(sum)
+
+	   var sum = 10;  //运算和声明分着写形式
+	   sum = sum - 10;
+	   console.log(sum)
+
+	   var sum = 10; //sum=sum-10还可写作sum-=10
+	   sum -= 10;
+	   console.log(sum)
+
+	   var sum;  //变量声明\赋值\运算均分开写的形式
+	   sum = 10;
+	   sum -=10;
+	   console.log(sum)
+	   ---结束---
+*-----Multiplying Numbers-----*
+0.js中的数字乘法运算
+	   ---例子---
+	   var sum = 10 * 10;  //声明变量的同时,使用减法表达式的值进行赋值
+	   console.log(sum)
+
+	   var sum = 10;  //运算和声明分着写形式
+	   sum = sum * 10;
+	   console.log(sum)
+
+	   var sum = 10; //sum=sum*10还可写作sum*=10
+	   sum *= 10;
+	   console.log(sum)
+
+	   var sum;  //变量声明\赋值\运算均分开写的形式
+	   sum = 10;
+	   sum *=10;
+	   console.log(sum)
+	   ---结束---
+*-----Dividing Numbers-----*
+0.js中的数字除法运算
+	   ---例子---
+	   var sum = 10 / 10;  //声明变量的同时,使用减法表达式的值进行赋值
+	   console.log(sum)
+
+	   var sum = 10;  //运算和声明分着写形式
+	   sum = sum / 10;
+	   console.log(sum)
+
+	   var sum = 10; //sum=sum/10还可写作sum/=10
+	   sum /= 10;
+	   console.log(sum)
+
+	   var sum;  //变量声明\赋值\运算均分开写的形式
+	   sum = 10;
+	   sum /=10;
+	   console.log(sum)
+	   ---结束---
+*-----Incrementing Numbers-----*
+0.变量名后跟两个加号,表示变量值加1
+	   ---例子---
+	   var counter = 1;
+	   counter = counter + 1;  //或counter += 1;
+	   console.log(counter)
+
+	   var counter = 1;
+	   counter++;
+	   console.log(counter)
+	   ---结束---
+*-----decrementing Numbers-----*
+0.变量名后跟两个减号,表示变量值减1
+	   ---例子---
+	   var counter = 1;
+	   counter = counter - 1;  //或counter -= 1;
+	   console.log(counter)
+
+	   var counter = 1;
+	   counter--;
+	   console.log(counter)
+	   ---结束---
+*-----Decimal Numbers-----*
+0.定义一个变量用来存放小数  //这里翻译为十进制数比小数更精确一些
+	   ---例子---
+	   var decimalNumber = 8.9;
+	   console.log(typeof decimalNumber)
+	   ---结束---
+*-----Multiply Decimals-----*
+0.小数之间的乘法
+	   ---例子---
+	   var result = 2.0 * 2.5;
+	   console.log(result)
+	   ---结束---
+*-----Divide Decimals-----*
+0.小数之间的除法
+	   ---例子---
+	   var result = 8.0/2.0;
+	   console.log(result)
+	   ---结束---
+*-----Finding a Remainder-----*
+0.取余运算,或叫取模
+	   ---例子---
+	   var result = 8%3;
+	   console.log(result)
+	   ---结束---
+*-----Compound Assignment with Augmented Addition/Subtraction/Multiplication/Division-----*
+	   ---例子---
+	   var x +=3;     //注意不能在声明变量时使用复合赋值符号
+	   console.log(x)
+
+	   var a = 3;   
+	   a += 4;             //加
+	   console.log(a)
+
+	   var b = 4;
+	   b -= 1;             //减
+	   console.log(b);
+
+	   var c = 2;
+	   c *= 3;             //乘
+	   console.log(c)
+
+	   var d = 6;
+	   d /= 3;             //除
+	   console.log(d)
+	   ---结束---
+*-----Declare String Variables-----*
+ 0.单引号,双引号,反引号括起来的字符都是字符串类型
+	   ---例子---
+	   var a = "hello,"
+	   var b = 'My name is '
+	   var c = `Jack!`
+	   console.log(typeof a)
+	   console.log(typeof c)
+	   console.log(a+b+c)   //字符串的连接方式,加号
+	   console.log(a + "slkdfj" + b + "dlfkj" + c)
+	   ---结束---
+*-----Escaping Literal Quotes in Strings-----*
+0.我们都知道 单引号, 双引号, 反引号 引起来的字符序列都可以是字符串, 那么如果字符序列中也含有引号要怎么处理呢?
+两种方法: 
+  a.序列中的引号类型和最外层的引号类型一样时,可以将序列中的引号前缀一个反斜杠对其进行转义,让解释器认为序列中的引号不是作为字符串开头或结尾的标志,就是一个普通的字符.
+  b.使用与字符序列中类型不同的引号
+  c.如果字符序列中三种引号都有,最外层使用序列中类型最少的那类引号,并将序列中该类引号使用反斜杠进行转义
+	   ---例子---
+	   var str = "My name is \"Lucy\""
+	   console.log("My name is \"Lucy\"")   // 'My name is \'Lucy\''   `My name is \`Lucy\``
+	   console.log("123\n456")  //转义字符"\"来说,它后面是跟单个字符,作用分为两种,一种是将有特殊意义的字符作为普通字通字符对待, \\,\',\";另一种正好相反,将某些普通字符进行转义可以使其有特殊意义,\t,\n,\r
+	   console.log(str)
+
+	   var str = 'My name is "Lucy"'
+	   var str1 = `My name is "Lucy"`
+	   console.log(str)
+	   console.log(str1)
+
+	   var str = 'My friends are "lucy", \'Lily\' and `Jack`'
+	   console.log(str)
+	   ---结束---
+
+
+for(let i=0;i<2;i++){     // 0, 1
+  for(let j=0;j<2;j++){  //0, 1
+    console.log(i,j)
+  }
+  console.log(i)
+  for(let k=0;k<2;k++){  //0,1
+    console.log(i,k)
+  }
+  console.log(i)
+}
+
+同一关键字可以多次声明同一变量:
+var i = 1
+var i = 2
+var i = 3
+
+let i = 1  //报错,因为使用不同的关键字let又声明了一次i
+
+不同关键字:
+var i = 1  
+let i = 1  //报错,理由同上
+
+let i = 1  
+var i = 1  //报错,理由同上
+var a = 6;
+*-----闭包(function closure)-----*
+0.先引出几个概念(不是什么新概念):
+  函数内嵌
+  全局变量
+  外部变量 //variables in surrounding functions(或叫outer functions)
+  局部变量 //functions itself variables declared
+1.从闭包的英文名中也可以看出, 闭包其实是函数的相关操作.简单来说闭包就是内嵌函数对外部变量的引用(这里的外部变量指的是内嵌函数所在函数中声明的变量).
+2.闭包主要有两个特点:
+  a.从外部特征来看,首先就是要有函数的嵌套(即在函数里面又声明了函数);可以存在多层嵌套.
+  b.调用外层函数时,返回值为内层函数,也就是说,当你调用外层函数时,返回的并不是一个普通值,而是另一个函数(既然是函数就说明可以被调用).
+  c.最实用的一点是,外层函数中声明的变量状态会保留下来, 也就是说多次调用返回的内层函数时,下一次内层函数引用的外层函数中的变量值并非初始值,而是上一次内层函数调用时产生的结果.
+---
+1.变量
+	   ---例子---
+	  var glo = 0;   //abbreviation global
+	  function name(x){
+	    var outer = 1;
+	    function age(y){
+	      var inner = 2;
+	      var sum = inner + y + outer + x + glo
+	      return sum
+	    }
+	    console.log(age(4))
+	  }
+	  name(5)
+
+	   ---结束---
+如果函数有多层内嵌,则最里面的函数,可以访问到所有外层函数中的变量,包含形参变量
+	   ---例子---
+	   function init(){   //initialization  initial
+	     var name = 'Jack';
+	     function displayName(){
+	       console.log(name);
+	       return 1234
+	     }
+	     console.log(displayName());
+	   }
+	   init();
+	   ---结束---
+闭包(函数)初现
+	   ---例子---
+	   function init(){
+	     var counter = 0;
+	     var sum = counter + 1
+
+	     return sum
+	   }
+	   console.log(init())
+	   console.log(init())
+	   console.log(init())
+                 ---
+闭包函数特点:
+*0.闭包函数定义: 它是"引用了父函数本地变量"的作为"父级函数返回值"的"内嵌函数"
+*0.闭包函数的目的是对返回函数进行多次调用,而每一次调用时,所引用的父级函数中的变量都会受上一次调用的影响
+           //会受影响的情况即内嵌函数中会改变其引用的父函数中变量的值
+	   function init(){  //内嵌函数可以引用父函数中声明的本地变量
+	     var counter = 0;   
+	     function addOne(){
+	       counter += 1   //改变了父函数中形参变量x的值
+	       return counter
+	     }
+	     return addOne
+	   //  return addOne()
+	   }
+	   var b = init()    
+	   console.log(b())    
+	   console.log(b())  
+	   console.log(b())  
+	   b()
+	   b()
+	   b()
+
+	   //不会影响的情况           //不是不会影响,size虽是形参, 但形参说白了也是父级函数的本地变量, 之所以下面三次调用size值都一样,是因为内层函数本来也没有改变size变量值的语句, 仅仅是引用.
+	       function makeSizer(size){
+                 return function(){
+                   document.body.style.fontSize = size + 'px';
+                 };
+               }
+
+               var size12 = makeSizer(40);
+               size12()
+               size12()
+               size12()
+
+	      ---
+
+           function makeAdder(x){  //内嵌函数可以引用父函数中声明的本地形参变量
+	     return function(y){
+	       return x + y;    //没有改变父函数中形参变量x的值
+	     }
+	   }
+	   var add5 = makeAdder(5);
+	   var add10 = makeAdder(10);
+
+	   console.log(add5(2))
+	   console.log(add10(2))
+	   console.log(add5(2))
+	   console.log(add10(2))
+	   console.log(add5(2))
+	   console.log(add10(2))
+	   ---结束---
+*****youtube中关于垃圾回收与闭包那块的理解*****
+首先一个函数执行完成后, 内存中相应分配给其执行的内存会被回收, 如g函数执行后被回收了, 但f函数没有被回收, 因为f函数中引用了"Lambda g", 而var myG=f(1)也引用了"Lamda g", 如果g函数执行完内存被回收后, f函数执行时分配的内存也被回收,则由于此时myG变量还存在, 如果你后面再调用myG()时(实际调的是Lamda g),g函数引用其外层函数f()中的变量就找不到了,因为f()执行时分配的内存已经被回收了, 所以分配给f函数执行时的内存没有被回收. 我感觉通过这种理解方式也可以, 视频中给的是只要主函数存在一条能够到达对象的路径, 则分配给该对象与与分配给和它有关联的内存都不会被回收
+----
+0.函数?
+ii::基本上一个函数实现一个功能. 什么叫功能呢?说白了就是做某件事情的过程,只不过这个过程的每一步都用代码表示出来
+	   ---例子---
+	   实现的功能叫"回学校"
+	   逻辑: 
+	     1.先出家门;
+	     2.坐车去滦平;
+	     3.从滦平坐车去北京;
+	     4.从北京坐车到保定;
+	     5.下车打车去学校;
+	     6.到宿舍;
+            function backSchool(){
+	     1.
+	     2.
+	     3.
+	     4.
+	     5.
+	     6.
+	    }
+	    backSclool()  //函数的特点,可复用.
+	   ---结束---
+1.如何定义一个有名函数?
+	   ---例子---
+	   //无参有名函数
+	   function fun1(){  //这里()中放的是形参列表,形参数可以是0个或多个
+	   }
+	   //含有1个形参的有名函数
+	   function fun1(num1){
+	   }
+           //含有3个形参的有名函数
+	   function fun1(num1,num2,num3){
+	   }
+	   ---结束---
+2.如果定义一个匿名函数?
+	   ---例子---
+	     //无参匿名函数
+	     function(){   
+	     }
+	     //有参匿名函数
+	     function(num1,num2){
+	     }
+	     *.上面两种形式,只是为了练习其语法格式, 实际在代码中不能这样写,这样写会报错,说没有函数名; 要想不报错, 要用圆括号给包围起来.
+	   ---结束---
+3.如果调用有名函数?
+	   ---例子---
+	   //定义一个无参有名函数并调用
+	   function fun1(){}
+	   fun1()
+
+	   //定义一个含有2个形参的函数fun1,并调用
+	   function fun1(num1,num2){
+	     引用num1和num2  //增加函数的灵活性,
+	   }
+	   fun1(1,2)
+
+	  //给函数定义形参的目的是能让函数语句块中的语句能引用形参. 从而在调用函数的时候通过给函数传递不同的参数让函数产生不同的结果,这样可以增加函数的灵活性
+	  //未定义函数参数
+	  function fun1(){
+	    var sum = 1 + 2
+	    console.log(sum)
+	  }
+
+	  //定义函数参数
+	   function fun1(num1,num2){
+	     var sum = num1 + num2;
+	     console.log(sum)
+	   }
+	   var x = fun1(1,2)
+	   console.log(x)
+	   ---结束---
+4.如何调用匿名函数(常见2种方式)?
+ 4.1.定义的同时就调用了:
+	   ---例子---
+	   //无参匿名函数,定义的同时执行,此时需要注意的是当函数单独存在时,必须要使用圆括号包围起来,否则报错: "函数没有函数名"
+	   (function(){
+	     console.log("666")
+	   })()
+	   //有参匿名函数,定义的同时执行
+	   //用函数的返回值替代掉函数的调用
+           var x = (function(num1,num2){
+	     var sum = num1 + num2
+	     return sum
+	   })(1,2)
+	   console.log(x)
+
+	   console.log((function(num1,num2){
+	     var sum = num1 + num2
+	     return sum
+	   })(1,2))
+	   ---结束---
+ 4.2.将函数赋值给某个变量,之后使用该变量作为函数名进行调用:
+	   ---例子---
+	   //将无参匿名函数赋给变量fun
+	   var fun = function(){
+	     console.log("我是无参匿名函数的输出")
+	   }
+
+	   fun()
+	   ---结束---
+ *.需要注意的是,a."单独定义"匿名函数的同时进行调用时,匿名函数要使用小括号包围;b.如果是将匿名函数作为变量值,以及c.将匿名函数的返回值作为变量值时,则b,c用不用小括号将其包围都可以
+	   ---例子---
+	   //a.
+	   (function(){
+	     console.log("balabala")
+	   })
+	   (function(){
+	     console.log("balabala")
+	   })()  //匿名函数一定要用小括号包围起来,否则会报错
+	   
+	   //b.
+	   var fun = [(]function(){   //声明的是变量fun,fun的值为一个匿名函数
+	     console.log("aaa")
+	   }[)]
+	   fun()
+	   //c.
+	   var x = function(){  //声明的是变量x, x的值是匿名函数的返回值
+	     console.log("balabala")
+	   }()
+	   
+	  var x = (function(){  //声明的是变量x, x的值是匿名函数的返回值
+	     console.log("balabala")
+	     reuturn func(){}
+	   })()
+
+	   -----
+	   function name(){
+	     console.log("12345")
+	   }
+	   name()
+	   var alias = name
+	   alias()
+
+          function name(){
+	    console.log("12345")
+	  }
+	  var value = name()
+	  value()  //这样写是错的,因为上面name函数的返回值是undefined类型,而不是函数类型
+	  -----
+	  var name = function(){
+	    console.log("12345")
+	  }
+	  name()
+	  var alias = name
+	  alias()
+
+	  var name = function(){
+	    console.log(name)
+	  }
+	  var value = name()
+	  value()   //这样写是错的,因为上面name函数的返回值类型undefined,而不是函数
+	  *.只有函数的调用形式才是 "函数名+ ()"
+
+
+var e = 10;
+function sum(a){
+  return function(b){
+    return function(c){
+      return function(d){
+        return a + b + c + d + e
+      }
+    }
+  }
+}
+result = sum(1)(2)(3)(4) //返回值1 + 2 + 3 + 4
+console.log(result)
+
+
+function name(){
+  return function(a){
+    return  function(b){
+      return a+b
+    }
+  }
+}
+//console.log(name()(1)(2))
+x = name()
+y = x(1)
+console.log(y(2))
+
+
+function name(){
+  return 8
+}
+
+console.log(name())
+-----
+小标题:当只希望能通过,A,B,C函数可以访问D函数,其它函数不能访问D函数的情况下
+	   ---例子---
+	   var counter = (function(){
+	     var privateCounter = 0;
+
+	     function D(val){
+	       privateCounter += val
+	     }
+             return {
+	       A: function(){
+	         D(1);
+	       },
+	       B: function(){
+	         D(-1);
+	       },
+	       C: function(){
+	         return privateCounter;
+	       }
+	     };
+	   })()
+
+	   console.log(counter.C())  //0
+	   counter.A()  //将privatecounter的值变为1
+	   console.log(counter.C())  //1
+	   counter.B()  //将privatecounter的值变为0
+	   console.log(counter.C())  //0
+                 ---
+	   
+	   var counter = function(){
+	     var privateCounter = 0;
+
+	     function D(val){
+	       privateCounter += val
+	     }
+             return {
+	       A: function(){
+	         D(1);
+	       },
+	       B: function(){
+	         D(-1);
+	       },
+	       C: function(){
+	         return privateCounter;
+	       }
+	     };
+	   }
+
+           //每次调用counter()函数时,都会产生一个新对象, 每个新对象中privateCounter变量的初始值都为0
+	   var v1 = counter()  
+	   var v2 = counter()
+	   var v3 = counter()
+
+	   v1.A()  //privateCounter =1
+	   v2.A()  //privateCounter =1
+	   v1.A()  //privateCounter =2
+	   v3.A()  //privateCounter =1
+
+	   ---结束---
+----好例分析----
+<html>
+
+  <body>
+    <p id="help">Helpful notes will appear here</p>
+    <p>E-mail: <input type="text" id="email" name="email"></p>
+    <p>Name: <input type="text" id="name" name="name"></p>
+    <p>Age: <input type="text" id="age" name="name"></p>
+  </body>
+  <script>
+    function showHelp(help){
+      document.getElementById('help').textContent = help;
+    }
+
+    function setupHelp(){
+      var helpText = [
+        {'id':'email', 'help':'Your e-mail address'},
+        {'id':'name', 'help':'Your full name'},
+        {'id':'age', 'help':'Your age (you must be over 16)'}
+      ]
+
+      for(var i=0; i < helpText.length; i++){
+        var item = helpText[i];
+	document.getElementById(item.id).onfocus = function(){
+	  showHelp(item.help);
+	}
+      }
+    }
+    setupHelp();
+
+  </script>
+</html>
+
+---
+{
+var i = 0
+var item = helpText[0]
+'email'.onfocus=function(){ showHelp(item.help)}
+}
+
+{
+var i = 1
+var item = helpText[1]
+'name'.onfocus=function(){ showHelp(item.help)}
+}
+
+{
+var i = 2
+var item = helpText[2]
+'age'.onfocus=function(){ showHelp(item.help)}
+}
+-----
+{
+var i = 0
+let item = helpText[0]
+'email'.onfocus=function(){ showHelp(item.help)}
+}
+
+{
+var i = 1
+let item = helpText[1]
+'name'.onfocus=function(){ showHelp(item.help)}
+}
+
+{
+var i = 2
+let item = helpText[2]
+'age'.onfocus=function(){ showHelp(item.help)}
+}
+
+----------------
+闭包总结:
+1.闭包函数提供了一种内层函数语句可以引用(或说访问)外层函数中定义的变量的能力.
+*.闭包不一定要返回内嵌函数,只要a.有内嵌函数,b.内嵌函数访问了外层函数中的变量即可(这句话不对, 即外层函数的返回值应该一定是内层函数),只不过返回内嵌函数会更有用一些(最常见的情况就是本次调用会影响到下次调用时外层变量的值).
+	   ---例子---
+	   function init() {        //该init不是闭包, 因为其返回值非内层函数
+           var name = 'Mozilla'; 
+           function displayName() { 
+             alert(name); 
+           }
+           displayName();
+           }
+           init(); //调用函数其实执行的是函数定义里的代码块
+           console.log(init())
+	   和以下代码的区别:
+
+	   function makeFunc() {
+             var name = 'Mozilla';
+             function displayName() {
+               alert(name);
+             }
+             return displayName;
+           }
+           
+           var myFunc = makeFunc();
+           myFunc(); //调用函数其实执行的是函数定义里的代码块
+
+           最接近实际实用场景的代码:
+
+	   function makeFunc() {
+             var counter = 0;
+             function displayName() {
+	       console.log(counter)
+               counter += 1;
+             }
+             return displayName;
+           }
+           
+           var myFunc = makeFunc();
+           myFunc(); //同一函数多次以同一形式调用,但返回值却不同
+	   myFunc(); 
+           myFunc(); 
+           myFunc(); 
+           myFunc(); 
+	   ---结束---
+1.访问外层函数变量的能力即包括使用var let声明的变量,也包括形参变量(也就是说a.使用var let声明的变量以及b.函数形参都属于函数的本地变量).
+	   ---例子---
+	   上面有关于内层函数访问外层函数中使用var定义变量的例子,这里只举引用外层函数形参的例子.
+	   function makeAdder(x) {
+             return function(y) {
+               return x + y;
+             };
+           }
+           
+           var add5 = makeAdder(5);
+           var add10 = makeAdder(10);
+           
+           console.log(add5(2));
+           //console.log(add5(2));
+           console.log(add10(2));
+           //console.log(add10(2));
+
+          改的更实用一些: //上面的例子只是说到内层函数可以引用外层函数变量,下面的例子通过内层函数改变外层函数变量的值,从而影响下一次内层函数调用的返回值
+
+	   function makeAdder(x) {
+             return function(y) { //调用时才执行,引用的变量x也是调用时才替换
+	       x += 2   
+               return x + y;
+             };
+           }
+           
+           var add5 = makeAdder(5);  //只有在makeAdder调用时x值才是5
+           var add10 = makeAdder(10);
+           
+           console.log(add5(2));
+           //console.log(add5(2));
+           console.log(add10(2));
+           //console.log(add10(2));
+
+	   ---结束---
+2.穿插着一个实例
+	   ---例子---
+	   <html>
+	   <body>
+  	     <a href="#" id="size-12">12</a>
+             <a href="#" id="size-14">14</a>
+             <a href="#" id="size-16">16</a>
+
+	   </body>
+	   <script>
+  	     function makeSizer(size) {
+               return function() {
+                 document.body.style.fontSize = size + 'px';
+               };
+             }
+             
+	     //size12中size并未被替换为值,执行时才替换
+             var size12 = makeSizer(12);
+             var size14 = makeSizer(14);
+             var size16 = makeSizer(16);
+             
+             //这里学到的当onclick作为一个对象的属性时,其值为函数名,而非函数调用,拿下面第一行来说,onclick的值为size12,而非size12();而onclick作为标签属性时,其值为函数调用,如<p onclick="size12()">
+             document.getElementById('size-12').onclick = size12;
+             document.getElementById('size-14').onclick = size14;
+             document.getElementById('size-16').onclick = size16;
+	   <script>
+	</html>
+	   ---结束---
+3.函数中的语句也好,内嵌函数也好通常我们是不能在函数外部进行访问的,也就是说这些对于函数本身来说是私有的,一般只有在你调用函数时才会执行到这些语句.而闭包就是js提供的一种让我们可以在函数外可以访问函数内部变量或内嵌函数的机制.
+	   ---例子---
+	   //先引出什么叫函数外部是不能访问函数内声明的变量或内嵌函数
+	   function person(){
+	     var name = "张三"
+	     function hobby(){
+	       console.log("玩游戏")
+	     }
+	     console.log(name)
+	     hobby()
+	   }
+
+	   console.log(name)  //X
+	   hobby()  //X
+
+	   person()  //V
+
+	   下面引出如何通过闭包来访问到函数内部的成员(变量以及内嵌函数)
+	   function person(){
+	     var name = "张三";   //同级
+	     function hobby(){    //同级
+	       name += name
+	     }
+	     return {             //同级
+	        add: function(){
+		  hobby()
+		},   
+		show: function(){
+		  console.log(name)
+		}
+	     }
+	   }
+	   
+	   var p = person()
+	   p.show()
+	   p.add()
+	   p.add()  //注意这个add()
+	   p.show()
+
+	   再来看之前讲过的例子:
+	   var counter = (function() {
+             var privateCounter = 0;     //同级
+             function changeBy(val) {    //同级
+               privateCounter += val;
+             }
+           
+             return {                    //同级
+               increment: function() {
+                 changeBy(1);
+               },
+           
+               decrement: function() {
+                 changeBy(-1);
+               },
+           
+               value: function() {
+                 return privateCounter;
+               }
+             };
+           })();
+         
+         console.log(counter.value());  // 0.
+         
+         counter.increment();
+         counter.increment();
+         console.log(counter.value());  // 2.
+         
+         counter.decrement();
+         console.log(counter.value());  // 1.
+
+         对上个例子稍加改动,主要学习的是同一个函数每次调用都会产生一个不同的环境,不同环境间的变量互不影响:
+	 *.需要注意的是上个例子中,counter是匿我函数的返回值;本例makeCounter为匿名函数
+	 var makeCounter = function() {
+           var privateCounter = 0;
+           function changeBy(val) {
+             privateCounter += val;
+           }
+           return {
+             increment: function() {
+               changeBy(1);
+             },
+         
+             decrement: function() {
+               changeBy(-1);
+             },
+         
+             value: function() {
+               return privateCounter;
+             }
+           }
+         };
+         
+         var counter1 = makeCounter();
+         var counter2 = makeCounter();
+         
+         console.log(counter1.value());  // 0.
+         
+         counter1.increment();
+         counter1.increment();
+         console.log(counter1.value()); // 2.
+         
+         counter1.decrement();
+         console.log(counter1.value()); // 1.
+         console.log(counter2.value()); // 0.
+
+	   ---结束---
+4.函数多层内嵌时的闭包(子能访问先辈的变量).
+	   ---例子---
+	   // global scope
+           var e = 10;
+           function sum(a){
+             return function(b){
+               return function(c){
+                 // outer functions scope
+                 return function(d){
+                   // local scope
+                   return a + b + c + d + e;
+                 }
+               }
+             }
+           }
+
+           console.log(sum(1)(2)(3)(4)); // log 20
+           
+           // You can also write without anonymous functions:  //虽说内嵌函数有名, 但返回的其实还是无名函数,即下面的变量sum2,sum3,sum4可以任意自定义不一定非得和返回值里面的函数名相同
+           
+           // global scope
+           var e = 10;
+           function sum(a){
+             return function sum2(b){
+               return function sum3(c){
+                 // outer functions scope
+                 return function sum4(d){
+                   // local scope
+                   return a + b + c + d + e;
+                 }
+               }
+             }
+           }
+           
+           var sum2 = sum(1);
+           var sum3 = sum2(2);
+           var sum4 = sum3(3);
+           var result = sum4(4);
+           console.log(result) //log 20
+
+	   ---结束---
+4.在循环中使用闭包时经常犯的错误
+	   ---例子---
+	   <html>
+	     <body>
+	       <p id="help">Helpful notes will appear here</p>
+               <p>E-mail: <input type="text" id="email" name="email"></p>
+               <p>Name: <input type="text" id="name" name="name"></p>
+               <p>Age: <input type="text" id="age" name="age"></p>
+	     </body>
+
+	     <script>
+               function showHelp(help) {
+                 document.getElementById('help').textContent = help;
+               }
+               
+               function setupHelp() {
+                 var helpText = [
+                     {'id': 'email', 'help': 'Your e-mail address'},
+                     {'id': 'name', 'help': 'Your full name'},
+                     {'id': 'age', 'help': 'Your age (you must be over 16)'}
+                   ];
+               
+                 for (var i = 0; i < helpText.length; i++) {
+                   var item = helpText[i];
+		   //下句function(){}也是一个闭包函数,首先它属于setupHelp函数的内嵌函数,其次它引用了showHelp函数中的item变量
+                   document.getElementById(item.id).onfocus = function() {
+                     showHelp(item.help);
+                   }
+                 }
+               }
+           
+               setupHelp();
+	     </script>
+//分析问题的原因,for循环中的document语句值为一个匿名函数,所以里面的item变量只有在对该匿名函数进行调用时才会替换, 但因为var是全局变量,所以最终item总是引用的是helpText[2]
+	   ---结束---
+
+           解决方法一:使用闭包函数
+	   ---例子---
+	   function showHelp(help) {
+             document.getElementById('help').textContent = help;
+           }
+
+          //相较上面的问题代码这里多声明了一个函数 
+           function makeHelpCallback(help) {
+             return function() {
+               showHelp(help);
+             };
+           }
+           
+           function setupHelp() {
+             var helpText = [
+                 {'id': 'email', 'help': 'Your e-mail address'},
+                 {'id': 'name', 'help': 'Your full name'},
+                 {'id': 'age', 'help': 'Your age (you must be over 16)'}
+               ];
+           
+             for (var i = 0; i < helpText.length; i++) {
+               var item = helpText[i];
+               document.getElementById(item.id).onfocus = makeHelpCallback(item.help);
+             }
+           }
+           
+           setupHelp();
+
+分析:关键在for循环中的document语句的值为"函数的返回值",所以makeHelpCallback(item.help)会被执行,此时item会分别被替换为helpText[0/1/2],也就是相当于item的调用是在makeHelpCallback执行的时候就完成了.
+也就是相当于:
+           function makeHelpCallback(help) {
+             return function() {
+               showHelp(help);
+             };
+           }
+	   v1 = makeHelpCallback(helpText[0].help)
+	   v2 = makeHelpCallback(helpText[1].help)
+	   v3 = makeHelpCallback(helpText[2].help)
+	   ---结束---
+
+           解决方法二:使用匿名闭包
+	   ---例子---
+           function showHelp(help) {
+             document.getElementById('help').textContent = help;
+           }
+           
+           function setupHelp() {
+             var helpText = [
+                 {'id': 'email', 'help': 'Your e-mail address'},
+                 {'id': 'name', 'help': 'Your full name'},
+                 {'id': 'age', 'help': 'Your age (you must be over 16)'}
+               ];
+           
+             for (var i = 0; i < helpText.length; i++) {
+               (function() {   
+                  var item = helpText[i];
+                  document.getElementById(item.id).onfocus = function() {
+                    showHelp(item.help);
+                  }
+               })(); 
+             }
+           }
+
+           setupHelp();
+分析:for循环的语句体是由内嵌的两个函数组成的,里面的那个函数是闭包函数,此时主要是利用函数中声明的变量只有函数内部可用,函数外部是看不到的特性.也就是说for循环的执行产生了三个嵌套的函数:
+                (function() {   
+                  var item = helpText[i];  //i=0
+                  document.getElementById(item.id).onfocus = function() {
+                    showHelp(item.help);
+                  }
+               })()
+
+                (function() {   
+                  var item = helpText[i];  //i=1
+                  document.getElementById(item.id).onfocus = function() {
+                    showHelp(item.help);
+                  }
+               })()
+
+                (function() {   
+                  var item = helpText[i];  //i=2
+                  document.getElementById(item.id).onfocus = function() {
+                    showHelp(item.help);
+                  }
+               })()
+	       ------另一种分析-----
+	     //每返回一个内嵌函数都会产生一个与之相对应的环境,该环境中存放着只有该内嵌函数可以引用的父级函数中定义的本地变量
+             document.getElementById(item.id).onfocus = (function() {
+	          var item = helpText[i];
+                  return function() {
+                    showHelp(item.help);
+                  }
+               })();                            {item = helpText[0]}  <-> function(){showHelp(item.help)}
+
+             document.getElementById(item.id).onfocus = (function() {   
+                  var item = helpText[i];
+                  return function() {
+                    showHelp(item.help);
+                  }
+               })();                            {item = helpText[1]}  <-> function(){showHelp(item.help)}
+
+             document.getElementById(item.id).onfocus = (function() {   
+                  var item = helpText[i];
+                  return function() {
+                    showHelp(item.help);
+                  }
+               })();                            {item=helpText[1]}  <-> function(){showHelp(item.help)}
+	   ---结束---
+	   
+           解决方法三:使用let关键字声明变量
+	   ---例子---
+           function showHelp(help) {
+             document.getElementById('help').textContent = help;
+           }
+           
+           function setupHelp() {
+             var helpText = [
+                 {'id': 'email', 'help': 'Your e-mail address'},
+                 {'id': 'name', 'help': 'Your full name'},
+                 {'id': 'age', 'help': 'Your age (you must be over 16)'}
+               ];
+           
+             for (let i = 0; i < helpText.length; i++) {
+               let item = helpText[i];
+               document.getElementById(item.id).onfocus = function() {
+                 showHelp(item.help);
+               }
+             }
+           }
+           
+           setupHelp();
+分析:重点在for循环中item是用let声明的,let声明的特点是只在最近一个包含{}中的代码中有效,也就是说for循环执行后产生了三个语句块
+             {
+               let item = helpText[i]; i = 0
+               document.getElementById(item.id).onfocus = function() {
+                 showHelp(item.help);
+               }
+             }
+
+             {
+               let item = helpText[i];  i = 1
+               document.getElementById(item.id).onfocus = function() {
+                 showHelp(item.help);
+               }
+             }
+
+             {
+               let item = helpText[i];  i = 2
+               document.getElementById(item.id).onfocus = function() {
+                 showHelp(item.help);
+               }
+             }
+
+	   ---结束---
+           解决方法四:使用forEach循环
+	   ---例子---
+	   function showHelp(help) {
+             document.getElementById('help').textContent = help;
+           }
+           
+           function setupHelp() {
+             var helpText = [
+                 {'id': 'email', 'help': 'Your e-mail address'},
+                 {'id': 'name', 'help': 'Your full name'},
+                 {'id': 'age', 'help': 'Your age (you must be over 16)'}
+               ];
+           
+             helpText.forEach(function(text) {
+	      var text = text
+               document.getElementById(text.id).onfocus = function() {
+                 showHelp(text.help);
+               }
+             });
+           }
+           
+           setupHelp();
+说明,该方法直接使用数组helpText调用forEach方法来从helpText中循环取值,不存在全局变量的情况.
+*.forEach语句的用法: array.forEach(function(当前值,[当前值索引],[当前元素所属array对象]))
+/*
+arr = ['A','B','C','D']
+arr.forEach(function(text){console.log(text)})
+arr.forEach(function(text,index){console.log(index + "-->" + text)})
+arr.forEach(function(text,index,obj){console.log(index + "-->" + text + "-->" + obj)})
+*/
+	   ---结束---
+
+-----好例分析-----
+<html>
+
+  <body>
+    <p id="help">Helpful notes will appear here</p>
+    <p>E-mail: <input type="text" id="email" name="email"></p>
+    <p>Name: <input type="text" id="name" name="name"></p>
+    <p>Age: <input type="text" id="age" name="name"></p>
+  </body>
+  <script>
+    function showHelp(help){
+      document.getElementById('help').textContent = help;  //这是最终改变文本的代码
+    }
+
+    function makeHelpCallback(help){
+      return function(){
+        showHelp(help);
+      };
+    }
+
+    function setupHelp(){
+      var helpText = [
+        {'x':'email', 'help':'Your e-mail address'},
+        {'x':'name', 'help':'Your full name'},
+        {'x':'age', 'help':'Your age (you must be over 16)'}
+      ]
+
+      for(var i=0; i < helpText.length; i++){
+        var item = helpText[i];
+	document.getElementById(item.x).onfocus = makeHelpCallback(item.help);  //()只是为了获了值
+	}
+    }
+    setupHelp();
+
+  </script>
+</html>
+
+帮助理解:
+    document.getElementById(item.x).onfocus = makeHelpCallback(help)
+    document.getElementById(item.x).onfocus = makeHelpCallback(help)
+    document.getElementById(item.x).onfocus = makeHelpCallback(help)
+
+    -----
+
+    document.getElementById(item.x).onfocus = {help=helpText[0].help} <-> function(){showHelp(help)}
+    document.getElementById(item.x).onfocus = {help=helpText[1].help} <-> function(){showHelp(help)}
+
+    document.getElementById(item.x).onfocus = {help=helpText[2].help} <-> function(){showHelp(help)}
+
+    -----
+
+    document.getElementById(item.x).onfocus = {help="Your e-mail address"} <-> function(){showHelp(help)}
+    document.getElementById(item.x).onfocus = {help="Your full name"} <-> function(){showHelp(help)}
+    document.getElementById(item.x).onfocus = {help="Your age (you must be over 16)"} <-> function(){showHelp(help)}
+
+------------------
+function X(a){
+  if(a>3){
+    return "0"  //函数中只要执行了某个return语句,就不会继续向下执行其它语句了,而是直接跳出该函数继续向下执行,return后面的内容即为该函数的返回值
+    var b = 6;
+    return "8"
+  }
+  return "1"
+}
+
+X(2)
+console.log(X(8))
+
+var a= []
+var b= {}
+
+html文件: 一堆标签;
+内置了一些各种功能的标签:
+  <p>
+  <a>
+  <h>  ...
+
+这些标签相当于让你实现这些功能的入口,将html中的标签理解为编程语言中的对象(或叫类的实例).
+class p_template{
+   方法  //函数
+   属性  //变量
+}
+class p_template{
+   init()
+   var innerText = ""
+}
+class h_template{
+}
+
+<p id="">
+p = p_template(id="")
+p.innerText = ""
+------------------
+*-----json-----*
+******下面关于手写text json的描述应该有问题, 现在对于json与相应序列化的操作先完全依赖于JSON.parse()与JSON.stringify()吧, 至于具体转换原则有机会再研究
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON
+0. json是JavaScript Object Notation的缩写
+-----------Full Json Grammar--------
+JSON-text = object / array       
+begin-array     = ws %x5B ws  ; [ left square bracket
+begin-object    = ws %x7B ws  ; { left curly bracket
+end-array       = ws %x5D ws  ; ] right square bracket
+end-object      = ws %x7D ws  ; } right curly bracket
+name-separator  = ws %x3A ws  ; : colon
+value-separator = ws %x2C ws  ; , comma
+ws = *(
+     %x20 /              ; Space
+     %x09 /              ; Horizontal tab
+     %x0A /              ; Line feed or New line
+     %x0D                ; Carriage return
+     )
+value = false / null / true / object / array / number / string
+false = %x66.61.6c.73.65   ; false
+null  = %x6e.75.6c.6c      ; null
+true  = %x74.72.75.65      ; true
+object = begin-object [ member *( value-separator member ) ]
+         end-object
+member = string name-separator value
+array = begin-array [ value *( value-separator value ) ] end-array
+number = [ minus ] int [ frac ] [ exp ]
+decimal-point = %x2E       ; .
+digit1-9 = %x31-39         ; 1-9
+e = %x65 / %x45            ; e E
+exp = e [ minus / plus ] 1*DIGIT
+frac = decimal-point 1*DIGIT
+int = zero / ( digit1-9 *DIGIT )
+minus = %x2D               ; -
+plus = %x2B                ; +
+zero = %x30                ; 0
+string = quotation-mark *char quotation-mark
+char = unescaped /   
+    escape (
+        %x22 /          ; "    quotation mark  U+0022
+        %x5C /          ; \    reverse solidus U+005C
+        %x2F /          ; /    solidus         U+002F
+        %x62 /          ; b    backspace       U+0008
+        %x66 /          ; f    form feed       U+000C
+        %x6E /          ; n    line feed       U+000A
+        %x72 /          ; r    carriage return U+000D
+        %x74 /          ; t    tab             U+0009
+        %x75 4HEXDIG )  ; uXXXX                U+XXXX
+escape = %x5C              ; \
+quotation-mark = %x22      ; "
+unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+
+HEXDIG = DIGIT / %x41-46 / %x61-66   ; 0-9, A-F, or a-f
+       ; HEXDIG equivalent to HEXDIG rule in [RFC5234]
+DIGIT = %x30-39            ; 0-9
+      ; DIGIT equivalent to DIGIT rule in [RFC5234]
+
+总结json的写法:
+1.从宏观来说,json就是一个数组({})或对象({})
+2.json的开闭标签两边均可有0到多个空白字符(空格,tab,\n,\r).
+3.对象({})中键必须是由"双引号"引起来的"字符串"
+4.数组的元素值或对象的键值必须是6种类型中的一种(boolean/null/number/array/object/string)
+  4.1. 数字类型,除0外,禁止以0打头; 如果是小数,则小数点后必须至少跟着一位数字
+  4.2. 字符串类型的外围引号必须是双引号,不能是单引号或反引号
+5.字符串中有的转义字符
+  5.1. 部分字符不能正常显示其本身,转义后才能表示其本身
+    5.1.1. 双引号什么时候需要转义
+    5.2.2. 反斜杠必须被转义才能显示,因为它本身就是特殊字符
+    5.2.3. 斜杠什么时候需要转义
+  5.2. 部分字符转义后有特殊效果 //b,f,n,r,t
+
+规律:
+两步+ 一个特殊情况
+一步: 将构建的json文本字符串转成[]/{}需要二得一
+二步: 从一步中得到的[]{}输出时,再一次二得一,此时就是最终的结果
+一特殊: json文本转[]/{}时,字符串中双引号前的反斜杠默认被去掉
+----------end json-----------
+目的达到了,知道了如何构建json字符串可以得到想要的结果,但中间过程还有问题
+后端--> 前端  json   字符串
+var str = `{"xy": "my mame is \\"\t1Jack\\"\\\\\\\\"}`  
+var j = JSON.parse(str)
+console.log(j)   //['my name is "Jack"\\\\']
+console.log(j[0]) //my name is "Jack"\\
+
+-------------
+str json-text
+str --> []/{} --> 值
+
+str -> [] :   ["my name is \"Jack\""]
+       []  --> 值
+console.log(j[0])
+my name is "Jack"
+
+
+var a = ['abcd']
+console.log(a)
+
+'my name is "Jack"'
+var x = '{"a":"b"}'
+var y = JSON.parse(x)
+console.log(y)  // {a:'b'}
+
+json文本转为[]后,所有字符串类型的元素都是用单引号引起来的,无论定时义相应的字符串用的是什么引号(单,双,反)
+  var str = `["a","b"]`    -->  ['a','b']
+
+json文本 转为{}后,所有键直接写,不被任何引号引起来; 相应值如果是字符串类型一律用单引号引起来,无论定义时相应的字符串用的是什么引号(单,双,反)
+  var str = `{"name":"张三","age":8}`  --> {name:'张三', age:8}
+
+var str = `[{"name":"张三","age":8},"football"]`
+   -->  [{name:'张三',age:8},'football']
+
+规律: 字符串类型的值所有引号都变成单引号
+    *.特殊情况: 对象类型的键不需要单引号,直接写
+var x= `["abc\rdef"]`
+console.log(x)
+console.log(x[1])
+console.log("abc\rdef\rghi")
+*\f是form feed可以翻译为换页,既然是换页就是和上一页不在同一页,这里理解为新起一行,虽然是换页,但两页的内容是连着的,这样去理解\f就通了
+  var str = "abc\fdef\fghi"
+  console.log(str)
+*\r回到当前行首,覆盖后面的内容
+*\n换行,从行首输出
+
+json:
+0. [] {}
+1. 元素支持的类型: 6种  boolean/null/object/array/string
+   *.元素,[x,y,z], {key:value}  key只能是由双引号引起来的字符串类型,value可以是6种型中的任意一种
+   *.字符串只能由双引号引起来,区别于js中的字符串(单,双,反)
+   *.数字类型除了0外,其它整数不能以0打头(01);小数的话,小数点后至少有1位
+   *.字符串中的字符转义:
+     " / \都要进行转义才能显示其本身
+
+
+
+
+
+
+json-text --> []/{} --> 取值
+
+ var str = `["a\\"b\/c\\\\"]`    //`["a\\"b/c\\"]`
+ var b = JSON.parse(str)
+ console.log(b[0])    // 最终输出结果是: a"b/c\  如果输出b,则结果是c后面两个反斜杠, 但由于字符串被console.log()函数输出时,还会处理转义字符,所以b[0]的结果中c后只有一个斜杠
+
+ var d =`["a\\"b\\/c\\\\"]`
+ 倒推规律:
+ 第一步:将原始字符串中需要转义的字符前加上一个反斜杠,得到中间过程
+ 第二步:对所有反斜杠进行转义
+
+var str = `["a\\tb"]`   
+var b = JSON.parse(str)  
+console.log(b)
+console.log(b[0])    // 最终输出结果是: a	b
+
+正推和倒推, \t \n \r \f 
+
+倒推:
+第一步: 将",\,/这三个特殊字符进行转义,得到第二步.
+   *.但碰到\t \n \r \f不对其前的\进行转义
+第二步: 在所有\的前面加上一个\
+a"b\c\r        
+a\"b\\c\r
+a\\"b\\\\c\\r
+
+正推:
+第一步: 将所有的反斜杠,二得一
+第二步: 再将一步中的结果再一次二得一
+  特殊情况一: 双引号前面的反斜杠被默认去掉,因为转换后字符串以单引号包围
+  *.注意\t \n \r \f \b等的处理
+a\\"b\\\\c\\r
+a\"b\\c\r   //a"b\\c\r
+
+
+
+--------------------------
+c//\\df"""c\tbb
+var str = `["c//\\df"""c\tbb"]`
+
+var str = `["c\\/\\/\\\\\\\\df\\"\\"\\"c\\\\tbb"]`
+var b = JSON.parse(str)  
+console.log(b[0])
+var str1 = `["c\\/\\/\\\\\\\\df\\"\\"\\"c\\tbb"]`
+var b1 = JSON.parse(str1)  
+console.log(b1[0])
+
+*.将\t \b \n \f \r先单独圈出来,最后处理,逻辑上更清晰一些
+
+
+
+如果想将t想象为tab,则\t就已经是第二层了
+如果想输出\t,则按正常流程走,即将\t作为普通字符
+
+    -----
+    正推反推规律得出的过程:
+     通过改变json-text中转义字符\的数量,观察JSON.parse()后{}/[]中值的特点以及从{}/[]输出具体字符串的特点
+    var str = `["a\\tb"]`   
+    var b = JSON.parse(str)  
+    console.log(b)
+    console.log(b[0])    // 最终输出结果是: a	b
+    -----
+
+首先要知道"需要转义的字符"是: " \ / b f n r t
+其次要知道"转义字符"是: \
+再细解释一下: 
+  想要输出" \ /这三个字符,要使用\" \\ \/
+  想要实现 退格: 转义b   \b
+  想要实现 换页: 转义f   \f
+  想要实现 换行: 转义n   \n
+  想要实现 跳首: 转义r   \r
+  想要实现 tab : 转义t   \t
+  4位16制转字符: 转义u   \uXXXX
+        %x22 /          ; "    quotation mark  U+0022
+        %x5C /          ; \    reverse solidus U+005C
+        %x2F /          ; /    solidus         U+002F
+        %x62 /          ; b    backspace       U+0008  abcde\b\bde
+        %x66 /          ; f    form feed       U+000C  abc\fdef\fghi
+        %x6E /          ; n    line feed       U+000A  abc\ndef\nghi
+        %x72 /          ; r    carriage return U+000D  abcde\rbc\rde
+        %x74 /          ; t    tab             U+0009  tab
+        %x75 4HEXDIG )  ; uXXXX                U+XXXX  \u0026  &
+此时就有个问题, " \ / 这三个想要在字符串中输出,就必须转义,这个没啥说的
+  *. / 不转义也行,但原文既然将其列为需要转义的字符里,这里就先默认它必须转义才能输出
+但b,f,n,r,t,u这些既可以原样输出也可以通过转义实现特殊的效果, 所以这几个字符就不像" / \这三个一样必须转义才能输出. 因此要根据实际情况来判定想让b,f,n,r,t,u作为普通字符输出,还是想实现特殊效果
+
+练习:
+c//\\df"""c\tbb
+要将t理解为需要被转义的字符,则\t就已经是转义后的了
+如果要将t理解为普通字符,则将\与t分开单独看,即此时\为需要被转义的字符,而t就是本身的意思t
+
+
+
+c//\\df"""c\tbb
+由json得原始字符串:
+
+
+由原始字符串得json:
+
+A和你说,我要传输 atbnc
+a\tb\nc
+var str = `["a\nbtc"]`  
+var b = JSON.parse(str)
+console.log("")
+第一步就是先处理" \ / 这三个,26个字母中那几个特殊的最后根据要得以的效果一个一个看.
+
+
+
+var str = `["a\\\\nbtc"]`    //a\nbtc
+var b = JSON.parse(str)
+console.log(b)
+console.log(b[0])
+
+*var str = `["a\\\\\\nbtc"]`    //a\换行btc
+var b = JSON.parse(str)
+console.log(b[0])
+
+
+var str = `["a\nbtc"]`    //a换行btc
+var b = JSON.parse(str)
+console.log(b[0])
+
+
+
+var str = `["a\\\\\\nb\\tc"]`    //a\换行b	c
+var b = JSON.parse(str)
+console.log(b[0])
+
+
+var str = `["a\\\\n\\btc"]`    //a\tc
+var b = JSON.parse(str)
+console.log(b[0])
+
+悬疑题: 为啥n没有被\b干掉.
+a\n\bn	c
+var str = `["a\\\\n\\b\\tc"]`    //a\nbtc
+var b = JSON.parse(str)
+console.log(b)
+console.log(b[0])
+
+1.字符串解析时,是从左到右
+2.先处理" \ /
+3.最后处理[\]tbnfu
+  普,只需要按照1对\进行转义即可
+  转,前置的\就已经算是完成了一次转义,此时只需在\前加上\完成第二步即可
+4.字符串序列化: JSON.stringify(array/object)
+主脉络是: 二步走
+------end-----
+<script>
+var str= `["a\bcc"]`
+var b = JSON.parse(str)
+console.log(str)
+</script>
+
+*-----Ajax-----*
+需求(要实现的功能):
+一次显示一张图片(后一张覆盖前一张,然后循环显示)
+追加显示图片,显示完最后一张图片后隐藏按钮
+<html>
+  <body>
+    <button id="bu">Mysterious Button</button>
+    <div id="box"></div>
+  </body>
+
+  <script>
+    document.getElementById("bu").onclick = function(){
+      //获得客户端句柄
+      //构建请求url
+      //发送请求
+      //获取响应信息
+      //将响应信息转化为json
+      //从json中读取数据进行显示
+      //当取值次数大于3次,则重置变量为1,重新计数
+    }
+  </script>
+</html>
+
+<html>
+  <style type="text/css">
+    .hide-me{
+      display: none;
+    }
+  </style>
+  <body>
+    <button id="bu" onclick="hide()">Mysterious Button</button>
+    <button id="buu" onclick="hide()">Test</button>
+    <div id="box"></div>
+  </body>
+
+  <script>
+    function hide(){
+        bn = document.getElementById("bu")
+        bn.setAttribute('class','hide-me') 
+      }
+    </script>
+</html>
+
+<html>
+  <style type="text/css">
+    .hide-me{
+      display: none;
+    }
+  </style>
+
+  <body>
+    <button id="bu" onclick="press()">Button</button>
+    <div id="box"></div>
+  </body>
+
+  <script>
+       //每点击一次按钮发生一次请求,每次响应回一个json文本,在div块末尾插入一个img标签,标签内容为json文本中的图片链接,当第三次请求后,隐藏按钮
+     function showPic(){
+        var xhr = new XMLHttpRequest() //这块为什么不放到匿名函数里
+        var box = document.getElementById("box")
+        var bn = document.getElementById("bu")
+        var counter = 0
+        return function(){
+	  if (counter == 2){
+	    
+	    xhr.open("GET","http://127.0.0.1:8080/"+counter)
+	    xhr.onload = function(){
+	    
+	      var jo = JSON.parse(xhr.responseText)
+	      htmlString = '<img src='+jo.Picture+'></img>'
+	      box.insertAdjacentHTML("beforeend",htmlString)
+              //bn.onclick = function(){bn.setAttribute('class','hide-me')}
+              bn.setAttribute('class','hide-me')
+	    }
+	    xhr.send()
+	  } else {
+	    xhr.open("GET","http://127.0.0.1:8080/"+counter)
+	    xhr.onload = function(){  //会话成功完成后触发onload(从发送请求到成功收到数据这个过程叫做一个会话)
+	      var jo = JSON.parse(xhr.responseText)
+	      htmlString = '<img src='+jo.Picture+'></img>'
+	      box.insertAdjacentHTML("beforeend",htmlString)
+	      counter += 1
+	    }
+	    xhr.send()
+	  }
+
+	}
+     }
+     var press = showPic()
+    </script>
+</html>
+--------------
+js  html标签以及每个标签的属性,以及相应可以调用的函数
+//后端返回图片
+<html>
+  <style type="text/css">
+    .hide-me{
+      display: none;
+    }
+  </style>
+
+  <body>
+    <button id="bu" onclick="press()">Button</button>
+    <div id="box"></div>
+  </body>
+
+  <script>
+       //每点击一次按钮发生一次请求,每次响应回一个json文本,在div块末尾插入一个img标签,标签内容为json文本中的图片链接,当第三次请求后,隐藏按钮
+     function showPic(){
+        var xhr = new XMLHttpRequest() //这块为什么不放到匿名函数里
+        var box = document.getElementById("box")
+        var bn = document.getElementById("bu")
+        var counter = 0
+        return function(){
+	  for(var i=0;i<=2;i++){
+	    if (counter == 2){
+                bn.setAttribute('class','hide-me')
+	    }
+	      xhr.open("GET","http://127.0.0.1:8080/"+counter,false)
+	      xhr.onload = function(){  //会话成功完成后触发onload(从发送请求到成功收到数据这个过程叫做一个会话)
+	        var jo = JSON.parse(xhr.responseText)
+	        htmlString = '<img src='+jo.Picture+'></img>'
+	        box.insertAdjacentHTML("beforeend",htmlString)
+	      }
+	      xhr.send()
+	      counter += 1
+	  }
+
+	}
+     }
+     var press = showPic()
+    </script>
+</html>
+<script>
+        var xhr = new XMLHttpRequest() //这块为什么不放到匿名函数里
+	for(var i=0;i<=2;i++){
+	    xhr.open("GET","http://127.0.0.1:8080/"+i,false)
+	    xhr.send()
+        }
+</script>
+
+//如果onclick属性中的函数有参数,如何传值?
+<html>
+  <style type="text/css">
+    .hide-me{
+      display: none;
+    }
+  </style>
+
+  <body>
+    <button id="bu" onclick="showPic('class')">Button</button>
+    <div id="box"></div>
+  </body>
+
+  <script>
+       //每点击一次按钮发生一次请求,每次响应回一个json文本,在div块末尾插入一个img标签,标签内容为json文本中的图片链接,当第三次请求后,隐藏按钮
+     var box = document.getElementById("box")
+     var bn = document.getElementById("bu")
+     var counter = 0
+     function showPic(n){
+        if (counter == 2){
+          bn.setAttribute(n,'hide-me')
+	}
+
+      var xhr = new XMLHttpRequest() //再优化,该句还可以放到函数外
+      xhr.open("GET","http://127.0.0.1:8080/"+counter)
+      xhr.onload = function(){  //会话成功完成后触发onload(从发送请求到成功收到数据这个过程叫做一个会话)
+      var jo = JSON.parse(xhr.responseText)
+      htmlString = '<img src='+jo.Picture+'></img>'
+      box.insertAdjacentHTML("beforeend",htmlString)
+      }
+      xhr.send()
+      counter += 1
+     }
+    </script>
+</html>
+
+-------------Class------------
+Classes
+Defining classes
+--Class declarations
+--Hoisting
+--Class expressions
+Class body and method definitions
+--Strict mode
+--Constructor
+--Static initialization blocks
+--Prototype methods
+--Generator methods
+--Static methods and properties
+--Binding "this" with prototype and static methods
+--Instance properties
+--Field declarations
+--Private field declarations
+Sub classing with "extends"
+Species
+Super class calls with "super"
+Mix-ins
+Re-running a class definition
+-----static keyword-----
+1.在类中我们可以使用static来定义静态的方法(函数)和属性(变量).定义的方法也很简单,就是在正常的方法和属性声明前前缀一个static关键字. 需要注意的是在类中定义方法不需要使用function关键字,直接就 方法名([参数...]) 即可.
+2.再就是说一下给属性和方法前缀一个static实际的作用是啥呢? 答案是:使用static前缀的属性和方法后,只能使用类名对其进行调用,而类的实例是不可以调用的.再进一步说,因为类模板只有一个,而利用类模板创建的实例可以有无数个,这也就保证了
+
+3.同一个类中, 静态成员之间互相引用可以使用this关键字,此时this可以理解为类模板名; 同一个类中, 非静态成员访问静态成员时,不能直接访问,也不能直接使用this访问,方法有二,一是使用"类名.静态成员",二是使用"this.constructor.静态成员"
+
+4.static block中的this指的是类里的构造器对象
+5.可以使用super.<property>的形式访问父类中的属性(方法呢?).但需要注意的是在类中的static block中调用super()方法或是在类中的static block中尝试访问类构造器函数中的参数都是错误的.
+6.由于static block是在类中声明的,因此static block可以访问类中的私有实例变量.
+7.static block不可以有装饰器, 但它所在的类可以有.
+
+
+-----class step by step-----
+class Person {
+  //属性
+ name
+ age
+ gender
+
+  //方法
+  run() {
+    console.log("马拉松")
+  }
+
+  beat() {
+    console.log("棒球")
+  }
+  eat() {
+    console.log("萝卜汤")
+  }
+}
+
+class GaoTian extends Person {
+  //自己的属性
+    height = 270
+  //自己的方法
+    sleep() {
+      super.name = '高天'
+      console.log("一天18个点")
+    }
+}
+
+const g = new GaoTian()
+console.log(g.height)
+g.sleep()
+console.log(g.name)
+g.name = '嘟嘟'
+console.log(g.name)
+const p = new Person()
+console.log(p.name)
+g.any = "游戏"
+
+
+
+小节:
+ 1.类继承用关键字extends;
+ 2.类下直接子级只允许有属性和方法,至于对属性和方法的操作只能放到函数中(如上例所用的super.name='高天'就不能和height与sleep()放在同一级)
+ 3.在子类的代码中想要调用父类中的成员,要使用super关键字
+ 4.可以直接使用"实例.属性名"的方法给实例添加新的属性(不能用这种方式添加方法)
+
+----------------------------
+类中的constructor()方法:
+0.这是一个特殊函数, 它的作用是利用所在的类模板"创建"并"初始化"一个对象.(这里的创建可以理解为在内存中新开辟了一片空间; 初始化可以理解为将类模板中的语句在这片空间执行了一遍,其实所谓的初始化指的就是给变量赋值)
+  *.实例化的时候会自动执行constructor()方法 //类似某些语言里类中定义的init()方法
+  -----
+  var a = new A()
+  class A{
+    constructor(){
+      console.log("ok")
+    }
+  }
+
+  const a = new A()
+  -----
+1.一个类中最多可以有1个constructor()方法.(最多,意味着也可以没有)  //如果在一个类中定义了多个constructor()方法会报错.
+2.可以在constructor()方法中使用super关健字调用父类的构造器方法. //有的时候我们在创建对象的时候,需要先执行父构造器方法,想一个例子?.
+3.构造器的语法:
+  constructor(a*) {} //0到多个参数
+4.再就是说一下一般情况下都把什么代码放到构造器方法中.无论是啥其实都是根据其特点下手.构造器的特点是创建对象时执行的第一个方法,根据这个特点,一般是当利用创建好的对象调用类中其它的方法时需要提前创建好的内容(如变量的定义)都放在它里面. 再总结一下: 你const object = new ClassName()的目的是想要在后面使用object调用里面相应的成员, 而有些情况是某些成员方法里面的语句会用到需要你预先定义好的内容(如变量).此时就需要你将这部分需要预先定义好的内容放到constructor()方法中去执行.
+  -----举例-----
+  class Person {          //先忽略为什么要用this
+    constructor(name) {
+      this.name = name
+    }
+    
+    introduce(){
+      console.log(`Hello, my name is ${this.name}`)
+    }
+  }
+
+  const p = new Person('Otto')  //注意这里传参了,原因见上面代码中构造器的形式是constructor(name),当然你也可以不传,此时name默认值为undefined
+  p.introduce()
+  --------------猜测---------
+  class Person {          //先忽略为什么要用this
+    gender = 'female'
+    constructor(name) {
+      var age = name   //此时age是在为constructor方法分配的空间中定义的,而this.age = name,则是在为实例对象分配的空间中定义的
+    }                  //也就是this.VAR声定的相当于一个在类中声明的全局变量,该用法只能用在类定义里的方法中,不一定非得定义在类中的constructor方法
+    introduce(){
+      console.log(`Hello, my name is ${this.age}`)  //此时由于对象空间(this)中没有age,所以这块输出是undefined
+    }
+  }
+
+  const p = new Person('Otto')  //注意这里传参了,原因见上面代码中构造器的形式是constructor(name),当然你也可以不传,此时name默认值为undefined
+  p.introduce()
+  console.log(p.gender)
+  -----------------------------
+  *****
+  class C {
+  gender = 'female'
+  name = '张三'
+  age
+  constructor(){
+    this.gender ='ok'   //相当于在实例c下定义的全局变量,如果类C中定义了gender字段,则这里只是引用,如果没有定义,则这里会创建一个类C中的字段(全局变量)
+    var gender='male'  //只有constructor能访问,对象c不行
+  }
+
+  play() {
+    this.what = 'basketball'
+  }
+}
+
+const c = new C()
+c.play()
+console.log(c.what)
+console.log(c.gender)
+内存分配一块空间,成员放到空间里
+c其实就是这块空间的一个起始地址, 大C里的每个成员也都有一个地址,不同的是
+name, age , play()它们三个的地址是以c的地址为基地址得到的一个偏移地址
+this关键字只能在方法中用,不能在方法外用,原因是this这个关键字是在实例化完成之后才有的,而实例化的过程是分配内存空间,并在被分配的这块空间里根据类模板中的成员进行赋值,说白了类的初始化就是在给该对象分配的内存空间中给字段赋上值,给方法也赋上一个值,只不过方法的这个值是对另外一块内存地址的引用,另外一块内存地址存的是方法的源码,即初始化时方法是不会被执行的,只有这些工作都做完了,这个类的实例化才完成, 此时才会产生"this".所以如果你在方法外使用this关键字,在初始化期间,this还不存在,所以不行.而在方法内可以使用this关键字是因为对方法的调用是使用"对象名.方法名()",此时已经得到了一个实例化对象了,而this其实代指的就是实例化对象,它们本质上就是被分配内存区域的起始地址. 而方法中使用this定义的变量和不使用this定义的变量区别是使用this定义的相当于和类直属字段在同一空间(可以想像一下它们在内存中是如何被分配的),而不加this的变量,是在为该方法另外分配的空间中定义的变量其可见性仅限于其声明时所在的方法.
+  *****
+5.上面也讲过了,利用类创建对象(或叫类的实例化)时其实调的是类模板中的constructor()方法, 但问题来了, 如果我写的类里没有constructor()方法为什么也能成功创建对象呢? 原因在于如果你在写类的时候如果没有定义constructor()方法,则js引擎会自动为你提供一个空的constructor()方法,即constructor(){},你可以理解为当js引擎在执行代码前会有一个预处理的过程,在这个过程中如果检测到你的类中没有constructor()方法,则会自动为你加上, 也就是说js最终在创建对象的时候,constructor(){}已经写在类模板里了.
+
+6.接5讲, 如果你定义的类还继承自其它类, 如class A extends B {},且A中没有定义constructor()方法,则js引擎在预处理时给父类B加上constructor(){}方法.此时如果子类A里定义了constructor方法,则你必须在该子类中调用super()来执行父类B里constructor()方法(无论此时父类B里是否显式的定义了constructor方法),此时如果父类显示的定义了constructor方法,并且也有形参,则你在子类中调用super()时,也要将相应的形参值传过去,当然不传语法也不算错的, 但既然父类的constructor方法中有形参,肯定在方法体中要用到,所以一般都会传.具体例子后面有提到. 从这点学到的东西:
+
+    
+  1.方法(函数)调用时,对形参的赋值是很随意的,也就是说即使我方法定义中没有形参,你在调用时也可传;我方法中有形参的,你也可以不传;这样做逻辑上也是通的,我们举例说明一下:
+  ##############################################
+    例1:
+    function withoutArg(){
+      console.log("6666")
+      console.log(arguments)
+    }
+    withoutArg()  //没传参调用正好和函数定义的一致,肯定没问题
+    withoutArg(1,2,3)  //函数未定义参数,但调用时传了,此时因为js中有个关键字arguments,你在调用函数时所有的参数都会存到它里面,它是一个对象,即里面存放的是一个个的键值对,其中键是参数的位置索引,值就是对应的值,索引从0开始.正是因为有arguments这个关键字的存在,不会导致对未定义形参的函数调用时传参没有意义,当然你在函数体中引不引用arguments是没关系的.
+    例2:
+    function withArg(arg1,arg2) {
+      console.log(arg1,arg2)
+    }
+    withArg(1,2) //传参调用和函数定义一致,没啥说的
+    withArg()  //函数定义有参,但调用未传参,此时相当于每个函参都是undefined
+    !!!例3:这题是错的, js没有关键字参数,只有位置参数,啥意思呢,在下面这个例子中,支持关键字参数的语言,我在调用withDefaultArg(b=4)时,得到的结果是3,4. 但js中得到的结果是"4, undefined"也就是说在js中调用函数时没有关键字一说,你在第几个位置设置的值,这个值就传给函数定义中相应位置的变量
+    function withDefaultArg(a1=3,b){
+      console.log(a1,b)
+    }
+    withDefaultArg(b={b:5})
+    python支持关键字参数:
+    >>> def name(b,a=3,c=5):
+    ...   print(b,a,c)
+    ...
+    >>> name(4,c=6)
+    4 3 6   //照js的逻辑这块输出的就是4 6 5
+
+    但是我们可以间接的让js的函数支持关键字参数,利用js的结构特性(https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)
+    https://javascript.plainenglish.io/lets-understand-positional-and-named-parameters-in-javascript-672faa2e4ed9
+   
+    啥叫解构(destructuring)?
+     解构其实是针对array([])和object({})来说的.
+     说白了就是从array或object中取值赋给变量的一种写法.//非X=array[index]或Y=object["key"]的形式.下面四种形式基本能概括所有情况了.
+     let a,b,rest
+     [a,b] = [10,20]  //a = 10,b = 20
+    
+     [a,b,...rest] = [10,20,30,40]    // a = 10, b = 20, rest = [30,40]
+     ---
+     {a,b} = {a:10,b:20}    //a = 10, b = 20
+    
+     {a,b,...rest} = {a:10,b:20,c:30,d:40}  //a=10,b=20,rest={c:30,d:40}
+     ---
+     说明: 
+       a.变量的位置没有关系,{a,b}与{b,a}得到的结果是一样的;
+       b. "...变量名"只能放在最后面, 即{a,...b,c}是错误的;
+       c.[a,b,c] = [1,2] 中a=1,b=2,c没值,所以为undefined
+       d.[a,b] = [1,2,3,4] 同样,只有a=1,b=2, 后面3,4没有接收的变量
+       e.上面举例时是先用let声明的变量后面才用的,也就是变量的声明和结构表达式分着写的,你也可以不分,如let [a,b] = [1,2],也是可以的
+ 
+ 有了解构的基础做支撑,就能明白为什么函数实现关键字参数要这样写了:
+     function namedArgs({a,b,c=3,d}){
+       console.log(a,b,c,d)
+     }
+     namedArgs({a:1,b:2,c:6,d:4}) //这句是函数调用,而函数调用时的传参就相当于给定义中的形参赋值,也就是相当于:
+     {a,b,c=3,d} = {a:1,b:2,c:6,d:4}  需要注意的是这样的写法中, a,b,d是第一次赋值,而c是第二次赋值,也就是说如果右边没有c:6这个键值对,函数中引用c时,c的值为初始赋值3
+     这不正符合解构中的语法嘛
+
+   *.总结一下定义函数时使用位置参数和关键字参数(又叫命名参数)各自的特点:
+   位置参数: 所谓位置参数就是形参为一个个的变量名
+     function positionArgs(a,b,c=3,d){
+     }
+   特点: 如果调用时你想给第4个参数传值,则前三个也必须传.也就是说形参为位置参数时,你在函数调用过程中进行传值时,会按照位置映射给相应位置的形参变量
+
+   关键字参数: 利用解构特性,在函数定义时,将变量放到{}中
+     function namedArgs({a,b,c=3,d}){
+     }
+   特点: 调用过程中可以使用关键字给任意一个形参传值,如我只想给d传值,则直接写namedArgs({d:5})即可.    
+   例子:
+     function namedArgs({a,b}){
+       console.log(a,b)
+     }
+     namedArgs({b:3}) 
+     //{a,b} = {b:3,a:5}
+   
+   *.总体来说,关键字参数更灵活
+
+小插曲: 经常碰到parameter和argument混着用的,有时候很懵,因为一打眼,这两个单词都是参数的意思,通过维基百科上的解释, parameter指的是形参, 而argument指的是实参,再细一点来讲,parameter是函数定义时里面的那个变量名, argument是调用函数时传递给函数中形参变量parameter的值或变量(https://en.wikipedia.org/wiki/Parameter_(computer_programming))
+  ##############################################
+  2.如果A是继承自B类,且A没有明确定义构造器方法的情况下,js引擎会自动在A类里为我们加上一个构造器,此时构造器不是空的,里面有一个调用父类构造器的语句,并且初始化子类时给子构造器传的参数会如数的传给父构造器:
+      constructor(...args){
+        super(...args)
+      }
+      -----见例子-----
+      class Parent {
+        constructor(){
+	  console.log(arguments)
+	}
+      }
+      class Child extends Parent {
+        /*
+	  因为Child有父类,所以预处理时加的是:
+	  constructor(...args){
+	   super(...args)
+	  }
+	  constructor(1,2,3,4,5){
+	    super(1,2,3,4,5)
+	  }
+	*/
+      }
+      const c = new Child(1,2,3,4,5)
+      ----------------
+  3.但是如果A是继承自B类,但A中已经明确定义构造器方法的情况下,在对A实例化的时候必须使用super()对父类B中的构造器方法进行调用,具体调用的位置也有说法,首先你必须在子类A的constructor()函数返回前进行调用,并且如果A中的constructor()中还使用了this关键字,则还要保证在this相关的语句前调用
+  -----见例子-----
+  class Parent {
+    constructor(){
+      console.log("I am Parent")
+    }
+  }
+  class Child extends Parent{
+    constructor(){
+      console.log("I am child")
+      super()
+//    this.name="3"
+//    return
+    }
+  }
+  const c = new Child()
+  ----------------
+  *.上面3中说到子类明确定义构造器的情况下必须要利用super()调用父类的构造器,也有特殊情况,如你的子类构造器利用return返回一个object类型的对象时,就不用调用super()  //常见的object类型有array([]),object({}),还有一个通用的方法: return new Object(这里可以是任意类型的值,如'字符串',666等)
+  -----例子-----
+  class Parent{
+    constructor(){
+      console.log("mygod")
+    }
+  }
+  class Child extends Parent{
+    constructor(){
+      return [1,2,3,4]  //此时子类里没有调用super()也是没问题的,因为返回的是一个object类型的对象,此时可以不调super()的原因,你返回的是一个单独的对象而非当前类的一个实例了,得到的变量此后没有权力调用子类或父类里的字段或方法,所以你调不调super()没啥意义, 现在可以想到有意义的场景就是在父类的构造器函数中输出一个字符串用来说明你得到的变量没有权力调用父类或子类中的任何成员.
+      //return {'a':1} 
+      //return new Object(66)
+    }
+  }
+  const c = new Child()
+  console.log(c[3])
+  ----------------
+  *.子类是没有初始this的,它里面的this其实是通过调用super()得到的, 也就是说子类中的this其实等价于 new Base(),要不为啥上面说子类调用super()的位置要在this和return之前呢!
+   class Parent{
+     constructor(){}
+     age=3
+   }
+   
+   class Child extends Parent {
+     constructor(){
+       //return new Object(666)
+       super()
+       this.age=5
+     }
+   }
+   const p = new Child()
+   console.log(p.age)
+
+  *.没有继承关系的类的this就来源于它自身, 即this = new itself()
+  **.再说一下对this的理解: 由上两条所说,this其实是new出来的一个东西,所以this就相当于实例对象, 而实例对象是啥呀,之前也说过,它就是在内存中开辟了一块空间,而这个对象指向的是这个空间的一个起始地址,也就是说实例对象其实指向的是内存中一块空间的起始位置, 后期我们就可以利用这个"对象.成员"的形式对成员进行调用. 而"对象.成员"这种调用的实际过程是先利用对象找到一块空间的起始位置,而"成员"可以理解为相对于起始位置的偏移,这样通过对象找到某块内存空间的起始位置,然后再利用偏移找到实际的代码所在位置,最后对所找到的代码进行执行.
+
+  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor下面的两个例子为什么头一个是Error后一个是ValidationError,关键是要弄清instanceof关键字,但想要弄明白它,还要先搞清prototype链是怎么一回事.先放一放吧
+
+再来看一个例子:
+    -----
+    class Base {}
+    class Good extends Base {}
+    class AlsoGood extends Base {  //这种写法也是正确的, 原因其实上面已经讲过了. 简单来 说就是因为虽然显式的定义了constructor()方法,虽然没有在里面调用super()方法,但其返回的是一个对象类型
+      constructor(){
+        return {a:5}
+      }
+    }
+    class Bad extends Base {  //这种写法bad的原因是你是一个子类并且又显式的定义了constructor()方法,而且又没有返回一个object类型的对象,所以此时你必须要使用super()去调用父类的构造器函数
+      constructor() {//缺少super()或return object类型变量
+      }  
+    }
+    new Good()
+    new AlsoGood()
+    new Bad()
+    -----
+4.类的本质其实也是一个函数. 那么既然类可以使用new ClassName()的方式,普通的函数也可以通过new的方式得到一个可以调用函数中成员的对象也可以:
+    function A(){
+      this.name = "张三"  //此时this指的就是下面的对象实例a
+    }
+    const a = new A()
+    console.log(a.name)
+5.类的私有变量(语法: #+变量名,如#p),所谓私有指的是只有类中的代码可以使用,类外就不能用了
+利用变量的使用场景: 比如有些机密的参数(变量)或过程(方法)不能对外公开,但是对于某些功能(非私有)来说又需要使用这些机密的参数或方法进行运算.
+    -----
+    class PrivateField {
+      #p
+      constructor(){
+        this.#p = 3
+      }
+      usable() {
+        console.log(this.#p)
+      }
+    }
+    const a = new PrivateField()
+    console.log(a.p)
+    a.usable()
+    -----
+*.类常用方法是在类下直接声明变量,然后在constructor()中利用this给这些变量赋值,在方法中利用this引用这些变量(正如上面这个例子中的代码所说)
+    class PrivateField {
+      #p  //解密密钥 
+      constructor(){
+        this.#p = 12345678
+      }
+      usable(str) {  //开放一个外部可以访问的接口,body里可以私有的#p对传进来的数据进行解密,这样一来私有属性#p,既不被外部看到,又有了用武之地.
+        console.log(str+this.#p)
+      }
+    }
+    const a = new PrivateField()
+    a.usable('32423')
+    *-----*
+    class A{   //类中方法想要访问类中成员,必须要使用this去调用,因为p和usable()方法体中的内容是两个空间,所以只能在方法中使用this这个中介访问p
+      p
+      usable(){
+        console.log(this.p)
+      }
+    }
+    const a = new A()
+    a.usable()
+    *-----*
+类初始化的过程: 先将里面的变量和方法都处理了,得到了对象,然后将对象绑定到this(即this引用的就是对象),最后再调用constructor()方法,完成整个实例化过程.所以你在constructor()中才能使用this关键字.而类下的属性在给类分配的空间中, 会给类下的方法另外分配的一块空间,二者中的变量是不通用的,所以你在方法中想要调用类下的方法要使用this关键字做中转.可以直接在方法中使用"this.变量名"来直接向类空间中定义变量
+
+
+base class实例化过程:
+class A {
+  x = console.log("first")
+  constructor(){
+    console.log("second")
+  }
+}
+const a = new A()
+
+derived class实例化过程:
+<script>
+class A {
+  x = 1
+  aFunction(){
+  }
+  constructor(){
+    console.log("second")
+  }
+}
+
+class B extends A {
+  y = 2
+  bFunction(){
+  }
+  constructor(){
+    console.log("nth?")
+    super()
+  }
+}
+
+const a = new B()
+</script>
+
+
+对比调试: 通过下面这个例子就能看出子类在实例化时,父类和子类的一个执行过程:
+  1.当只有一个类(没有父类)时,先初始化类中的字段, 再执行constructor()方法  //上面的 "base class实例化过程"中的小例子的测试结果说明了这个问题
+  2.当有继续关系时,初始化顺序为:子类constructor方法>父类成员字段>父类constructor()方法>子类成员字段  //通过下面这个例子的测试结果证明了该顺序
+base类  derived类(extends)
+
+<script>
+class A {
+  a = console.log("second")
+  x = 1
+  aFunction(){
+    console.log("third")
+  }
+  constructor(){
+    this.a = 3
+    console.log(this.a)  //注意这块直接输出a是会报错a is not defined
+  }
+}
+
+class B extends A {
+  b = console.log("fourth")
+  y = this.aFunction()
+  bFunction(){
+  }
+  constructor(){
+    console.log("first")
+    super()
+  }
+}
+
+const a = new B()
+</script>
+
+
+-----
+<script>
+class A {
+  a = console.log("second")
+  x = 1
+  y = 2
+  aFunction(){
+    const q = 7
+    console.log("third")
+  }
+  constructor(){
+    var r = 5
+    this.p = 4
+    this.a = 3
+    this.say=function(){}
+    console.log(this.a)  //注意这块直接输出a是会报错a is not defined
+  }
+  z = 3
+}
+var o = new A()
+</script>
+base类实例化过程:
+第一步: 先建立一个空的this,类型为对象({})
+第二步: 先遍历类里面的属性,将所有的属性和值添加到this对象中,此时忽略类中的方法.
+第三步: 当类中所有的属性都添加到this对象中之后,调用特殊方法constructor(),constructor()方法中的语句块执行完成,则整个实例化过程也就结束了.
+
+说明: 
+  0.this中存放的实际就是类里定义的属性,以及函数调用时,使用this对象添加的变量
+  1.最终得到的变量可以调用类中的成员(字段)和方法
+-----
+
+class A{
+  yy(){
+    var age=8
+  }
+}
+const a = new A()
+a.yy()
+
+
+
+
+下面这个含有3个类的例了证实了上面所说的对最小辈类实例化时,所有类的一个执行过程,总结起来就一句话: 当没有基类(只有一个类)时,顺序为 字段>constructor()方法; 当有类的继续时,就看父类是不是基类, 如果是基类,则基类的执行顺序和单类一样, 先字段后constructor(),如果父类非基类,则是先constructor(),至于该类的字段什么时候初始化要看什么时候回落到该类.总结的有点抽象, 对照下面这个例子的代码和执行结果,规律就非常清晰了
+<script>
+class A {
+  a = console.log("A")
+  constructor(){
+    console.log("AA")
+  }
+}
+class B extends A {
+  b = console.log("B")
+  constructor(){
+    console.log("BB")
+    super()
+  }
+}
+
+class C extends B {
+  c = console.log("C")
+  constructor(){
+    console.log("CC")
+    super()
+  }
+}
+const c = new C()
+
+
+const i = setInterval(function(){console.log("ok")},2000)
+</script>
+
+-----函数二讲-----
+1.函数实参类型可以是primitive也可以是object,当为前者时函数内对形参进行改变时,对外面的实参没有影响; 当为后者时函数内对形参的改变会影响外面的实参. //原因就是解释器对primitive类型和object类型存储的方式不同.
+     -----例----
+     //实参为primitive中的number类型
+     var a = 1
+     function donotChange(x){
+       x += 1
+     }
+     donotChange(a)
+     console.log(a)
+
+     //实参为3种objects中的{}
+     var a = {"name": "ZhangSan"}
+     function doChange(x){
+       x["name"] = "GaoTian"
+     }
+     doChange(a)
+     console.log(a["name"])
+
+     -----------
+2.定义函数的常见方式有N种:
+--a.利用function关键字单独声明;
+      function name([param[, param[, ... param]]]) {
+         statements
+      }
+--b.利用function关键字作为表达式;
+      语法同a,只不过是用于表达式中,ar a = expression,需要注意的是表达式中的函数可以有名也可以没名(有名的好处是当函数中的语句报错了,则在报错信息中可以显示函数名,从而可以在代码中快速的定位到出错的位置). 另外表达式中的函数不支持hoisted(说白了就是不支持"先使用后定义",hoisted应该是在编译阶段做的事儿.).
+      -----例-----
+      var withName = function sunWuKong(){
+         sdf
+      }
+      //withName()
+      sunWuKong()
+
+
+      var withoutName = function(){
+         sdf
+      }
+      withoutName()
+      ------------
+      *.定义一个只执行一次的函数:
+      (function() {
+         statements
+      })()  //作为表达式时,最外层括号可有可无,单独存在时,必须有
+--c.利用function*单独声明;  //发生器,生成器
+      function* name([param[, param[, ... param]]]) {
+       statements
+      }
+    *.通常配合yield关键字一起用,该关键字的作用是暂停generator函数的执行.然后生成器对象一旦调用了next()函数,则函数恢复执行,并将yield后面的值作为函数的返回值.
+    -----例-----
+    function* gen(){
+      let a = 0
+      while(true){
+        yield a++   //继续运行+返回值   0 1
+      }
+    }
+    var num = gen()  //generator对象
+    console.log(num.next().value)   //gen函数返回的是一个generator对象,该对象里定义了next()方法
+    console.log(num.next().value)
+    console.log(num.next().value)
+    console.log(num.next().value)
+
+    ------------
+  d.利用function*表达式作为表达式;
+    语法同c,只不过用于表达式中, 参考b中描述
+  e.键头函数表达式;
+    ([param[, param]]) => {
+     statements
+    }
+
+    param => expression
+
+    *.其实就是函数的一种简写形式,但并不是普通函数能出现的地方一定能够用键头函数替代(https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions).在代码中经常能见到这种用法,具体可参见该链接.
+  f.Function构造器;
+    new Function (arg1, arg2, ... argN, functionBody)
+    *.不推荐用
+    var x = new Function("a","b","a=a+b;return a+b")
+    console.log(x(1,2))
+3.如何判断一个函数是否存在
+class window {
+  x(){}
+}
+
+var w = new window()
+if ('function'=== typeof w.x){ //对象名而非类名调用函数名
+  console.log("aa")
+} else {
+  console.log("bb")
+}
+
+
+
+
+
+
+
+
+
+function(a){
+  return a + 100
+}
+(a)=>{
+  return a + 100
+}
+(a)=>{
+  a + 100
+}
+
+(a)=> a+ 100
+a => a+ 100
+如果有多个参数()不能省, 如果有多条语句,则{}不能省. //上面给出的mdn中关于arrow function的语法描述中清晰的说明了这点
+var x = a=>a+100
+var x = function(a){return a + 100}
+
+var x = (c,a=400,b=200) => a+b
+console.log(x(300,200))
+
+<script>
+let a,b
+let arr = [100,200];
+[a,b] = arr        //这块有个点, 如果let arr=[100,200]后不加分号的话, js解释器会认为这两行是一行,而报错,所以推荐在每个js语句的结尾都加上分号,其实这也是特殊情况, 具体都哪些情况可能会导致js解释器混淆还没有看过相应的文章, 先记住这种情况.
+console.log(a,b)
+</script>
+
+-----
+<script>   //这段代码好像是youtube中阿三讲的js内部原理的视频中引用的,不明白可以看下那个视频
+function main(){
+  var a = 2
+  b = 1
+  function f(z){
+    b = 3
+    c = 4
+    var d = 6
+    e = 1
+  
+    function g(){
+      var e = 0
+      d = 3*d
+      return d
+    }
+  
+    return g();
+    var e
+  }
+
+ f(1)
+}
+</script>
+-----gabage collection and closure-----
+1.虽然main()函数执行结束了,只要窗口不关, main堆就一直存在.
+
+2.与main堆有关联的其它区域也不会被回收掉.
+  ?.因为main堆还存在,只所以存在是因为后面还有可能会利用里面的数据,所以一旦你将与main堆相关联的数据清理掉,则后面你想调用main堆里的相应对象时,就会出错了,因为可能你调用的对象引用的是另外一块内存区域的数据,而你给清掉了,所以在引用的时候就找不到数据了,因此会出错.
+
+3.为什么两个函数堆会产生关联呢?
+  a.首先要明白的是函数里面的本地变量都存在于给它分配的堆里.
+  b.子函数可以引用父函数中的变量.
+  基于上面ab这两点,所以在Parent函数中执行Child函数,就会导致Parent函数堆与Child函数堆产生关联.因为无论Parent函数还是Child函数二者的本地变量都存在于各自的堆,所以与其说Child函数可以访问Parent函数中的本地变量,还不如说Child堆可以访问Parent堆.
+
+4.垃圾回收: 在一定间隔内就会执行一遍的内置程序.它独立于你写的代码.可以理解为一个打扫卫生的. 这个卫生员的职责:
+  a.只要你在内存中分配了新的区域,就要告诉这个卫生员,卫生员将这些标记存放于container中, 作为卫生员每次检查时要查的一个对象.
+  b.这个卫生员定时会从main堆出发捋着关系一个个的检查container中的对象是否都能找到. 如果能找到,就继续检查container中的下一个对象,如果找不到就会认为这是一个垃圾对象,需要清理掉, 清理掉之后,将该对象从container中移除.直到container中所有的对象都检查完毕.歇一会儿,再把这个过程执行一遍,如此循环.
+
+5.只要Child函数执行结束就会删掉Child堆与Parent堆之间的关系.
+-----------------------------------------
+  <script>
+    var xhr = new XMLHttpRequest()
+    xhr.responseType='blob'
+
+    function f(){
+      verificationCode()
+    }
+    
+    function verificationCode(){
+      xhr.open("GET","http://127.0.0.1:8080/bbq/getCode")
+      xhr.onload = function(){
+         var image = document.querySelector("img")
+	 let src = URL.createObjectURL(xhr.response)
+	 image.src = src
+       }
+      xhr.send()
+
+    }
+    verificationCode()
+  </script>
+</html>
+-----
+id   被修改的字段,  值s
+arr = ['001','name','1','gender','male']
+for(i=1;i<arr.length;i+=2){    //arr.length=5
+      console.log(arr[i],arr[i+1])
+}
+dic= {}
+dic = {id:001, items:{name:1,gender:male}}
+json_str = JSON.stringify(dic)
+<input  name="data",value=json_str>
+Object.keys(dic)  [id,items]
+dic[id]
+Object.keys(Object.keys(dic[items]) keys=[name,gender]
+for(i in keys){
+  update 表名 set i=dic[items][i] where id=dic[id]
+}
+
+<select>
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+</select>
+<div></div>
+<script>
+function main(){
+  const div = document.querySelector('div')
+
+  const xhr = new XMLHttpRequest()
+  xhr.open("GET","http://127.0.0.1:8081/bar",true)  // true/false
+  xhr.onload = function(){
+    div.insertAdjacentHTML("beforeend",`<p>${xhr.response}</p>`)
+  }
+  xhr.send()  
+}
+</script>
+//无论是同步io还是异步io,事儿都是别人干的,但是为什么同步io会阻塞代码继续执行而异步io不会呢,线程在被cpu读取执行之前会有一个状态检测的过程,同步io,这个状态会被置为false,也就是告诉cpu你现在不能读取我继续执行后面的代码,然后当同步io执行完了,会将该线程在内存中的状态改为true,下次cpu循环到该线程时,发现该线程的状态为true,则将该线程的数据再次读取到cpu,继续向后执行.
+异步来说, 当执行到异步代码时,不会将线程的状态更改为false,所以cpu在循环到该线程的时候就可以将其读入cpu继续执行,而系统怎么知道异步io执行完了呢,这就要靠中断,io执行完成后,向cpu发送编号为N的中断, cpu暂停当前手上的工作执行与编号N相对应的函数.
+*.上面这两段话应该是错误的, 只是当时自己根据测试结果假想的逻辑.而线程的实际执行过程最好看一下<Operating Systems Principles and Practice, Vol. 2 Concurrency (Thomas Anderson, Michael Dahlin)>以及https://people.cs.ksu.edu/~schmidt/300s05/Lectures/ArchNotes/arch.html等.
+
+网络io完事儿后,会执行一个函数, onload事件 event loop捕获,从而将onload对应的函数放入队列,
+
+异步io,无论是网络io操作还是磁盘io操作确实是和主线程中的其它代码同步执行的,这是因为有磁盘控制器和网卡控制器的存在,cpu只需要给它俩下命令,它俩就干活了,从而cpu可以继续干其它的事儿.
+
+除了异步io,其它的异步代码并不是和其它代码同时执行的,也就是说其它的异步操作,只能保证一个代码的执行顺序.
+function f1(){
+  console.log(1)
+}
+function f2(){
+  console.log(2)
+}
+
+f2()  
+f1()  
+setInterval(f1,1000)  timer
+setTimeout(f2,0)  timer
+setTimeout(f2,1000) timer
+setTimeout(f1,1000) timer
+MicoroTaskQueue(f)
+Taskqueue
+MicoTaskQueue()
+事件循环: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop
+任务(队列)和微任务(队列):https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide
+*.大概回忆一下上面这三个概念: 事件循环说的是一个运行时, 当栈里为空(函数执行完了)时,先去任务队列中执行任务, 有意思的是它每执行完任务队列中的一个任务就要去遍历执行微任务队列中的所有任务,注意是所有任务,然后再看栈里有没有函数,没有的话再去任务队列中执行一个任务>所有微任务>栈, 就一直这么循环. 大概意思是这样具体的再看
+
+-----
+浏览器提供的用来创建新线程的构造器函数: Worker()
+Worker的用法: new Worker('worker.js')
+主线程与Worker线程通讯的组合:
+  1.主线程中给某个对象的某个事件绑定事件触发时要执行的函数;
+  2.在绑定的函数中调用worker线程对象的postMessage()方法用来向Worker线程传输数据
+  3.worker.js中给onmessage事件绑定函数,当主线程中调用worker的postMessage()方法后,会触发worker线程的onmessage事件,从而执行worker线程中与onmessage相绑定的函数.重点在于,我们会在该函数中对主线程传过来的数据进行一个处理,处理后,会再调用postMessage()函数,将处理后的数据返回给主线程.
+  4.主线程再给worker线程对象的onmessage事件绑定一个函数,当3中的worker线程中调用postMessage()函数后,会触发主线程中worker线程对象的onmessage事件,从而执行相应绑定的函数.重点是在这个函数中我们可以读取worker线程传回给我们的结果.
+
+简单总结一下:
+用到的线程有两个: 主线程和Worker线程;
+
+主线程中用到的事件: 任何事件都可以
+worker线程中用到的事件: onmessage
+
+主线程中的操作:  触发事件,调用worker.PostMessage([data]).
+  *.该函数的两个作用: 1.触发worker线程的onmessage事件;
+                      2.向worker线程的onmessage中传输数据,data
+worker线程中的操作: 执行onmessage事件相绑定的函数,对主线程传输过来的数据进行处理,然后调用postMessage()函数.
+  *.该函数的两个作用:1.触发主线程中worker对象的onmessage事件;
+                     2.将处理后的数据返回给主线程
+
+
+main.js
+const worker = new Worker('worker.js')
+某个对象.任何事件 = function(){
+  worker.postMessage([要向worker线程发送的数据])
+}
+worker.onmessage = function(e) {
+  处理worker线程返回来的数据,e.data
+}
+
+worker.js
+onmessage = function(e){
+  处理主线程传送过来的数据,e.data
+  调用postMessage()将处理结果返回给主线程
+}
+
+主线程中结束掉Worker线程:
+  worker.terminate()
+
+
+-----
+默认情况下使用getAllResponseHeaders()和getResponseHeader('xx')最多只能拿到7个头,如果想要拿到其它头,则需要后端将('Access-Control-Expose-Headers', '*')头返给客户端(https://stackoverflow.com/questions/8945587/xmlhttprequest-getallresponseheaders-not-returning-all-the-headers)
+
+
+-----
+
+<form action="http://127.0.0.1:8081/bar">
+  <input type="button" value="clickMe">
+</form>
+
+<script>
+//submit  -> onsubmit事件默认行为就是把数据发送到action指定的接口
+//自定义onsubmit事件
+/*
+
+    Submit the form using AJAX.
+        var data = new FormData(document.getElementById("MYFORM"));
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "SERVER-SCRIPT");
+        xhr.send(data);
+    Submit the form using Fetch API.
+        var data = new FormData(document.getElementById("MYFORM"));
+        fetch("SERVER-SCRIPT", { method: "post", body: data });
+
+*/
+let form = document.querySelector('form')
+  let btn = document.querySelector('input')
+  btn.onclick = function(){
+    let data = new FormData(form)
+    let xhr = new XMLHttpRequest()
+    xhr.open("GET","http://127.0.0.1:8081/bar")
+
+  //  xhr.onreadystatechange = function(){
+  //    if(xhr.readyState == xhr.HEADERS_RECEIVED){
+  //      let headers = xhr.getAllResponseHeaders()
+  //      alert(headers)
+  //      console.log(headers)
+  //  }
+  //}
+    xhr.onload = function(){
+      let header = xhr.getResponseHeader('Name')
+      alert(header)
+      console.log(header)
+    }
+    xhr.send(data)
+}
+</script>
+
+
+讲一下表单为啥不直接提交,还有表单提交的默认行为,以为后端代码空指针问题
+镜像dockerfile 编排compose
+submit事件的默认行为有二:
+  1.触发表单提交;
+    *.表单提交的是sc控件中提取的键值对,提交的目的是form标签中action的属性值
+  2.刷新页面;
+由此引出为啥该例子中不能直接使用表单中的提交按钮触发提交? //想一下提交事件产生的效果
+其实并不是不能使用提交按钮,我们想一下我们的最终目的: 我们要对响应回来的内容进行判断,然后进一步的决定要如何操作. 具体到本例来说,就是不会说刚一点击提交按钮页面就刷新了,说白了就是点击按钮前用户名,密码,验证码都是填好的,你一点击提交按钮由于submit事件的默认行为会刷新页面,导致这三个input中啥都没了,这个体验就很不好; 另外最重要的一点是我们没有方法捕获响应回来的内容,因为我们想要根据捕获到的内容做下一步的判断,如返给你一个{"msg":false},则你知道验证码不对,则会相应的在某个位置显示一条类似类似"验证码/用户名密码输入错误,请重新输入"的信息.如果正确的话后台返给你html页面的内容,你把这个内容重新载入当前页面或是后台返你一个url,你直接在当前窗口打开就行. 也就是说,说一千道一万该种情况下表单提交有两方面要注意:一是不能点击提交后就触发页面刷新;二是还要能够捕获到响应回来的内容.第一点其实都无伤大雅,关键是第二点,因为如果你能捕获到后台给你的内容,你就能对内容做判断,从而做下一步的动作,这样比较灵活.
+
+实现难点: 一是不能刷新页面
+          二是还要把表单数据发到指定api(form元素action属性指定的值)
+	  三是还要能够捕获到响应回来的内容
+
+写在前面:
+  <button>和<input>都可实现submit事件:
+    <button>: type属性值为submit或不写type属性
+    <input>: type属性值为submit
+实现方法一: 表单提交中使用普通按钮,即<button type="button">,这样写这个button就是一个普通的按钮,它唯一实际一点的作用其实就是定义一个onclick事件,也就是说在其onclick事件绑定的函数里面完成一系列操作:
+  1.表单数据的发送; //表单数据发到form表单的action属性指定的值(所谓的api)
+  2.响应信息的捕获; //拿到响应回来的信息
+  3.响应信息的处理; //对拿到的信息进行分析判断,然后做出响应(如,返回的用户名/密码/验证码不正确,进行提示或是所有的input添的都对,跳转到主页面)
+对应的代码:
+ <form action="schema://ip:port/path" method="X" ...>  <!-...表示还有其它属性可指定,最常见的还有enctype,这个先不展开->
+  <input type="text" name="用户名">   <!-这块要注意,只有sc控件才会被提交,所以看一下之前讲过的,sc控件有什么特征,或者说符合什么条件的控件才是sc控件->
+  <button type="button">  <!-重点来了,这里定义了一个普通按钮,虽然出现在<form>中,但由于type="button"属性的加持,让它不会触发表单提交事件->
+ </form>
+ <script>
+ //接下来就是js部分的逻辑了,js部分要完成的任务就是上面说的1,2,3 
+ //首先肯定是给button按钮定义一个onclick事件
+ const btn = document.querySelector('button')
+ btn.onclick = submitToApi
+ //为了逻辑上更清晰,上面定义btn的click事件时没有用以往常用的匿名函数
+ //下面就是看看如何在submitToApi这个函数中实现1,2,3了
+ function submitToApi(){
+   //第一步就是要发送数据,既然要发送表单数据,就要先拿到表单数据,方法就是通过FormData类
+   const data = new FormData(document.querySelector('form')) //即将form表单对象作为FormData类的参数得到的就是该form中的表单数据,也就是这里的data
+   //第二步接着就是利用XMLHttpRequest来异步发送表单数据
+   const xhr = new XMLHttpRequest()
+   xhr.open("method","api")
+   xhr.send(data)
+   //上面两步(第一步拿到数据data,第二步利用异步发送data)完成了第1点,即"表单数据的发送"
+   //接下来该说当后台处理完成后,把数据响应回来后,我们该如何捕获这个响应数据呢,其实就是利用触发XMLHttpRequest的事件
+   xhr.onload = function(){    //常用的是onload和onreadystatechange
+   //利用JSON.Parse()方法将后台响应回来的字符串转换为js支持的对象,如{}或[]
+   const json = JSON.Parse(xhr.responseText)
+   //到此也就算捕获到后台响应给我们的数据了,即第2点也完事儿了
+   //下面也就是对捕获到的数据根据实际情况进行处理了,如if(json.msg is false){ 则在页面上加一条错误信息}等等,这个具体怎么处理就看实际情况了,第3点也写完了
+   }
+ }
+ </script>
+
+ 实现方法二:<form>中正常使用点击后可以触发提交的按钮(<button>,<button type="submit">,<input type="submit">),但我们在js中重写<form>的submit事件
+   *.这里对于初学者有个需要注意的地方就是虽然submit事件虽然是由按钮触发的,但submit事件并不是按钮的,而是按钮所在的<form>元素的,也就是说"button或input的点击触发了其所在form的submit事件"
+<script>
+  form.addEventListener("submit",function(event){
+   //先阻止掉submit事件的默认行为,即提交表单和刷新页面
+    event.preventDefault()  
+   //然后就可以按照上面的逻辑使用XMLHttpRequest进行处理了 | 还可以使用fetch进行处理(https://stackoverflow.com/questions/374644/how-do-i-capture-response-of-form-submit),但使用fetch进行处理要先判断status,这个mdn fetch上有说,稍后细聊
+  })
+</script>
+
+<form id="MYFORM" action="http://127.0.0.1:8081/bar", method="GET">
+  <input name="code">
+  <button type="button">clickMe</button>
+</form>
+<script>
+  const btn = document.querySelector('button')
+  const xhr = new XMLHttpRequest()
+  btn.onclick = function(){
+    let data = new FormData(document.querySelector('form'))
+    let data = new FormData()
+    xhr.open("GET","http://127.0.0.1:8081/bar")
+    xhr.send(data)
+  }
+</script>
+
+
+更改iframe.src加载新页面后,找不到新页面中的元素可能是什么原因?
+::可能原因是在页面还未完全加载完成就进行了新页面元素的查找,所以为了保证元素加载完才进行元素的查找,要将iframe.onload=function(){元素查找的逻辑}放到iframe.src的前头(https://stackoverflow.com/questions/3142837/capture-iframe-load-complete-event)
+
+-----
+<form>
+  <input type="checkbox" name="1">
+  <input type="checkbox" name="2">
+  <input type="checkbox" name="3">
+  <input type="checkbox" name="4">
+  <input type="checkbox" name="5">
+</form>
+  <button type="button">clickMe</button>
+
+<script>
+  let str = []
+  let data = new FormData()
+  const form = document.querySelector('form')
+  const btn = document.querySelector('button')
+
+
+  form.addEventListener("click", function(){
+    str.push(event.target.name)
+  })
+
+  btn.addEventListener("click",function(){
+    const xhr = new XMLHttpRequest()
+    xhr.open("POST","http://127.0.0.1:8081/bar")
+    //xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded")
+    xhr.onload = function(){
+      alert("ok")
+    }
+    //data.append("t_id",str.join(','))
+    data.append("t_id","1,2,3")
+    console.log(data.get("t_id"))
+    xhr.send(data)
+  })
+</script>
+-----
+firefox和chrome都支持给postMessage传{},但只有firefox支持传FormData类型:
+  btn.onclick = function () {
+    //此时是输入完成后构建的表单
+    var formData = new FormData(document.getElementById("form"));
+
+    const worker = new Worker('submitData.js')
+    worker.postMessage(formData)
+    worker.onmessage = function(e){
+      console.log("no")
+
+      var json = JSON.parse(e.data)
+      console.log(json)
+      if (json.msg == "登录成功") {
+        window.location= "/mainPage.html"
+      }
+      else {
+        window.stop()
+        alert(json.msg)
+        form.reset()
+        verificationCode()
+      }
+    }
+
+  }
+  
+***submitData.js***
+  onmessage = function(e){
+      let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/anli/login/loginer")
+    xhr.onload = function (){
+      postMessage(xhr.responseText)
+    }
+    xhr.send(e.data)
+
+}
+
+*****
+  btn.onclick = function () {
+    //此时是输入完成后构建的表单
+    var formData = new FormData(document.getElementById("form"));
+    var postData={}
+
+
+    postData['user'] = formData.get('user')
+    postData['user0'] = formData.get('user0')
+    postData['password'] = formData.get('password')
+    postData['code'] = formData.get('code')
+
+
+
+    const worker = new Worker('submitData1.js')
+    console.log(postData)
+    worker.postMessage(postData)
+    worker.onmessage = function(e){
+      console.log("*****"+e.data)
+
+      var json = JSON.parse(e.data)
+      console.log(json)
+      if (json.msg == "登录成功") {
+        window.location= "/mainPage.html"
+      }
+      else {
+        window.stop()
+        alert(json.msg)
+        form.reset()
+        verificationCode()
+      }
+    }
+
+  }
+*****submitData1.js*****
+onmessage = function(e){
+      console.log(e.data)
+      var formdata = new FormData()
+
+      formdata.append('user',e.data['user'])
+      formdata.append('user0',e.data['user0'])
+      formdata.append('password',e.data['password'])
+      formdata.append('code',e.data['code'])
+
+      let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/anli/login/loginer")
+    xhr.onload = function (){
+      postMessage(xhr.responseText)
+    }
+    xhr.send(formdata)
+
+}
+*****完*****
+
+
+*****异步下载文件*****
+::原理: 先将文件内容下载到本地;然后构建本地URL,再利用anchor标签进行下载
+const xhr = new XMLHttpRequest()
+xhr.open("GET","下载地址")
+xhr.responseType="blob"
+
+xhr.onload = function(){
+  const localURL = window.URL.createObjectURL(xhr.response)
+
+  const anchor = document.createElement('a')
+  anchor.style.display = 'none'
+  anchor.href = localURL
+  anchor.download = "x.doc" //这块可以传个变量动态获取文件名
+
+  document.body.appendChild(anchor)
+  anchor.click()
+
+  window.URL.revokeObjectURL(localURL)
+}
+
+xhr.send()
+*****完*****
+

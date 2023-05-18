@@ -1,0 +1,1607 @@
+html中所有标签都具有的属性和方法
+-----小插曲-----
+  属性和方法 类(class)
+  更准确的说: html中所有实例或对象都具有的属性和方法
+类 类模板 并不在内存中, 
+class P{
+  var a = 3;
+  function b(){}
+}
+
+var p = P()   //门牌号
+var p1 = P()  //门牌号
+
+
+开发商开发了一个样板房 1:1
+1000间房子, 每间房都一模一样, 只有房间号不一样
+
+//样板房
+class P{
+  var a = 3;
+  function b(){}
+}
+
+//甲买了一间房, 
+var p = P()  //开发商告诉甲, 房间号为p的那间房子就是你的
+
+//已买了一间房,
+var p1 = P() //开发商告诉已, 房间号为p1的那间房子就是你的
+
+样板间(class P)和1000间房子(内存)
+
+门牌号为p和p1的这两间房子,初始数据一样,
+p.a = 4
+p1.a  -> 3
+----------
+html中所有类都具有的属性和方法
+// 属性: Property, Properties |方法:  Method, Methods
+1.accessKey  访问键
+作用: 用来"设置"或"返回"指定标签中accesskey属性的值
+效果: 通过按下含有accesskey属性值的组合键来激活/聚焦某个标签
+*.在不同系统及不同浏览器中"功能键+accesskey"的组合中,"功能键"不一致,具体见表
+
+<input/button accesskey="s" id="any">
+var value = document.getElementById("any").accesskey
+document.getElementById("any").accesskey = "w"  // <p accesskey="w" id="any">
+
+<html>
+<body>
+<button>A</button>
+<button>B</button>
+<button>C</button>
+<button accessKey="u">D</button>
+<input type="text" accessKey="u" />
+<button accessKey="u">E</button>
+<button>F</button>
+</body>
+</html>
+*.多个标签的accessKey属性值为同一个字符时,当循环按下组合键,不同浏览器的行为可能会不一样, 就目前来看:
+    IE,Firefox: 会循环选中相应的标签;
+    Chrome, Safari,Edge: 固定选中最后一个标签; //原文没提到Edge,但Edge用的是Chrome的内核, 所以按Chrome浏览器的方法在Edge上试验了一下, 是可行的, 所以将Edge分类到这儿
+    Opera: 固定选中第一个标签
+-----
+-----小插曲-----
+<button id="any">A</button>
+<script>
+var obj = document.getElementById("any")
+obj.addEventListener( "click", function(){
+  obj.innerText = "C"
+})
+</script>
+
+<p id="any" onclick="function(){}()">A</p>
+
+obj.onclick=function(){}   //上面三个效果是等价的
+
+
+
+
+<p id="any" onclick="function(){}">
+            onfocus
+	    onload
+
+举例说明在标签中使用onclick属性和在js中指定对象的onclick属性的用法(标签中是函数调用,js中是函数名)
+//标签中加onclick属性
+<button id="any" onclick="alterText()">Before</button>  //此处要用函数调用,而非函数名
+<script>
+  var obj = document.getElementById("any")
+  function alterText(){
+    obj.innerText = "After"
+  }
+</script>
+
+//js中修改onclick属性
+<button id="any" >Before</button>
+<script>
+  var obj = document.getElementById("any")
+  function alterText(){
+    obj.innerText = "After"
+  }
+  obj.onclick = alterText  //注意此处值为函数名,而非函数调用
+</script>
+-----
+2.addEventListener()方法
+作用: 给元素添加事件以及该事件触发后要执行的函数
+主要写法:
+  obj.addEventListener("事件名","事件触发后要执行的函数",usecapture)
+    *. obj = document.getElementByXXX("YYY")
+
+<body>
+<button id="btn">点我</button>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  var d = document.getElementById("ddiv")
+  var b = document.getElementById("btn")
+
+  b.addEventListener("click", function(){
+    d.insertAdjacentHTML("beforeend","<p>新年快乐<p>")
+  })
+  b.addEventListener("mouseout", function(){
+    d.insertAdjacentHTML("beforeend","<p>666!<p>")
+  })
+  b.addEventListener("mouseover", function(){
+    d.insertAdjacentHTML("beforeend","<p>888!<p>")
+  })
+</script>
+
+-----
+removeEventListener() 能移除使用 addEventListener()添加的事件,
+<p onclick="">  //是否能移除这种方法添加的事件
+obj.onclick=function(){} //是否能移除这种方法添加的事件
+
+//addEventListener  **.注意,addEventListener中第二个参数最好不要用匿名函数,因为,如果使用匿名函数的话, removeEventListener中无法指定第二个参数的函数名,进而导致无法移除事件
+//stackoverflow上有一个例子可以作为参考:
+    button.addEventListener('click', function handler() {
+          ///this will execute only once
+          alert('only once!');
+          this.removeEventListener('click', handler);
+    });  //该例子的作用是点击后执行函数的动作只能触发一次. 第二个参数直接使用有名参数
+
+<body>
+<button id="btn">点我</button>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  var d = document.getElementById("ddiv")
+  var b = document.getElementById("btn")
+  
+  function cli(){
+    d.insertAdjacentHTML("beforeend","<p>新年快乐<p>")
+  }
+
+  function rem() {
+    b.removeEventListener("click", cli)      //刚刚想到, 为啥移除与事件绑定的函数还要既指定事件名又要指定相应的函数名, 指定事件是要明确你要移除与哪个事件绑定的函数; 而指定具体要移除的函数名是因为每个事件都能绑定多个函数, 所以指定两个参数可以做到精准移除.
+    d.insertAdjacentHTML("beforeend","<p>已移除点击事件!<p>")
+    b.removeEventListener("mouseout", rem)
+    d.insertAdjacentHTML("beforeend","<p>已移除移出事件!<p>")
+  }
+  b.addEventListener("click", cli)
+  b.addEventListener("mouseout", rem)
+</script>
+
+<body>
+<p id="parent">
+  <p id="child"></p>
+</p>
+</body>
+bubbling phrase    child触发了事件,则子方法先执行, 然后传播到父标签;前提是父子事件要一致
+capturing phrase   与bubbling phrasae相反
+
+<body>
+<h1 id="parent"> 111111<p id="child">000000</p> </h1>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  p =  document.getElementById("parent")
+  c =  document.getElementById("child")
+  d =  document.getElementById("ddiv")
+
+
+  p.addEventListener("click", function(){
+    d.insertAdjacentHTML("beforeend","<p>A<p>")
+  })
+  c.addEventListener("click", function(){
+    d.insertAdjacentHTML("beforeend","<p>B<p>")
+  })
+  console.log(c.parentNode)
+</script>
+//既然要传播,一定要形成父子关系
+//不是所有的事件都支持propagate(传播)
+
+//下面例子是通过AbortController接口来移除handler,虽说没问题, 但是不理解的是addEventListener这个函数明明第三个函数是boolean类型,为啥这里可以指定{signal:controller.signal} ?  //https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener这个链接里关于addEventListener就说了第三个参数还可以是AbortSignal等对象,不仅仅只能是boolean
+<body>
+<p id="parent">
+  111111<p id="child">000000</p>2222
+</p>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  p =  document.getElementById("parent")
+  c =  document.getElementById("child")
+  d =  document.getElementById("ddiv")
+
+
+  const controller = new AbortController()
+  p.addEventListener("click", function(){
+    d.insertAdjacentHTML("beforeend","<p>A<p>")
+  },{signal:controller.signal})
+  c.addEventListener("click",()=>{
+    controller.abort()
+    d.insertAdjacentHTML("beforeend","<p>Over!<p>")
+  },{signal:controller.signal})
+</script>
+
+//实验证明,removeEventListener只能移除通过addEventListener添加的handler,不能移除通过在标签中加onclick属性以及js中调用.onclick属性指定的handler
+<body>
+<p id="parent" onclick="X()">
+  Parent<p id="child">Child</p>
+</p>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  p =  document.getElementById("parent")
+  c =  document.getElementById("child")
+  d =  document.getElementById("ddiv")
+
+  function X(){
+      d.insertAdjacentHTML("beforeend","<p>A<p>")
+      p.removeEventListener("click",X)
+  }
+
+  function Y(){
+      d.insertAdjacentHTML("beforeend","<p>B<p>")
+      c.removeEventListener("click",Y)
+  }
+  c.onclick=Y
+</script>
+
+//可以为一个事件添加多个handler
+<body>
+<p id="parent">
+  Parent<p id="child">Child</p>
+</p>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  p =  document.getElementById("parent")
+  c =  document.getElementById("child")
+  d =  document.getElementById("ddiv")
+
+  function X(){
+      d.insertAdjacentHTML("beforeend","<p>A<p>")
+  }
+
+  function Y(){
+      d.insertAdjacentHTML("beforeend","<p>B<p>")
+  }
+  p.addEventListener("click", X)
+  p.addEventListener("click", Y)
+</script>
+//到此才明白为啥addEventListener方法的第三个函数可以是对象类型,而非boolean类型,因为addEventListener方法有三种调用形式,w3school中只提到了其中两种
+
+//第三个参数,options,之once
+<body>
+<p id="parent">
+  Parent<p id="child">Child</p>
+</p>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  p =  document.getElementById("parent")
+  c =  document.getElementById("child")
+  d =  document.getElementById("ddiv")
+
+  function X(){
+      d.insertAdjacentHTML("beforeend","<p>A<p>")
+  }
+
+  function Y(){
+      d.insertAdjacentHTML("beforeend","<p>B<p>")
+  }
+  p.addEventListener("click", X,{"once":true})
+  p.addEventListener("click", Y,{"once":true})
+</script>
+
+
+//现在还不知道怎么区分父子关系,只能通过node.parentNode的结果来看  //不知道当时怎么会有这个疑问,不是很明显的事儿嘛
+<body>   //就该例来说,h1和p是一对父子关系, 但位置对调就不是了
+<div id="dd">
+<h1 id="parent">
+  Parent<p id="child">Child</p>
+</h1>
+</div>
+<div id="ddiv"></div>
+</body>
+
+<script>
+  p =  document.getElementById("parent")
+  c =  document.getElementById("child")
+  d =  document.getElementById("ddiv")
+  e =  document.getElementById("dd")
+
+  function X(){
+      d.insertAdjacentHTML("beforeend","<p>A<p>")
+  }
+
+  function Y(){
+      d.insertAdjacentHTML("beforeend","<p>B<p>")
+  }
+
+  function Z(){
+      d.insertAdjacentHTML("beforeend","<p>C<p>")
+  }
+
+  e.addEventListener("click", Z,false)   //爷C
+  p.addEventListener("click", X,true)    //父A
+  c.addEventListener("click", Y,false)   //子B
+  console.log(c.parentNode)
+</script>
+
+bubbling phase
+target phase
+capturing phase
+
+
+Dom树
+
+propagation
+
+parentNode
+-----event小节-----
+event listen:
+  listener + handler
+event listener
+event handler
+  addEventListener("click", function())
+
+一个元素可以绑定多个相同的事件
+p."click",function1()
+p."click",function2()
+p."click",function3()
+
+*.安全考虑, 在达到目的的情况下,关键字的作用域越小越好: var,let,只要是let能实现,就不用var. 能用const就不用var和let   //只要能实现功能,关键字的使用影响越小越好,这里的影响通常指作用域的大小,以及变量的值是否可以改变
+
+var p = document.getElementById("id")
+var p = document.querySelector('button')
+
+
+bubbling phase , capturing phase  与 DOM树一块用
+bubbling 从当前触发事件的标签向上找, 一直找到html标签,这中间, 如果其祖辈定义了相同的事件监听器,都会被执行.
+capturing 从html标签向下查找, 一直到触发事件的那个标签,这中间如果有祖辈定义了相同的事件监听器, 都会被执行.
+祖 click
+太 click
+爷 click
+父 click
+我 click
+
+事件有很多, 并不是所有的事件都支持propagation(传播).具体哪些事件支持哪些事件不支持,不清楚
+
+有些场景,你不希望进行事件传播,true,false,
+preventDefault() //事件默认都会bubbling或capturing,但如果对某个
+stopPropagation()
+stopImmediatePropagation()
+-------------------
+click + handler
+
+<div>
+  <div id="d">
+    <button id="h">B</button>
+    <div>
+      <button id="p" onclick="C()">C</button>
+    </div>
+  </div>
+</div>
+<div id="dd"></div>
+<script>
+ const d = document.getElementById("d")
+ const h = document.getElementById("h")
+ const dd = document.getElementById("dd")
+
+  function A(){
+    dd.insertAdjacentHTML("beforeend","<p>A</p>")
+  }
+  function B(){
+    dd.insertAdjacentHTML("beforeend","<p>B</p>")
+  }
+  function C(){
+    dd.insertAdjacentHTML("beforeend","<p>C</p>")
+  }
+
+  d.addEventListener("click",A)
+  h.addEventListener("click",B)
+</script>
+
+
+
+<p>Please click on the checkbox control.</p>
+
+<form>
+  <label for="id-checkbox">Checkbox:</label>
+  <input type="checkbox" id="id-checkbox"/>
+</form>
+
+<div id="output-box"></div>
+<script>
+ const check = document.querySelector("#id-checkbox")
+ const string = "Sorry! <code>preventDefault()</code> won't let you check this!<br>"
+ check.addEventListener("click", function(event) {
+  document.getElementById("output-box").innerHTML += string
+  event.preventDefault();
+  }, false);
+</script>
+
+怎么添加事件, 有几种添加方法(常见的有三种)? 
+:: <p onclick="函数名()">
+   
+   var p = document.getElementById("xxx")
+   p.onclick= 函数名
+
+   var p = document.getElementById("xxx")
+   p.addEventListener("事件名称",有名函数或匿名函数)
+
+事件绑定的函数啥时候执行?
+:: 触发事件后执行, 如点击事件,会在相应的元素被点击后执行与点击事件绑定的函数
+
+事件的传播方向(bubbling, capturing)?
+:: bubbling phase传播是从当前标签向ancestor传播,一直到html标签;
+   capturing phase传播是从html标签到当前标签;
+   *.注意,无论哪个方向传播的都是一支上的,不会传播到旁系(如叔,姨等).
+
+如何中止事件的传播? 
+:: 调用event.stopPropagation()
+                 或
+       event.stopImmediatePropagation()
+
+如何阻止事件的默认行为?
+:: 调用event.preventDefault()方法
+
+事件传播注意要点?
+::传播的是事件,删除的是与该事件绑定的函数;
+::事件的传播默认一直有发生,没有看到效果是因为传播的这支上的标签的事件没有绑定函数,或者是没有绑定产生效果的函数
+---------------
+需求: 
+用法:
+场景:
+
+-----例一:利用bubbling propagation特性精简代码-----
+<style type="text/css">
+  .tile{    
+    height: 100px;
+    width:  25%;
+    float:  left;
+  }
+</style>
+<body>
+  <div id="container">
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+  </div>
+</body>
+<script>
+  function random(number){
+    //Math是一个库,里面定义好多常用的数学函数;
+    //Math.floor()是对结果取整,需要注意的是非4舍5入,而是直接取整数
+    //  console.log(Math.floor(1.3))
+    //  console.log(Math.floor(1.8))
+    //math.random()是随机产生0(包)-1(不包)之间的数
+    //  console.log(Math.random())
+    //下面这句会产生0(包)-254(包)之间的整数
+    // ?想一下如何得到任意范围内的随机整数
+          /*****
+          极限假设求25-35之间的整数:
+          0-N 不用加上一个数
+            0-20  //Math.random()*21
+            0-18  //Math.random()*19
+          M-N 要加一个M,乘数为N-M+1
+            15-26  //(Math.random()*12) + 15
+            205-309 //(Math.random()*195) + 205
+          *极限假设的想法是核心
+          *****/
+    return Math.floor(Math.random()*number)
+  }
+
+  function bgChange(){
+    //字符串中用${}括起来的说明这是一个表达式,最终要用表达式的值进行替代,如果不加${},则random(255)在里面就是本身的意思,而非一个函数调用
+    const rndCol = `rgb(${random(256)}, ${random(256)}, ${random(256)})`
+    return rndCol
+  }
+
+  const container = document.getElementById('container')
+  container.addEventListener('click', function(){ event.target.style.backgroundColor = bgChange()})
+  //event.target指的是触发事件的那个标签; event.currenttarget指的是在传播过程中的当前标签.
+  //对于所有事件来说, 会自动将event对象传递到事件所绑定的函数中,通常是以event或evt或e为名称存在,也就是说可以在与事件绑定的函数中,直接使用event对象对其里面的属性或函数进行调用, eve
+  //event或evt或e会被自动传到handler函数中, 也就是在handler函数中你可以直接使用event对象进行相应属性或函数的调用,当然你把event,evt,e作为参数传给handler函数也是可以的
+  //另外这块函数的写法除了用匿名函数外, 还可以使用有名函数,()=>{},或 e=>{}的形式,前两种学了, 后两种还没学,先备注在这,以后系统的学完函数后自然就明白了
+</script>
+-----
+-----例二:X-----
+<head>
+  <style type="text/css">
+    .warning {
+      border: 2px solid #f39389
+      border-radius: 2px
+      padding: 10px
+      position: absolute
+      background-color: #fbd8d4
+      color: #3b3c40
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Please enter your name using lowercase letters only.</p>
+
+      <input type="text" id="mytextbox">
+  </div>
+</body>
+<script>
+  var myTextbox = document.getElementById('mytextbox')
+  myTextbox.addEventListener('keypress', checkName, false)
+
+  function checkName(evt){
+    var charCode = evt.charCode
+    if (charCode != 0) {
+      if (charCode < 97 || charCode > 122) {
+        evt.preventDefault()
+	displayWarning(
+	  "Please use lowercase letters only." + "\n" + "charCode " + charCode + "\n"
+	)
+      }
+    }
+  }
+
+  var warningTimeout
+  var warningBox = document.createElement("div")
+  warningBox.className = "warning"
+
+  function displayWarning(msg){
+    warningBox.innerHTML = msg
+
+    if(document.body.contains(warningBox)){
+      window.clearTimeout(warningTimeout)
+    }else{
+      myTextbox.parentNode.insertBefore(warningBox,myTextbox.nextSibling)
+    }
+
+    warningTimeout = window.setTimeout(function(){
+        warningBox.parentNode.removeChild(warningBox)
+	warningTimeout = -1
+    },2000)
+  }
+</script>
+
+
+
+
+
+
+
+
+<div id="grandma">
+  <div></div>
+  <div id="mother">
+    <div id="daughter">
+      <button id="granddaughter">A</button>
+    </div>
+  </div>
+</div>
+
+<div id="container"></div>
+
+<script>
+//a
+function grandma(){
+  c.insertAdjacentHTML("beforeend","<p>姥</p>")
+}
+function mother(){
+  event.stopImmediatePropagation()
+  c.insertAdjacentHTML("beforeend","<p>妈</p>")
+}
+function daughter(){
+  c.insertAdjacentHTML("beforeend","<p>女</p>")
+}
+function baby(){
+  c.insertAdjacentHTML("beforeend","<p>baby</p>")
+}
+let g = document.getElementById("grandma")
+let f = document.getElementById("mother",true)
+let s = document.getElementById("daughter")
+let gs = document.getElementById("granddaughter",true)
+let c = document.getElementById("container")
+
+g.addEventListener("click",grandma)
+f.addEventListener("click",mother)
+s.addEventListener("click",daughter)
+gs.addEventListener("click",baby)
+
+</script>
+/*
+需要确认的问题:
+1.event.preventDefault()是否会对当前目标产生影响,还是只对触发事件的那个目标有影响   //猜测应该是在传播的过程中对当前目标都有影响,而非只影响触发事件的那个目标.
+2.event.stopPropagation()和event.stopImmediatePropagation()的区别: 主要是当在同一个元素添加多个同一类型的listeners时有区别, 前者是会将触发事件标签上的所有该类型的事件listeners都调用,但不会向父级传播了;但后者是触发事件标签上,同一类型的listeners,如果还有没执行的, 则也不会执行了.
+如果不涉及添加多个同一类型的listeners,则二者无区别.
+*/
+<body>
+    <input type="text" id="child">
+    <div id="d"></div>
+</body>
+<script>
+  pc = document.getElementById("child")
+  d = document.querySelector("div")
+  
+  pc.addEventListener("keypress",function(){
+    event.preventDefault()  //prevent(点击事件的)Default(行为)
+    d.insertAdjacentHTML("beforeend", `<p>你点击的是: ${event.charCode}点击事件的默认行为已经被禁止啦!</p>`)
+
+  })
+</script>
+<a>
+
+<div id="parent">
+  <p id="multiple">1234</p>
+</div>
+<script>
+  let same = document.querySelector('p')
+  let parent = document.querySelector('div')
+
+
+  parent.addEventListener("click",function(){
+    console.log("我是永远也不会被输出来滴!")
+  })
+
+  same.addEventListener("click",function(){
+    event.stopPropagation()
+    console.log(2)
+  })  //添加事件监听器
+  same.addEventListener("click",function(){console.log(1)})  //添加事件监听器
+  same.addEventListener("click",function(){console.log(3)})  //添加事件监听器
+</script>
+
+
+
+//当没有指定行为时,
+<div id="fu">
+  <a href="https://www.baidu.com/" id="link">点击跳转</a>
+</div>
+
+<script>
+  var bbq = document.getElementById("fu")
+  var link = document.getElementById("link")
+
+  bbq.addEventListener("click", function(){
+    event.preventDefault()
+  })
+  link.addEventListener("click", function(){
+    console.log(1111)
+  })
+  
+/*  bbq.onclick = function(event){
+    event.preventDefault()
+  }
+  */
+</script>
+
+<div id="fu">
+    <a href="https://www.baidu.com">跳转百度</a>
+    <input type="checkbox">
+</div>
+<script>
+    var x = document.getElementById("fu")
+    //div.onclick = function(){
+    //    event.preventDefault();
+    //};
+    x.addEventListener("click", function(){event.preventDefault()})
+</script> 
+
+
+<body>
+<input type="text">
+</body>
+<script>
+  var yang = document.querySelector('input')
+  yang.addEventListener('keypress',function(){
+    console.log(input.text)
+  })
+</script>
+setTimeout(() => {  console.log("World!"); }, 2000);
+console.log("Hello");
+
+//打印阶段,
+event.CAPTUREING_PHASE
+event.AT_TARGET
+event.BUBBLING_PHASE
+
+
+<html>
+  <body>
+    <div id="A">
+      <div id="B">
+        <div id="C">
+	  <input type="checkbox" id="D">
+	</div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+function which_phase(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+/*
+  switch (e.eventPhase){
+    case "CAPTUREING_PHASE":
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+    case "AT_TARGET":
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+    case "BUBBLING_PHASE":
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+  }
+*/
+}
+
+document.addEventListener("click",function(){ which_phase(event)})
+document.documentElement.addEventListener("click",function(){which_phase(event)})
+document.body.addEventListener("click",function(){which_phase(event)})
+document.getElementById('A').addEventListener("click",function(){which_phase(event)})
+document.getElementById('B').addEventListener("click",function(e){
+  //e.preventDefault()
+  //event.stopPropagation()
+  which_phase(event)})
+document.getElementById('C').addEventListener("click",function(){
+  which_phase(event)})
+document.getElementById('D').addEventListener("click",function(e){
+//  e.preventDefault()
+  which_phase(e)
+})
+</script>
+//原文对所有元素都定义了两遍,一遍true,一遍false,上例先只定义一遍,用的默认值,false
+//还可以通过下断点的方式去看.
+//再就是根据上面的例子和stopPropagation()配合让preventDefault()函数不执行.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//观察事件传播的过程, 无论事件是从哪个标签触发的, 执行的都是一个闭环, 并且这个闭环的第一环为window, 中间环为触发事件的标签.
+<html>
+  <body>
+    <div id="A">
+      <div id="B">
+        <div id="C">
+	  <input type="checkbox" id="D">
+	</div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+
+document.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.documentElement.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.body.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('A').addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('B').addEventListener("click",function(e){
+  //e.preventDefault()
+  //event.stopPropagation()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('C').addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('D').addEventListener("click",function(e){
+//  e.preventDefault()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+
+
+document.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.documentElement.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.body.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.getElementById('A').addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.getElementById('B').addEventListener("click",function(e){
+  //e.preventDefault()
+  //event.stopPropagation()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.getElementById('C').addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.getElementById('D').addEventListener("click",function(e){
+//  e.preventDefault()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+</script>
+--------------
+
+
+
+
+
+<html>
+  <body>
+    <div id="A">
+      <div id="B">
+        <div id="C">
+	  <input type="checkbox" id="D">
+	</div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+
+document.addEventListener("click",function(e){
+      e.stopPropagation()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.documentElement.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.body.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('A').addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('B').addEventListener("click",function(e){
+  e.preventDefault()
+//  event.stopPropagation()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('C').addEventListener("click",function(e){
+  console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+  e.stopPropagation()
+})
+document.getElementById('D').addEventListener("click",function(e){
+  console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+ // e.preventDefault()
+})
+</script>
+
+
+
+
+<div>
+    <a href="https://www.baidu.com/" id="link">跳转百度</a>
+</div>
+<script>
+    var d = document.getElementById('link')
+    d.onclick = function(event){
+        event.preventDefault();
+	//event.stopPropagation()
+    };
+</script>
+
+
+
+//对于点击事件来说, 点击后, 相应元素点击的默认行为先生效,然后才是window从上至下再从下至上的闭环事件传播, 只不过在传播的过程中随时可以调用event对象的preventDefault()函数将触发点击事件标签的默认行为给取消.
+
+
+event propagation  window完整闭环
+event.preventDefault()
+event.stopPropagation()
+event.stopImmediatePropagation()
+event.target
+event.currentTarget
+
+event delegation 事件委托  //bubbling phase的一种应用场景
+事儿应该是谁办?  按理说应该是子自己办
+但最后让父给办了,
+所以相当于子委托父做这件事.
+中间有一个连接的纽带: event.target
+
+
+
+<button id="btn">clickMe</button>
+<div id="container"></div>
+
+<script>
+  btn = document.getElementById("btn")
+  cnr = document.getElementById("container")
+
+  btn.onclick =  event => {
+    cnr.insertAdjacentHTML("beforeend","<p>您触发点击事件!</p>")
+  }
+</script>
+
+
+
+
+<html>
+  <body>
+	  <a href="https://www.baidu.com/" id="D">clickMe</a>
+  </body>
+</html>
+
+<script>
+
+document.addEventListener("click",function(e){
+      e.stopPropagation()  //如果<a>的默认行为是window完成闭环才发生的,则因为这里从capturing phase的第一次调用就停止了向后传播,则跳转是不会发生的, 但实际上还是发生了,这就说明我们点击<a>标签后,已经将请求信息构建好了(已经执行了open()),直到发生stop事件或window完成闭环才执行的send(),前提是这个过程没有任何一处调用了event.preventDefault()函数.  //也就是说因为点击的默认行为是点击之后就立即发生的, 而window闭环是随后才执行的, 因此window三个阶段的闭环任何一处调用event.preventDefault()都会取消掉相应标签点击事件的默认行为
+      //e.preventDefault()
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+},true)
+document.documentElement.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.body.addEventListener("click",function(e){
+      console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+document.getElementById('D').addEventListener("click",function(e){
+  console.log(`which phase: ${e.eventPhase}, currentTarget: ${e.currentTarget}`)
+})
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html>
+  <body>
+    <input type="text" id="input">
+  </body>
+</html>
+
+<script>
+  input = document.getElementById('input')
+
+  function whether(){
+      console.log(`which phase: ${event.eventPhase}, currentTarget: ${event.currentTarget}, bubbles: ${event.bubbles}`)
+  }
+document.addEventListener("focus",whether,true)
+document.documentElement.addEventListener("focus",whether,true)
+document.body.addEventListener("focus",whether,true)
+input.addEventListener("focus",whether,true)
+
+document.addEventListener("focus",whether)
+document.documentElement.addEventListener("focus",whether)
+document.body.addEventListener("focus",whether)
+input.addEventListener("focus",whether)
+</script>
+<style>
+#parent{
+  height: 100px;width:25%;
+  border: 2px solid red
+}
+#child{
+  height: 100px;width:25%;
+  border: 2px solid red
+}
+</style>
+<div id="parent">
+  <div id="child"></div>
+</div>
+<script>
+  p = document.getElementById('parent')
+  c = document.getElementById('child')
+
+  p.addEventListener("click", function(){
+    //event.stopPropagation()
+    //event.stopImmediatePropagation()
+    console.log('parent-first')
+  })
+  p.addEventListener("click", function(){
+    console.log('parent-second')
+  })
+  c.addEventListener("click", function(){
+    console.log('child-first')
+  })
+
+
+</script>
+
+   if(typeof event.cancelable !== 'boolean' || event.cancellable){
+   }  // ||前面这么写用在什么情况下?
+
+<html>
+  <body>
+    <iframe src="http://107.150.7.138/test.html"></iframe>
+    <button id="btn" onclick="f()">clickMe</button>
+    <img src="/banana.jpeg">
+  </body>
+  <script>
+    const btn = document.getElementById("btn")
+    const frame = document.querySelector('iframe')
+    
+    function f(){
+      const innerNode = frame.contentWindow.document.getElementsByTagName("h1")[0]
+      const value = document.adoptNode(innerNode)
+      document.body.appendChild(value)
+    }
+  </script>
+</html>
+
+
+node.baseuri  -> document.baseuri ->window.location
+使用场景:像img这样的标签src使用相对路径,可以通过该属性得到域名部分;
+*.如果使用了base标签,则该属性得到的是其href属性的值,同时其它使用相对路径的属性值前面的基础域名部分用的也是它,因为它是自定义的,优先级要高于默认;自定义base标签后会影响node.baseuri和document.baseuri,而不会影响window.location
+
+document.body 获取body对象,如果body对象不存在,则返回值为null.
+使用场景:重新得到一个页面.
+null的场景:script中调用document.body在body定义之前, 因为html页面渲染时是从上到下
+
+爬虫, 下载某网站图片  1.先把document下载下来, <img src>都提取出来了, \1.jpg \2.jpg  node.baseURI  document.baseURI window.baseURI var base = http[s]://1.1.1.1  for base + \1.jpg   base + \2.jpg   http://1.1.1.1/1.jpg http://1.1.1.1/2.jpg
+document.baseURI的时候
+if base存在:
+  如果存在: 则用base里href属性值
+  如果不存在:
+  <body>
+  </body>
+  var a = document.createElement("body")
+  var b = document.createElement("p")
+  p.craeteAttrubite("ldasfkjlsdfjlaskjfd")
+  a.appendChild(b)
+  document.body = a
+<p class="paragraph">1234</p>
+p是node,  class是node   1234是node
+创建三个node,然后将属性节点和文本节点全都追加为标签节点的子节点
+var paragraph = document.createElement("p")
+var att = document.createAttribute("class", "paragraph")
+var tex = document.createTextNode("1234")
+
+paragraph.appendChild(att)
+paragraph.appendChild(tex)
+
+golang http
+net tcp
+C-S socket 套接字 插座  
+browser <p>1234</p>
+3F 1F 2B ...
+3F 1F 2B ...   <p>1234</p>
+5678  utf-8
+3F 9F 2C ...
+C 5678  iso-8859-1
+10101010010101010101010010101010101010
+
+client:
+  请求行
+  header
+  body
+
+server:
+ 响应行
+ header
+ body
+
+
+ <div>
+   <a></a>
+ </div>
+<p attib="">adslfkjasdlkfj</p> 
+
+<img src="">
+<><>
+lasdkfjldaskjf
+</img>
+
+初学者经常会在<script></script>标签对中的js语句中遇到获取某个标签对象值时返回的是null的情况, 这可能是因为<script>标签对位于<body>对的上面, 而html是从上到下进行渲染的, 此时因为body还没有被加载, 所以<scfipt>中查找相应标签的代码返回值才是null, 此时可以通过调换<script>和<body>标签对的位置解决该问题, 也可以利用new DOMParser()先新建一个document对象, 然后调用这个对象的某些方法创建元素.(后面说的不太好, 具体可参考这个网址的例子: https://developer.mozilla.org/en-US/docs/Web/API/Document/createComment)
+
+document  active
+document.createDocumentFragment() 空的document inactive
+
+<ul id="list"></ul>
+
+<script>
+  var list = document.querySelector('#list')
+  var fruits = ['Apple', 'Orange', 'Banana', 'Melon']
+
+  var fragment = document.createDocumentFragment()
+  fruits.forEach(function(fruit){
+    var li = document.createElement('li')
+    li.innerHTML = fruit
+    fragment.appendChild(li)
+  })
+  list.appendChild(fragment) 
+</script>
+
+document是一棵树A
+frament是另一棵树B
+将树B附加到树A, 树B就没了,之前树B上的节点都变成了树A的节点
+
+
+
+<ul>
+
+   <li>Coffee</li>
+   <li>Tea</li>
+</ul>
+<p id="demo">单击按钮更改列表项,使用createDocumentFragment方法,然后在列表的最后一个孩子添加列表项。</p>
+<button onclick="myFunction()">点我</button>
+<script>
+function myFunction(){
+        //创建一个fragment
+	var d=document.createDocumentFragment();
+	//从当前document中获取第一个li标签,并将其追加为fragment的子标签
+	d.appendChild(document.getElementsByTagName("LI")[0]);
+	d.childNodes[0].childNodes[0].nodeValue="Milk";
+	document.getElementsByTagName("UL")[0].appendChild(d);
+};
+</script>
+
+d
+  <li>Coffee</li>
+     Coffee(node)
+       nodeValue="Milk"
+d
+ <li>Milk</li>
+
+Element=<标签>, Node<标签,属性(object.setAttributeNode()),注释,文本>
+Node.appendChild()
+1.该方法的作用是"添加一个节点"到"某个父节点"的"子节点列表"的"末尾"
+2.如果添加的节点是从当前document中指定的, 则会将该节点从当前位置"移动"到新的位置
+3.由第2点可知, 同一个节点不能同时出现在一个document的两个地方, 因此实际的操作是:如果appendChild()中指定的节点有父节点, 则先将该节点从父节点移除, 然后再将其追加到新的位置(这里的移除可以理解为"先将其从当前父节点断开", 然后"挂到新的父节点上")
+4.如果我们想在document中将某个节点追加到新的父节点上, 但不想从原父节点移除, 可以使用cloneNode()方法,从其名可以知道,它其实是将某个节点复制了一份, 然后将复制的那份追加到新的位置. 因此, 原节点与其备份节点不会互相影响,因为已经是两个对象了.(这里还要再强调一下3中所说的移除,我们可以想一下, 如果是真的移除了,又怎么能挂到新的位置上呢, 比较合理的解释是:因为每个节点都是一个对象, 父子两个节点是因为通过某种方式关联在一起了, 这里所谓的移除应该是断开父子节点的连接, 断开后,将子节点又与新的父节点关联在一起了)
+   -----
+   <ul>
+     <li>Coffee</li>
+     <li>Water</li>
+     <li>Juice</li>
+   </ul>
+   <div id="div1">
+     <p id="a">1234</p>
+     <p id="a">1234</p>
+   </div>
+   <button onclick="f()">clickMe</button>
+   
+   <ul>
+     <li>Milk</li>
+     <li>Beer</li>
+   </ul>
+   <div id="div2"></div>
+
+   <script>
+     function f(){
+       const u1 = document.getElementsByTagName("ul")[0]
+       const u2 = document.getElementsByTagName("ul")[1]
+       
+
+       //u2.cloneNode(document.getElementsByTagName("ul")[0].childNodes[5])
+       const copy = document.getElementsByTagName("ul")[0].childNodes[5].cloneNode(true)
+       u2.appendChild(copy)
+     }
+   </script>
+   -----
+ ?.拥有id属性的节点能否使用cloneNode()进行复制,也就是同一个document能否同时存在两个id属性相同的同名节点  //同一个document中允许两个标签拥有相同的id属性, 如cloneNode()方法默认的结果就是这样, 但推荐把副本的id属性值改掉,保证同一个document中id属性值的唯一性
+5.如果appendChild()中的参数是一个fragment,则该fragment下的所有内容都会被移动到新的位置.也就是说如果是一个普通的节点移动的是节点本身, 而如果是一个fragment节点,则移动的是fragment的所有子节点.
+ ?.试一下
+     -----
+     <p onclick="f()">A</p>
+     <script>
+       function f(){
+        let fragment = document.createDocumentFragment()
+	const div = document.createElement('div')
+	const p = document.createElement('p')
+	const t = document.createTextNode('B')
+	p.appendChild(t)
+	div.appendChild(p)
+	fragment.appendChild(div)
+	document.body.appendChild(fragment)
+	}
+     </script>
+     -----
+6.引出了element.append()方法.该方法支持多个参数以及追加字符串,如果要追加的节点是一个element可以优先使用该方法(这里要注意appendChild()是Node对象的属性, 而append()方法是element对象的属性, 应该只有标签才叫element,而标签中的属性,文本,以及注释都叫node)
+ ?.上面的解释是否正确, 稍后把element.append()方法再写一下.
+7.除了可以从当前document中找被追加的节点, 还可以直接使用document.createXXX()作为node.appendChild()的参数.
+ ?.试一下
+8.我们经常见到可以链式调用方法,所谓链式调用就是A对象中定义了一个方法a,其返回值是B类型,而B类型中定义了方法b,其返回值是C类型,而C类型又定义了一个方法c.
+  class A{function a()->B}
+  class B{function b()->C}
+  class C{function c()}
+此时我们可以这样调a().b().c(). 但是,我们不可以多个appendChild()方法链在一起, 假设b是某个节点对象, 则b.appendChild().appendChild().appendChild()这样是不行的, "准确来说不是不行, 而是我们的需求是想在b下添加三个同级子标签", 但是因为appendChild()方法的返回值类型为其参数对象,所以如果像上面这样写的话, 最终是在b下追加了一个子A,又在子A下追加了一个孙AA,又在孙AA下追加了一个重孙AAA(以b的口吻说的)
+ *.如果被追加的是一个fragment,则返回值是一个空的fragment
+ ?.试一试
+      -----
+      <div></div>
+      <a></a>
+      <script>
+        let fragment = document.createDocumentFragment()
+
+	let p = document.createElement('p')
+	let t = document.createTextNode("5678")
+	let attr = document.createAttribute("class")
+	attr.value = "paragraph"
+	p.append(t)
+	p.setAttributeNode(attr)
+
+	let link = document.querySelector('a')
+
+	fragment.appendChild(p)  //object  p object
+	console.log(fragment)   //object   空 fragment
+	const result1 = document.body.appendChild(fragment)
+	const result2 = document.body.appendChild(link)
+	console.log(result1)
+	console.log(result2)
+      </script>
+      -----
+9.注意区分Node与Element
+10.DOM树也有一些限制,当下列情况发生时,会抛出HierarchyRequestError异常:
+  下面情况中, 假设aChild为被操作的节点.
+  a.如果aChild的父节点不是Document,fragment或某个element时.
+    <p>1234</p>
+    <button onclick="f()">clickMe</button>
+
+    <script>
+      function f(){
+        var p = document.querySelector('p')
+        var t = p.childNodes[0]
+        t.appendChild(document.createElement('a'))
+      }
+    </script>
+    *.结合Document,DocumentFragment,Element这三个接口的继承关系图去解释一下
+  b.如果aChild插入新的父节点会导致死循环时, 也就是说被插入的aChild是新父节点的长辈节点
+    <div>      //父 新子
+      <a></a>  //子 新父
+    </div>
+    ---
+    <div>      
+      <a>
+        <div>   
+          <a></a>
+        </div>
+      </a>
+    </div>
+    -----
+    <div>
+      <p>1234</p>
+    </div>
+    <button onclick="f()">clickMe</button>
+
+    <script>
+      function f(){
+        var p = document.querySelector('p')
+        var div = document.querySelector('div')
+        p.appendChild(div)
+      }
+    </script>
+    *.不太明白它这个追加的逻辑, 也就是说为什么会发生循环
+  c.如果aChild不是documentFragment,documentType, Element,也不是CharacterData时.
+    <p>1234</p>
+    <button onclick="f()">clickMe</button>
+
+    <script>
+      function f(){
+        var p = document.querySelector('p')
+        var a = document.createAttribute("class")
+	a.value = "animal"
+
+        p.appendChild(a)
+      }
+    </script>
+    *.搜一下document.createAttribute()方法的返回值为Attr类,看一下Attr类的继承图,发现,Attr类和CharacterData类继承自同一个节点,Node.也就是说Attr并不属于CharacterData类.
+  d.将一个Text节点追加到Document时.
+    //document.documentElement指的是<html>标签
+    <button onclick="f()">clickMe</button>
+
+    <script>
+      function f(){
+        var t = document.createTextNode("666")
+	document.appendChild(t)
+
+      }
+    </script>
+  e.如果当前节点是一个DocumentType,并且它的父节点不是一个Document时,因为一个doctype应该总是一个document的直接后辈(这里翻译为子节点感觉更精确一些)
+    //虽说下面例子报错, 但是将documentType对象追加到document节点作为其子节点也不成功, 不知道问题出在哪
+    <button onclick="f()">clickMe</button>
+    <script>
+    function f(){
+      var dt = document.implementation.createDocumentType('svg:svg', '-//W3C//DTD SVG 1.1//EN', 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd');
+      var d = document.implementation.createDocument('http://www.w3.org/2000/svg', 'svg:svg', dt);
+      var b = document.querySelector('button')
+      b.appendChild(d)  
+    }
+    </script>
+
+  f.如果节点的父节点是一个Document并且aChild是一个带有超过一个Element子节点或是有一个Text子节点的DocumentFragment 
+  g.如果aChild的插入会导致带有超过一个Element子节点的Document作为子节点
+
+Element.append()
+1.作用是在Element的最后一个子元素后插入一组Node对象 或是 DOMString对象.
+2.插入的DOMString对象会被作为Text节点对待
+3.Element.append()和Node.appendChild()的区别:
+  a.前者除了允许添加Node对象外, 还支持添加DOMString对象, 后者只接受Node对象
+  b.前者无返回值, 后者返回的是添加的子节点或是空fragment
+   <button>clickMe</button>
+   <script>
+     var b = document.querySelector('button')
+     var x = b.append("666")
+     console.log(x)
+   </script>
+  c.前者可以同时添加几个Node或DOMString,后者一次只能追加一个节点
+
+
+
+Node.cloneNode()
+
+label element:
+1.represents a caption for an item in a user interface.
+  -----
+  <style>
+    .preference{
+      display: flex;
+      justify-content: space-between;
+      width: 60%;
+      margin: .5rem;
+    }
+  </style>
+  <div class="preference">
+    <label for="cheese">Do you like cheese?
+    <input type="checkbox" name="cheese" id="cheese">
+    </label>
+  </div>
+  <div class="preference">
+    <label for="peas">Do you like peas?
+    <input type="checkbox" name="peas" id="peas">
+    </label>
+  </div>
+  -----
+  //说different是因为本意是想通过点击label内容将事件关联到checkbox,但由于label有一部分是超链接,导致可能误点这部分,从而导致checkbox没有被选中,反而进行页面跳转了
+  <label for="tac">
+    <input id="tac" type="checkbox" name="terms-and-conditions">
+    I agree to the Terms and Conditions
+  </label>
+  <p>
+    <a href="https://www.baidu.com/">Terms and Conditions</a>
+  </p>
+  -----
+  <label for="your-name">
+    <h3>Your name</h3>
+    <input id="your-name" name="your-name" type="text">
+  </label>
+  
+  <style>
+    .large-label {
+      font-size:16px;
+    }
+  </style>
+  <label class="large-label" for="your-name">
+    <div>
+      Your name
+    </div>
+    <input id="your-name" name="your-name" type="text">
+  </label>
+  -----
+  <label>
+    XXXXXXXXXXXXX
+    <button onclick="f()">A</button>
+  </label>
+  <script>
+    function f(){
+      console.log("666")
+    }
+  </script>
+  -----
+  <fieldset disabled>
+    <legend>
+    Choose your favorite monster
+    <input type="radio" id="kraken" name="monster">
+    <label>Kraken</label><br/>
+    </legend>
+    <input type="radio" id="kraken" name="monster">
+    <label for="kraken">Kraken</label><br/>
+  </fieldset>
+  -----
+  <form action="http://127.0.0.1:8080/bar" method="get">
+    <fieldset>
+      <legend>Friends</legend>
+    <label>张三: 
+      <input type="checkbox" name="zhangsan">
+    </label>
+    <br/>
+
+    <label>李四: 
+      <input type="checkbox" name="lisi">
+    </label>
+    <br/>
+
+    <label>王五: 
+      <input type="checkbox" name="wangwu">
+    </label>
+    <br/>
+    </fieldset>
+  <form>
+  <input type="submit" value="Send">
+  -----
+表单提交(form submission):
+1.属性:
+  method:指定请求方法,支持get和post. //大小写不敏感
+2.成功的控件(Successful Controls):
+  a.什么是表单?https://www.w3.org/TR/html401/interact/forms.html#control-name
+  b.用户通过命名的控件进行表单操作
+  c.SC必须满足两个要求,一是必须定义在<form>中, 二是必须有name属性
+  d.每个SC都是由一个键值对组成的,键名是name属性值,值为"初始值(即value属性值)"或"当前值(在input控件中输入或选择的值)"(如果还没有自定义则为初始值,如果已经自定义,则为自定义的值. *.有的标签无初始值https://www.w3.org/TR/html401/interact/forms.html#control-name)
+  e.<form>中descandant控件的name属性作用域为<form>
+  *.SC注意事项:
+    被disabled的(有disabled属性),不能是SC;
+    如果表单包含多个提交按钮,则只有当时点击的那个生效
+    如果SC是<input type="checkbox">,则所有的勾选(值为on)都是有效的
+    如果SC是<input type="radio">,则只有选中的那个是有效的 //同一时刻只有一个radio可以处于选中状态
+    如果SC是<select>(该标签与<option>标签一起实现了菜单功能),则其name属性值作为控件名,而值则是由被选中的<OPTION>提供.当没有options被选中时,该<select>是一个非SC,也就表示当提交的时候<select>并没有键值对被提交
+    如果SC是<input type="file">则当前值是一个或多个文件名.此时,当表单提交以后,每个文件的内容和剩余的表单数据被提交.文件内容根据表单的内容类型进行打包 //多个同名name属性? 文件内容什么时候被提交? 文件内容是怎么打包的?
+    如果SC是一个object,则当前值是由object的具体实现决定 //object没有初始值?
+  f.如果一个控件有name属性,但无当前值,则客户端可以将其作为一个SC,也可以不将其作为一个SC.
+    *.进一步来说, 客户端不应将控件的下面几种情况认为是SC:
+      重置按钮(Reset buttons),因为重置按钮按下后,所有的控件都将被重置为初始值(没初始值的被重置为undefined).
+      declare属性已经被设置了的object元素.
+      隐藏控件以及由于样式设置导致没有被渲染的控件(https://www.w3.org/TR/html401/interact/forms.html#h-17.13)
+
+3.表单数据集(form data set): {k1:v1,k2:v2,k3:v3}
+  由SC组成的一系列键值对
+4.客户端处理表单的过程:
+  a.识别SC
+  b.构建表单数据集
+  c.根据<form>中的enctype属性指定的内容类型(https://www.w3.org/TR/html401/interact/forms.html#form-content-type)对表单数据集进行编码
+  d.使用method属性指定的方法将编码后的表单数据集提交到action属性指定的地址交由后端处理
+  *.使用get请求方法时,数据集中的内容只能是ascii类型(因此像我们平时搜索中文时会发现地址栏中的相应内容都被编码为相应的ascii字符了);只有使用post请求方法且enctype的值为"multipart/form-data"时,才能使用iso10646中的字符集
+5.控件类型:
+button|checkbox|radio|menu|text|file|hidden|object
+6.<input>标签支持的类型: 
+  text|password|checkbox|radio|submit|reset|file|hidden|image|button
+
+enctype属性: 在提前表单之前对表单数据集进行编码(编码<form>中SC组成的键值对集合)
+  浏览器肯定支持的两种类型:application/x-www-form-urlencoded | multipart/form-data , 至于其它content types的行为没有定义.
+  application/x-www-form-urlencoded:
+  当未指定enctype属性时,默认的就是它.该编码类型遵循的规则:
+  a.控件名和相应的值被转义.
+  b.空格字符被字符'+'号替换,剩下的字符按照RFC1738中描述的规则进行转义.
+  c.除数字字母以外的字符被'%HH'替换,即一个百分号和两个十六进制字符描述字符的ascii码. Line breaks由"CR LF"描述,也就是"%0D%0A"
+  d.控件名/值对按它们在document中出现的顺序依次列出, 键名和键值由'='号分隔,"键=值"对间由地址符'&'分隔
+<form enctype="">
+</form>
+
+<form>
+ 内部的一些"控件":
+   a.button|text|checkbox|radio|menu|file|hidden|object
+   b.name属性
+
+ a.有name属性; b.form内部
+
+</form>
+
+
+<form action="http://127.0.0.1:8081/bar" method="post" enctype="multipart/form-data">
+  <fieldset>
+    <legend>All supported Constrols</legend>
+    <label>
+      复选框:
+      <!--复选框控件-->
+      <input type="checkbox" name="checkbox">
+      <input type="checkbox" name="c2">
+      <input type="checkbox" name="c3">
+    </label>
+    <br/>
+
+    <label>
+      单选按钮:
+      <!--单选按钮控件-->
+      <input type="radio" name="radio" value="1">
+      <input type="radio" name="radio" value="2">
+      <input type="radio" name="radio" value="3">
+    </label>
+    <br/>
+
+    <label>
+      菜单:
+      <!--菜单控件-->
+      <select name="menu">
+        <option value="" disabled selected style="display:none">select a option...</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+    </label>
+    <br/>
+
+    <label>
+      单行文本框:
+      <!--单行文本框控件-->
+      <input type="text" name="text">
+    </label>
+    <br/>
+
+    <label>
+      文件:
+      <!--文件控件-->
+      <input type="file" name="file" multiple>
+    </label>
+    <br/>
+
+    <label for="story">
+      多行文本框:
+      <!--多行文本框控件-->
+      <textarea id="story" name="multiple-line"
+                rows="5" cols="33">
+      It was a dark and stormy night...
+      </textarea>
+      </label>
+    <br/>
+
+    <label>
+      看不到这个控件:
+      <!--隐藏控件>
+      <input type="hidden" name="hidden" value="000">
+    </label>
+    <br/>
+
+    <label>
+      按钮:
+      <!--按钮控件-->
+      <input type="submit" value="Go">
+      <input type="reset" value="重置">
+    </label>
+    <br/>
+</form>
+
+初始值和当前值
+
+突然又想到了包的转发了, 不同的服务监听在不同的端口,数据包进来后,根据端口将包转给相应的服务进行处理
+<form enctype="" method="post">
+*.先假定get方法不能有body(其实可以,只不过有弊端,所以大多数的客户端对于get方法都不能指定body, fiddler是个例外, 但使用get方法指定body时也会发出警告)
+默认值为application/x-www-form-urlencoded, 但如果要向服务端传送文件(即使用<input type="file">),一般是指定enctype="multipart/form-data",并且指定method="post"
+当enctype的值为"multipart/form-data"时,被传送的表单信息由N个独立的部分组成,每部分描述一个SC
+
+content-type
+content-disposition header(https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition):
+  a.既可以用在request中, 
+    在请求头中, 一般是出现在method="post"与enctype="multipart/form-data"中,也就是在对SC进行编码的时候,请求头中会多出一个'Content-Type=:multipart/form-data;boundray=1-70个字符.而boundray的作用是用来分隔不同的sc,其用法一般是每个sc的开头都有一个boundray,该boundray通常前缀两个--,而最后一个sc完成后, 还有一个结束行, 结束行通常是前面的boundray再尾缀两个--, 见例子:
+    --start
+    xx
+    --start
+    xx
+    --start
+    xx
+    --start--
+  而content-Disposition一般位于各个sc中,用来标记当前的sc的信息;并且这种情况下, 一般还会有一个Content-Type头,用来标记该sc的类型,即
+  --start
+  Content-Disposition: form-data; name="file"; filename="1"
+  Content-Type: application/octet-stream
+
+  上面空一行, 这里是内容
+
+  如果上面是最后一个sc了,则这行则是--start--,表示表单结束了
+        
+  b.也可以用在response中.
+    响应头中content-disposition的默认值为inline,如果不显式的指定,一般不显示
+    值还可以是"attachment",此时会将返回内容作为一个附件,从浏览器的角度去看就是响应回来的内容不会显示在页面内, 而是弹出一个弹窗,进行附件保存,此时请求路径的最后一部分为默认的文件名
+    值还可以是'attachment;filename="xyz"',此时行为同上, 但保存的文件名默认为"xyz"
+
+我传给后台,后台怎么收? 后台传给我,我如何接? 而且还要确定在执行ParseMultipartForm()前,数据是否就已经被传过来了?(通过抓包看情况好像是传输的时候就已经过去了),如果是提前就传过去了那么如果我是通过接口构建的请求,是否会绕过这个限制?
