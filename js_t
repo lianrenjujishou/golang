@@ -3109,3 +3109,86 @@ xhr.onload = function(){
 xhr.send()
 *****完*****
 
+
+
+
+回调地域可以使用promise优雅的解决, 先了解啥叫回调地域, 简单来说包含两方面, 一是异步操作, 二是回调函数依赖上级函数提供的参数.这样一来, 一旦回调层级多了,阅读和维护都是非常困难的. 然后就把根据回调地域的特征把它进行拆解然后有了promise. then()函数会将return后面的值进行一个封装,得到一个新的promise对象,传到下层, 下层解封上层promise对象,看看第一个参数是fullfilled还是rejected,然后选择调用then()中的第一个函数还是第二个函数, 然后再把从promise中解封的第二个参数,也就是成功值或错误信息传给函数的形参,最后then()还会根据被调函数的返回值重新封装一个Promise对象供后面使用,即then()函数的作用是解包上层Promise对象并执行相应的函数,然后使用相应函数的返回值再次封装一个Promise对象供后面使用.
+一. 回调地狱
+上面也说了,回调地狱有两个特征: 一是函数为异步请求(不会阻断函数的执行, 其实就是将需要异步执行的函数放入Task队列或MicroTask队列, 然后利用事件循环机制执行队列中的函数), 二是异步请求的函数依赖坚挨着的上层参数,来看个例子:
+function asyncOperation1(callback) {
+  setTimeout(() => {
+    const result1 = 'Result 1';
+    callback(null, result1);
+  }, 1000);
+}
+
+function asyncOperation2(input, callback) {
+  setTimeout(() => {
+    const result2 = `Result 2 based on ${input}`;
+    callback(null, result2);
+  }, 1000);
+}
+
+function asyncOperation3(input, callback) {
+  setTimeout(() => {
+    const result3 = `Result 3 based on ${input}`;
+    callback(null, result3);
+  }, 1000);
+}
+
+function asyncOperation4(input, callback) {
+  setTimeout(() => {
+    const result4 = `Result 4 based on ${input}`;
+    callback(null, result4);
+  }, 1000);
+}
+
+// Execute the nested asynchronous operations
+//下面的函数调用中把resultN作为形参名对初学者其实有一定的迷惑性, 所以可以试着把result1-4都替换为w,x,y,z
+asyncOperation1((err, result1) => {
+  if (err) {
+    console.error(err);
+  } else {
+    asyncOperation2(result1, (err, result2) => {
+      if (err) {
+        console.error(err);
+      } else {
+        asyncOperation3(result2, (err, result3) => {
+          if (err) {
+            console.error(err);
+          } else {
+            asyncOperation4(result3, (err, result4) => {
+              if (err) {
+                console.error(err);
+              } else {
+                console.log('Final result:', result4);
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+});
+
+总结一下回调函数的特点:
+  1.函数回调是异步函数之间的回调;
+  2.被回调的函数会引用调用它的函数中的变量作为参数,第一个入口参数除外,因为入口函数是回调生命周期中每一个被执行的函数;  //这句话是不严谨的,说的太死板了
+  3.错误检测逻辑. //每个函数中应该都设计错误处理, 对于回调函数来说, 错误处理逻辑不是必须的
+  4.所谓的地狱回调就是回调函数层级太深了;
+
+上面这个回调地狱的例子, 知道了这个例子的特点后, 再去学promise就会容易很多, 把promise中对应回调地狱中的相应点找到,promise也就会了.
+首先,无论怎么回调,也得有个起始点, 在这里是一个起始函数,这里我们使用fetch()作为入口函数, 它返回的是一个Promise对象, Promise对象其实理解起来很简单,它包含两个值,一个值表示操作执行成功还是失败,另一个参数是对应于第一个参数的值,即成功(参数一)有成功的返回值(参数2),失败(参数一)有失败的原因(参数2).
+  侧设我的返回Promise对象的入口函数为entry = fetch("http://192.168.1.207:8000/who?name='张三'&age=18", {method:"GET"})
+然后再回过头去看回调地狱, 下一步就是判断是否有错误, 有则输出错误信息, 没有则继续执行另外一个回调, Promise对象专门设计了一个then()函数, 用来处理这个逻辑. 而then()函数其实有两个作用, 一个是解包上一个Promise对象;另一个是封包另一个Promise对象供下一个then()使用(如果存在下一个then()的话). 我们拿实际例子去理解一下这段话:
+  entry.then(successFuction, failFunction)
+首先,successFunction和failFunction是两个函数, 特征是都有一个形参;其次,就是then()函数的解包上级传过来的Promise对象的逻辑了,当上级对象的第一个参数为成功,则将第二个参数作为实参传给successFuntion去执行,如果上级对象第一个参数为失败,则将第二个参数作为实参传给failFunction; 紧接着就是执行successFuntion或failFunction函数的函数体了; 最后,就是将这将函数successFunction或failFunction的返回值(具体是哪个要看哪个被执行了)和函数的执行状态二次封装为一个新的Promise对象供后面的then()使用(如果后面还存在then()函数的话),可以看出来,错误判断被then()函数给隐式实现了.
+到此基本逻辑就结束了,另外还有两个函数也常用, 一个是catch(),一个是finally(), catch()是捕获异常的嘛, 它其实相当于then(null,failFunction),即如果上层Promise第一个参数为成功,则啥也不做,如果上层第一个参数是失败,则将第二个参数作为实参传给failFunction. 而finally()函数的作用是单独执行一段逻辑,然后将上级的Promise对象原样返回.
+最上面的回调地狱使用Promise的写法:
+  asyncOperation1()  //执行入口函数,返回值为Promise对象
+    .then(result1 => asyncOperation2(result1)) //如果上个Promise对象的第一个参数为成功,则将Promise对象的第二个参数传给另一个异步请求作为实参数;然后将异步请求的结果再次封装为Promise对象,传给下一个then()函数使用(如果存在下一个then()函数的话)
+    .then(result2 => asyncOperation3(result2)) //同上
+    .then(result3 => { ... })
+    .catch(err => console.log(err)) //也就是说如果有错误,并且上面的Promise都没有定义相应的处理函数的话, 可以在最后使用.catch()进行兜底.
+    *.通过上面代码可知,如果没有定义失败所回调的函数,则一旦上个Promise是失败的,则该Promise对象会麝向下走, 直到遇到某个定义了处理失败的回调函数的then()函数
+

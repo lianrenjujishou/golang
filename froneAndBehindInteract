@@ -27,10 +27,47 @@
   a.前端如何构建请求:
     主要讲利用GET和POST方法请求时传递参数,文本,html,json,文件.其实客户端不仅可以使用内置的那几种请求方法, 还可以自己自定义, 只要后端有相应的处理逻辑即可.
     GET主要是用于向服务器请求资源
-    POST主要是用于向服务器发送资源
-    -----使用GET方法传递参数-----
+    POST主要是用于向服务器发送资源               
+    -----使用GET方法请求一个带有参数的资源并拿到服务端的返回值-----
+    *.该小节更倾向于测试的目的, 为了完成完整的请求与响应,所以请求阶段与响应阶段都使用了最简单的形式, 服务端输出资源路径,/who,及参数name='张三' age=18,客户端输出服务端的返回值"ok"
     方法一: 利用XMLHttpRequst构建请求
       //XMLHttpRequest mdn文档: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+        00000客户端代码00000
+        <html>
+          <script>
+        xhr = new XMLHttpRequest()
+        //资源路径,/who,和参数连接在url后面
+        xhr.open("GET", "http://192.168.1.207:8000/who?name='张三'&age=18")
+        xhr.onload=function(){
+          //当服务端返回信息后,以弹出警告框的形式将返回的信息显示出来, 当前例子中,服务端返回的是字符串"ok"
+          alert(xhr.response)
+        }
+        xhr.send()
+          </script>
+        <html>
+        
+        package main
+        
+        import (
+            "net/http"
+            "fmt"
+            )
+
+        00000服务端代码00000
+        func main(){
+          http.HandleFunc("/who", func(w http.ResponseWriter, r *http.Request){
+            //解析请求中问题后面的参数
+            r.ParseForm()
+            //加上该头是因为客户端请求地址为/tmp/1.html,而请求的资源地址为192.168.1.207,跨域了,加上该头就能忽略这个问题,这是测试,生产环境不要这么用
+            w.Header().Set("Access-Control-Allow-Origin", "*")
+            //给客户端返回字符串"ok",意思是告诉客户端我收到了你的请求了
+            fmt.Fprintln(w, "ok")
+            //至于收到的请求信息对不对还要通过把资源路径以及参数打印出来才能确定,所以又加了两条输出语句
+            fmt.Println(r.URL.Path)
+            fmt.Println(r.Form)
+          })
+          http.ListenAndServe(":8000", nil)
+        }
 
     方法二: 利用Request()构造器构建请求,配合fetch().then()使用
     方法三: 利用html的表单构建请求
@@ -40,5 +77,6 @@
     方法一: 利用XMLHttpRequst构建请求
     方法二: 利用Request()构造器构建请求,配合fetch().then()使用
     方法三: 利用html的表单构建请求
+    方法四(如何利用纯nodejs实现):
     ------------------------------
   b.后端如何构建响应:
