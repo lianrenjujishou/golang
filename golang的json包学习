@@ -13,7 +13,7 @@ json package
     1.看看有没有字段的tag叫Foo;
     2.字段名精确匹配Foo;
     3.不精确匹配,但是以F开头,如FOO,foO;
-    4.大小写不敏感的其它Foo;
+    4.大小写不敏感的其它foo;
 
 3.通常使用Marshal()函数进行编码;
       *.func Marshal(v interface{}) ([]byte, error)
@@ -46,6 +46,7 @@ func Compact(dst *bytes.Buffer, src []byte) error
 src是字节slice; dst是字节buffer; 从内存的角度来看,其实就是将数据从内存的src位置复制到dst位置; 只不过dst位置的这个结构(Buffer)支持Read()和Write()方法.也就是说这个函数的一般用法是:
 先声明一个*bytes.Buffer类型的变量dst, 然后再通过某个方法(如json.Marshal)拿到json-encoded后的字节slice(去掉不重要的空格字节), src, 然后将src的内容追加到dst里, 最后因为dst实现了Writer接口和Reader接口,所以之后我们就可以在dst上调用Read()和Write()方法进行json-encoded字节的读写了.
 -----代码实践-----
+package main
 import (
   "fmt"
   "encoding/json"
@@ -64,17 +65,19 @@ func main() {
                  }`)
 
   //b, _ := json.Marshal(src)
-  if err := json.Compact(dst, src); err != nil {
+  if err := json.Compact(dst, src); err != nil {   //官方解释说Compact函数会忽略无关紧要的空格,但通过测试来看无关紧要空格的忽略好像并不是由Compact实现的, 而是由[]byte()函数实现的
     fmt.Println(err)
   } else {
     fmt.Println(dst)  //之所以可以这样写,是因为dst实现了Stringer接口了
   }
 }
-一开始自己的想法是src变量只是一个字符串(即去掉现在的[]byte()函数),然后使用json.Marshal(src)得到一个json-encoded的字节切片b, 最后把这个得到的字节切片b传到Compat函数中, 但最终存到dst中的结果和b完全一模一样,并没有将非必要的空白给去掉.后来传给Marshal函数的切片直接使用[]byte()函数转换而来,就得到了正确结果了. 看来Compacdt函数中对src的处理不是只要src是byte slice就行.另外要多用new()函数得到指针类型变量,这样看着优雅一点; 另外,像上面例子,如果err只有一个,写在if里还是外都行,但是如果函数中有多条语句都返回了err,此时最好写成嵌入式的形式, 因为如果分着写的话, 前面用了err,后面就要用err1,err2等,那样看着就乱了(拿上例来说,err内嵌if中时其作用域就是if语句,和if语句外没关系, 但如果你将err写在了if外,则err的作用域就是其所在的整个函数了).
+一开始自己的想法是src变量只是一个字符串(即去掉现在的[]byte()函数),然后使用json.Marshal(src)得到一个json-encoded的字节切片b, 最后把这个得到的字节切片b传到Compat函数中, 但最终存到dst中的结果和b完全一模一样,并没有将非必要的空白给去掉.后来传给Marshal函数的切片直接使用[]byte()函数转换而来,就得到了正确结果了. 看来[]byte()函数会处理json字符串中的空白,而json.Marshal()则对json格式的字符串原样编码, 不会预先处理空白字符.另外要多用new()函数得到指针类型变量,这样看着优雅一点; 另外,像上面例子,如果err只有一个,写在if里还是外都行,但是如果函数中有多条语句都返回了err,此时最好写成嵌入式的形式, 因为如果分着写的话, 前面用了err,后面就要用err1,err2等,那样看着就乱了(拿上例来说,err内嵌if中时其作用域就是if语句,和if语句外没关系, 但如果你将err写在了if外,则err的作用域就是其所在的整个函数了).
 -----完-----
 func HTMLEscape(dst *bytes.Buffer, src []byte)
-将HTML标签中的<,>,&,U+2028和U+2029这5个字符分别转换为\u003c,\u003e,\u0026,\u0028,\u0029,目的是json安全的嵌入HTML的<script>标签中.说是由于历史原因,web浏览器不支持标准的HTML转义内嵌在<script>标签中.
+将HTML标签中的<,>,&,U+2028(`(`)和U+2029(`)`)这5个字符分别转换为\u003c,\u003e,\u0026,\u0028,\u0029,目的是json安全的嵌入HTML的<script>标签中.说是由于历史原因,web浏览器不支持标准的HTML转义内嵌在<script>标签中.
 ----代码实践-----
+package main
+
 import (
   "bytes"
   "encoding/json"
@@ -91,17 +94,15 @@ func main() {
 -----完-----
 func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error
 大的方向也就是src中的字节追加到dst中;
-json对象或array中的每个元素都是从带有prefix的新缩进行开始,元素前缩进的个数要根据数据的内嵌位置决定.
+json字符串或array中的每个元素都是从带有prefix的新缩进行开始,元素前缩进的个数要根据数据的内嵌位置决定.
 为了使用更简单的嵌入其它格式化的json数据中,追加到dst中的数据src,即不包含前缀也不包含缩进.也就是说src中存放的还是原始数据,存到dst中的数据是经过处理过的,加前缀呀,缩进呀,尾缀空白呀.
 在向dst中追加时, src开头的空白会被删掉, 但尾缀的空白被保留
 *.该函数的作用应该就是览时申请一个Buffer用来格式化输出src的, 即将src处理(格式化)后的内容放到Buffer中,然后输出Buffer,原src中的内容一直是不变的.
 -----实践代码-----
+package main
 import (
   "bytes"
   "encoding/json"
-  _ "log"
-  _ "os"
-  _ "io"
    "fmt"
 )
 
@@ -148,7 +149,7 @@ func main() {
 	out.WriteTo(os.Stdout)  //WriteTo方法应该执行完会清空out
 }
 该代码是验证json缩进添加成功的
-***.注意[]byte可以是原始的[]byte(`{"a":"b"}`), 也可以以json.Marshal()得到的,虽说这两个都可以得到[]byte,但不是所有json函数中都适用!! 这句话要反复的看
+***.注意[]byte可以是原始的[]byte(`{"a":"b"}`), 也可以以json.Marshal()得到的,虽说这两个都可以得到[]byte,但不是所有json包里的函数中都适用!! 这句话要反复的看
 -----完------
 func Marshal(v interface{}) ([]byte, error)
 Marshal函数返回任何json包支持的golang类型变量的json编码.
@@ -161,6 +162,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
   Floating point, integer, Number类型值被编码为JSON中的numbers类型值
   string类型值被编码为JSON中的strings类型值,并被强制为有效的UTF-8,使用Unicode replacement rune替换掉无效的字节.以便于JSON可以被安全的内嵌到HTML的<script>标签里,golang字符串类型值使用HTMLEscape函数进行编码, 该函数会将<,>,&,U+2028和U+2029转义为\u003c,\u003e,\u0026,\u0028,\u0029.当使用一个Encoder的时候,可以通过调用SetEscapeHTML(false)来禁用该转义.
   -----^代码验证^-----
+  package main
   import "fmt"
   import "encoding/json"
   import "bytes"
@@ -181,6 +183,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
   -----完-----
   array和slice类型值字音被编码为JSON中的arrays类型值,有两个例外, []byte被编码为base64-encoded字符串类型值, nil slice被会编码为JSON中的null
   -----array类型验证-----
+  package main
   import   "fmt"
   import "encoding/json"
   
@@ -194,12 +197,13 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
   }
   -----完-----
   -----非字节类型slice验证-----
+  package main
   import   "fmt"
   import "encoding/json"
   
   func main() {
     var str []string = []string{"Jack","Lily","Lucy"}
-    if b, err := json.Marshal(str); err != nil {
+    if b, err := json.Marshal(str[:2]); err != nil {
       fmt.Println(err)
     } else {
       fmt.Println(string(b))
@@ -207,6 +211,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
   }
   -----完-----
   -----[]byte验证-----
+  package main
   import   "fmt"
   import "encoding/json"
   
@@ -215,11 +220,13 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     if b, err := json.Marshal(str); err != nil {
       fmt.Println(err)
     } else {
+      fmt.Println(b)
       fmt.Println(string(b))
     }
   }
   -----完----
   -----nil slice验证-----
+  package main
   import   "fmt"
   import "encoding/json"
   
@@ -232,10 +239,12 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     }
   }
   -----完-----
---struct类型值被编码为JSON中的objects.每个struct中的exported字段都变成object的一个成员,使用字段名作为object中(引用相应成员值)的键, 当出现以下情况之一的,字段名会被忽略:
+--struct类型值被编码为JSON中的objects(其它语言中叫字典或map).每个struct中的exported字段都变成object的一个成员,使用字段名作为object中(引用相应成员值)的键, 当出现以下情况之一的,字段名会被忽略:
   -----struct基本使用验证-----
-  import ( "fmt"
-           "encoding/json"
+  package main
+  import (
+          "fmt"
+          "encoding/json"
          ) 
   func main() {
     str := struct{
@@ -249,8 +258,9 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     }
   }
   -----完-----
-----通过看language spec中struct type一节我们知道,struct类型的每个字段最后可以有一个tag,我们可以通过自定义这个tag的内容(该tag以json打头,此时json叫做tag中的键)来自定义相应字段的编码. tag中的格式化字符串可以自定义该字段在转换为json后的名称(名称也可以留空,这样编码为json后键名用的还是原struct字段名),并且名称后面还可以跟着一系列由逗号分隔的选项, omitempty选项表示如果字段为空值(false,0,nil pointer,nil interface,empty array|slice|map|string)则忽略该字段(即跳过该字段).
+----通过看language spec中struct type一节我们知道,struct类型的每个字段最后可以有一个tag,我们可以通过自定义这个tag的内容(该tag以json打头,此时"json:"后跟着的tag在该字段被序列化为json时,替代字段名作为键)来自定义相应字段对应的键名. tag中的格式化字符串可以自定义该字段在转换为json后的名称(名称也可以留空,这样编码为json后键名用的还是原struct字段名),并且名称后面还可以跟着一系列由逗号分隔的选项, omitempty选项表示如果字段为空值(false,0,nil pointer,nil interface,empty array|slice|map|string)则忽略该字段(即跳过该字段).
     -----使用自定义键名而非字段名验证-----
+    package main
     import ( "fmt"
        "encoding/json"
        )
@@ -279,9 +289,8 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
         //注意json后是一(二声重读)个字符串,如果设置别名则是`json:"alias,omitempty"`,如果不
         //设置别名,只是当字段为零值时不编码时,千万不要忽略了omitempty前面的逗号
         //我用的时候犯的错误是以为别名和omitempty应该分别被引起来,即
-        // `json:"alias","omitempty"`是错误的写法, 正确的思想是:
-        //json是键名,然后冒号,最后一个字符串是值,而字符串中的第一个值是别名,
-        //后面可跟着由逗号分隔的选项
+        // `json:"alias","omitempty"`是错误的写法, 正确的语法是:
+        //`json:"[alias][,omitempty]"`,具体有多少种情况应该一目了然的, 就不写了
       }{Name:"Jack", Age: 0}
       if b, err := json.Marshal(str); err != nil {
         fmt.Println(err)
@@ -292,6 +301,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     -----完-----
 ----还有一个特殊的情况,当字段后面的tag内容"-", `json:"-"`,则json编码时会跳过该字段; 我们还可以通过将名称定义为"-,", `json:"-,"`来实现编码为json后相应字段的键名为"-".
     -----不对指定字段编码-----
+    package main
     import ( "fmt"
        "encoding/json"
        )
@@ -309,6 +319,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     }
     -----完-----
     -----指定编码后的字段名为横杠-----
+    package main
     import ( "fmt"
        "encoding/json"
        )
@@ -327,6 +338,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     -----完-----
 ----tag标签中,当json作为键值时,后面除了上面说的"omitempty"选项外, 还可以是"string", `json:",string"`, 该选项表示相应字段以字符串类型存储在json编码中.该选项仅可以用在字段类型为在string, floating point, integer, boolean这四个golang类型的字段后面.有时在与JavaScript程序通信时会使用这种额外的编码级别.
     -----将值类型以字符串类型存储在json中-----
+    package main
     import ( "fmt"
        "encoding/json"
        )
@@ -348,6 +360,7 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
     -----完-----
 ----如果tag中json键值中name部分是由Unicode字符, 数字,ascii标点符号(除了引号,反斜杠,逗号)组成的非空字符串,则其会被用作json-encoded中的键名.
     -----json tag中的name字段的合法名称验证-----
+    package main
     import ( "fmt"
        "encoding/json"
        )
@@ -364,12 +377,121 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
         fmt.Println(string(b))
       }
     }
-    *.在看这小段时纠结开头的key指的是字段名还是json tag中值的name部分,后往上看到Examples of struct fields tags and their meanings举的例子中的注释有说key都是围绕着tag中json键值name部分来说的, 所以才确定开头的key指的不是字段名.
+    *.在看这小段时纠结开头的key指的是结构体中的字段名还是格式化成json后对应键值对中的键名,后往上看到Examples of struct fields tags and their meanings举的例子中的注释有说key都是围绕着tag中json键值name部分来说的, 所以才确定开头的key指的不是字段名,而是对应于json序列化后的键名.
     *.struct字段tag不是只有json键一种, 应该可以是任何,看language spec中关于struct type中的描述,那里tag中的键用的就是protobuf
     -----完-----
-----匿名结构体中的字段(结构体中的匿名字段?)常常被marshaled,好像匿名结构体内部exported字段是结构体外部的字段,这受限于Go中的可见性规则(具体规则下段讲).一个带有JSON tag的匿名的结构体字段被认为tag中的名字就是该字段名称,此种情况不认为字段是匿名的.一个接口类型的匿名结构体字段将接口类型作为字段名称,此种情况下也不认为该字段是匿名的.
+----结构体中类型为结构体的匿名字段(参照下面例子Employee与Person的关系)在Marshal时,会将匿名结构体中的字段"直接"作为外部结构体字段.但我们可以给匿名结构体类型的字段加上一个json tag,此时Marshal的结果就会把该json tag设置的值作为键名,而匿名结构体中的可导出字段形成的map作为相应的键值.这受限于Go中的可见性规则(具体规则下段讲).一个带有JSON tag的匿名的结构体字段被认为tag中的名字就是该字段名称,此种情况不认为字段是匿名的.一个接口类型的匿名结构体字段将接口类型作为字段名称,此种情况下也不认为该字段是匿名的.
+    -----验证匿名结构体作为结构体中的字段-----
+    package main
+    
+    import (
+    	"encoding/json"
+    	"fmt"
+    )
+    
+    type Person struct {
+    	Name string `json:"name"`
+    	Age  int    `json:"age"`
+    }
+    
+    type Employee struct {
+    	Person    // Anonymous struct field
+    	//可以给上句再加一个tag: `json:"who"`  看看执行结果
+    	Company string `json:"company"`
+    }
+    
+    func main() {
+    	emp := Employee{
+    		Person: Person{
+    			Name: "John Doe",
+    			Age:  30,
+    		},
+    		Company: "ACME Corp",
+    	}
+    
+    	data, err := json.Marshal(emp)
+    	if err != nil {
+    		fmt.Println("Error:", err)
+    		return
+    	}
+    
+    	fmt.Println(string(data))
+    }
+    
+    -----验证接口类型作为结构体字段名-----
+    package main
+
+    import (
+    	"encoding/json"
+    	"fmt"
+    )
+    
+    type Animal interface {
+    	Sound() string
+    }
+    
+    type Dog struct {
+    	Breed string `json:"breed"`
+    }
+    
+    func (d Dog) Sound() string {
+    	return "Woof!"
+    }
+    
+    type Person struct {
+    	Animal // Anonymous struct field of interface type
+    	Name   string `json:"name"`
+    }
+    
+    func main() {
+    	p := Person{
+    		Animal: Dog{
+    			Breed: "Labrador Retriever",
+    		},
+    		Name: "John Doe",
+    	}
+    
+    	data, err := json.Marshal(p)
+    	if err != nil {
+    		fmt.Println("Error:", err)
+    		return
+    	}
+    
+    	fmt.Println(string(data))
+    }
+0000000000000000000000这部分还是再看看文档描述吧0000000000000000000000START
 ----当决定哪个字段要marshal或Unmarshal时,针对JSON为Go中结构体字段的可见性规则做了修改.如果有多个字段在同一层级,并且该层级是最小内嵌大的(因此将是通常Go规则选择的内嵌层级),下面额外的规则适用:
-------1)这些字段中,如果有一些后面有JSON tag,则只有这些有JSON tag的被考虑, 那些没有JSON tag的字段就不考虑了, 否则的话可能会发生冲突(如一个字段名叫A,无tag,另一个字段名叫B,有tag,`json:"A"`这不就冲突了)
+------1)这些字段中,如果有一些后面有JSON tag,则只有这些有JSON tag的被考虑, 那些没有JSON tag的字段就不考虑了, 否则的话可能会发生冲突(如一个字段名叫A,无tag,另一个字段名叫B,有tag,`json:"A"`这不就冲突了)  //下面是测试例子,实际情况是没有json标签的Email字段也被导出了.
+     *.验证失败(还是我理解的有问题?)-----验证当结构体中既有带json标签的字段又有不带标签的字段,则仅有带标签的字段被导出-----
+        *.chatGPT还是Bard给出的例子都是结构体中字段名首写字母是小写的, 那不废话嘛, 小的首字母,无论后面有无json tag都不会被导出,所以我认为例子给的不恰当, 下面这个例子我认为结果应该只输出name和age,但Email也输出了,按照我理解的原文,Name和Age有json tag,而Email没有,所以应该只输出name和age,但结果是三个字段全部输出了
+    package main
+    
+    import (
+    	"encoding/json"
+    	"fmt"
+    )
+    
+    func main() {
+    	person := struct{
+    	  Name  string `json:"name"`
+    	  Age   int    `json:"age"`
+    	  Email string // This field will be ignored during JSON marshaling
+
+	}{
+    		Name:  "John Doe",
+    		Age:   30,
+    		Email: "john.doe@example.com",
+    	}
+    
+    	jsonData, err := json.Marshal(person)
+    	if err != nil {
+    		fmt.Println("Error:", err)
+    		return
+    	}
+    
+    	fmt.Println(string(jsonData))
+    }
+
 ------2)如果struct中只有一个字段,无论该字段是否有tag,都会被选中
 ------3)否则有多个字段,并且所有字段都被忽略; 没有错误发生
 ----对结构体中匿名字段的处理是Go1.1版本新加进来的, 对于1.1版本之前,匿名的结构体字段会被忽略.无论是在Go1.1之前还是之后如果想忽略掉对某个匿名结构体字段的处理,只需要给JSON tag一个"-"名称.
@@ -381,3 +503,4 @@ Marshal递归遍历变量v的值(递归遍历应该指某个值是复合类型�
 --Interface类型值会将包含在接口中的值(concrete?)进行编码. nil接口值被编码为JSON中的null
 --Channel, complex, function值不能被编码为JSON.如果尝试对这些类型值进行编码则Marshal函数会返回一个UnsupportedTypeError.
 --JSON不能描述循环数据结构,也不能处理它们, 如果将循环数据结构传给Marshal,会返回一个错误.
+0000000000000000000000这部分还是再看看文档描述吧0000000000000000000000END
