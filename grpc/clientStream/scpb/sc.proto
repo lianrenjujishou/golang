@@ -3,7 +3,7 @@ syntax = "proto3";
 option go_package = "sc.com/user/hello/scpb";
 
 service sc {
-  rpc greeting (stream X) returns (Y) {}
+  rpc greeting (stream X) returns (Y) {}   //这里stream也是一个关键字
 }
 
 message X {

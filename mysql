@@ -1,0 +1,253 @@
+以下为mysql8.0文档中tutorial部分内容, 安装部分直接使用包管理器pacman装的
+-----
+如何更新用户密码:https://dev.mysql.com/doc/refman/8.0/en/resetting-permissions.html
+:: alter user 'root@localhost' identified by 'newPasswd';   //这句经常出现的问题就是执行后报语法错误, 而所谓的语法错误其实是密码的组成不正确,如必须是大小写数字及符号都有才行,但你不知道这个限制,会导致你会觉得明明整个语句都是正确的,为啥会报语法错误.
+-----
+连接数据库: mysql -h host -u user -p
+几个内置变量和函数: version(), current_date, now()
+可以将多条语句写在一行,用分号隔开
+可写跨越多行的语句;
+跨越多行语句如果写到一半不想执行了,输入\c并回车
+次提示符->, '>, ">, `>, /*>均表示语句没结束,要给一个相应的标点才行. 特殊例子:
+    mysql> SELECT * FROM my_table WHERE name = 'Smith AND age < 30;
+        '>
+    此时第一行的结尾虽是分号,但并不表示语句的结束而是属于字符串的一部分,所以此时如果不想执行此句,需要写 '\c 即先用 ' 结尾字符串部分,然后再用\c取消执行, 如果不写 ' 的话, \c也会被认为是字符串的一部分.
+关键字不区分大小写
+-----
+建库:
+ 创建只有你有权限访问的数据库: grant all on database_name.* to 'mysqlUserName'@'clientHost';
+ *nix下,数据库名和表名是大小写敏感的;
+ 指定数据库的两种常用方式: a.进入交互式mysql后用use命令;b.在linux shell中运行mysql指令最后加上库名(如,mysql -h host -u root -p databaseName), 需要注意的是-p参数的作用虽是指定密码,但-p参数和密码之间不能有空格,如果有空格,则空格后的内容不会被认为是密码.
+  查看当前使用的数据库: select database();
+-----
+建表:
+  查看当前库中的表: show tables;
+  create table table_name (field1 type1[(num)]...); //create table pet (name VARCHAR(20), owner VARCHAR(20), species VARCHAR(29), sex CHAR(1), birth DATE, death DATE);
+  查看表结构: describe tableName; //如你不记得表中的列名都有啥或是某个列的数据类型是啥,则可以使用该命令进行查看
+  含有外键的表: 所谓外键其实指的是两个表之间的关系,我们可以称之为父表与子表,被设置外键的表称为子表,外键所引用的表为父表.而子表的外键字段其实就是从其引用的父表的相应字段取值,这意味着你在向子表中插入记录时,如果该记录的外键字段值没有包含在相应父表指定的字段中时,该记录是插不进去的,会报错; 另外为了维护表之间数据的完整逻辑链, 我们还可以给外键设定限制,即当父表中的记录被删除或父表的某个字段被修改时,相应子表也会同步这个动作,这一点很好理解,如有一张顾客表,一张顾客的购买记录表,此时我们最好是在购买记录表中认定一个引用顾客表的外键,以达到当某个顾客被删除后, 相应购买记录也被删除的目的,如果不加这个限制,你把顾客删了后,购买记录表中该顾客的购买记录就成了无头数据了; 同理,以这个例子来说, 如果顾客表中也存在外键,即顾客表也是作为另一个表的子表,则我们也一定要在顾客表所设定的外键中加上删除或或新限制(on delete/update cascade),道理也是一样的,设定顾客表的父表是门店表,则当你将某个门店删掉后, 相应门店的顾客数据会被删除,而顾客数据被删除又会导致相应的顾买记录被删除.这样做是合理的, 存在都存在,不存在就都不存在,任何一环不存在了,整个数据链条就不完整了.
+  
+-----
+修改表:
+  alter *是一个系列,下面先只讲对表的常见修改:
+  表重命名: ALTER TABLE oldName RENAME newName;
+  修改列类型:ALTER TABLE tableName MODIFY columnName newType;
+  修改列名: ALTER TABLE tableName CHANGE oldColumnName newColumnName newColumnType; //最后的新列名类型是必须有的, 即使你只是改个名,类型并未动, 这个类型你也要写上, 否则就是语法错误.
+
+  在最后追加列: ALTER TABLE tableName ADD newColumnName correspondingType;
+  在某列后面追加列: ALTER TABLE tableName ADD COLUMN newColumnName correspondingType AFTER existedColumnName; //不能使用before,只能用after,如果想插在第一列,将"AFTER existedColumnName"改为"first"; 另外ADD后面的COLUMN可有可无.
+  删除列: ALTER TABLE tableName DROP COLUMN columnName columnType;  //drop后面的关键字column也是可有可无,最后的columnType也可有可无
+-----
+插数据:
+  常用的两咱方法: 
+    a.INSERT INTO tableName[(fields)] VALUES(value1,...); 
+    b.LOAD DATA LOCAL INFILE '/path/to/file' INTO TABLE tableName;  //每行一条记录;字段值和表中的字段顺序一致;字段间用tab分隔;空值用\N代替; *.在这块碰到个问题导入的时候说loading local data is disabled. show global variables like 'local_infile';结果值为OFF,因此set global local_infile=true;后,再看相应值变成ON了,也就能导进去了. *.还有需要注意的,如果源数据文件是在windows下处理的,是以\r\n结尾的,则在上面原有导入语句后还要加上LINES TERMINATED BY '\r\n'
+  *.使用insert into插记录时,NULL直接写(load data加载文件时,NULL要写成\N), 字符串和日期需要用引号引起来
+  *.使用load data批量导入数据时,服务端和客户端默认都是禁用的,所以要在客户端和服务端都启用load data功能时才能成功执行(https://dev.mysql.com/doc/refman/8.0/en/load-data-local-security.html):
+    ./mysqld --user=mysql --local_infile=1 [--secure-file-priv='']   //测试时,光导数据不用最后这个选项就可以,但现在测试还不充分,避免后期测试时没有它会出错时,看到它还能提个醒, 待后期测试充分了,光导数据时没有该选项也可以时再删掉它.结合下面这个星号的说法,当该选项值为空时, 可以将输出文件保存在任何目录下,前提是你要对相应目录有写权限.
+      *.如果想将表内容导出到本地,则服务端在启动时候还要加--secure_file_priv="文件夹名,按官方的教程将这个目录设置为mysql安装目录下新建的mysql-files文件夹,实际上可以是任>意位置"; 然后客户端就可以使用 "select ... into outfile '输出到的文件名称' from 表名;" 将全表导出了,有许多小细节可设置,具体可看官文细究
+    ./mysql -u root -p [table_name] --local-infile=1 
+    *.注意mysqld中的--local_infile是下划线,而mysql中的是中横线
+-----
+删除数据:
+  DELETE FROM tableName; //删除所有记录
+  DELETE FROM tableName where condition //删除满足条件的记录
+-----
+更新记录字段值:
+  UPDATE tableName SET fieldName=newValue WHERE condition;
+-----
+=====测试数据=====
+    CREATE TABLE `classA` (
+      `id` int NOT NULL AUTO_INCREMENT,
+      `name` varchar(20) DEFAULT NULL,
+      `age` int DEFAULT NULL,
+      `address` varchar(50) DEFAULT NULL,
+      `email` varchar(50) DEFAULT NULL,
+      `gender` varchar(10) DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    )
+    
+    张三    18      波东村  \N      男
+    李四    19      波西村  \N      男
+    王五    18      波东村  \N      女
+    赵六    18      波西村  \N      男
+    孙七    19      波东村  \N      男
+    马八    19      波东村  \N      男
+    李九    19      波西村  \N      女
+    司十    20      波东村  \N      男
+    十一    18      波东村  \N      男
+    十二    19      波西村  \N      女
+    十三    20      波东村  \N      男
+    十四    20      波东村  \N      男
+    十五    20      波西村  \N      女
+    十六    19      波东村  \N      男
+    十七    19      波西村  \N      女
+    十八    18      波东村  \N      男
+    十九    18      波西村  \N      女
+    二十    18      波东村  \N      男
+
+检索数据:
+  选择所有数据: SELECT * FROM tableName;
+  选择指定列的所有数据: SELECT field1,field2,.. FROM tableName;
+  选择满足条件的所有数据: SELECT * FROM tableName WHERE condition;
+  *.其实检索数据这块主要讲的就两大点:
+    1.SELECT后面可以是*表示选择所有字段;还可以是以逗号分隔的部分字段名,表示只选择特定的这几个字段的数据.
+    2.最重要的是WHERE后面的条件部分,简单来说选择的数据是什么主要看的就是这块, 如果没有WHERE部分,则取所有记录的指定字段.如果有WHERE存在,则主要有以下几种情况:
+        a. WHERE fieldName='value' //选择字段名为value的记录
+        b. WHERE fieldName ><=!=<> 值 //选择字段满足指定关系的记录
+        c. WHERE fieldName1='value1' OR|AND fieldName2='value2'  //选择字段1为value1,字段2为value2的字段
+        d. WHERE (fieldName1='' AND|OR fileName2='') AND|OR (fieldName1='value3' AND|OR fieldName2='value4')  //选择多个字段满足条件的记录(分组)
+        e. WHERE fieldName like ''  //这个也比较常见,选择字段匹配某个模式的记录,重点: 下划线_表示任意单个字符,类似其它正则中的点,百分号%表示任意数量的字符,类似于其它正则中的".*",以及通配符中的"*". 例子: like|not like 以x开头: 'x%' 以x结尾: '%x' 包含x: '%x%' 精确由3个字符组成: '___'  还可以使用where FIELD like binary 'PATTERN'进行大小写敏感匹配,原理是将字符转换为二进制,然后逐字节匹配(like默认是大小写不敏感匹配). 使用扩展正则函数regexp_like(),实现大小写敏感匹配,"select * from classA where regexp_like(字段名,'正则区别于上面binary这个是真正的正则','c');"(https://dev.mysql.com/doc/refman/8.0/en/regexp.html#function_regexp-like)
+-----
+对结果排序:
+    在查询语句后加上ORDER BY fieldName  //默认是升序,即最小的在最上面; 如果想要降序排列,则在结尾加上关键字DESC.
+    如果字段是字符类的,则在比较的时候是大小写不敏感的,如果想让大小写敏感比较,则要用 ORDER BY BINARY fieldName.
+     对多个字段进行排序, 这个直接指定多个字段即可;其实对多个字段排序一开始是难在理解上, 每个字段的排序其实都是在分组;后面字段的排序相当于在头一个字段分的组里进行排序. 多个字段排序是先拿第一个给定字段排, 然后第2个给定字段是在第1个字段的基础上(根据第一个字段分好的组)去排,而非全局排(同理如果有第三个字字段,则是在前两个字段的基础上去排,以此类推).并且可以对不同的字段指定不同的顺序(直接在相应字段后加上DESC或ASC,如果不加,则默认是ASC,如 ORDER BY a DESC,b,c DESC)
+  count(*)一般和group by联用,输出匹配上的组的数量, "select address,count(*) from classA group by address;"  //注意语句前后两个address
+ *.其实在不久前才意识到,无论多复杂的语句,最开始的select应该是最后执行的,即select字段后面的逻辑负责整出一个临时表来, 而最开始的select只需要按要求从这个临时表中把需要的数据取出来. 
+ *.count还可以与case when联用,此时每个case when都会遍历一遍相应的表,然后得到一个临时的表让count进行统计.sum(if(条件,值1,默认值))也是比较常用的(https://zhidao.baidu.com/question/1996951205510586067.htm这是我百度知道回答的一道问题,里面用到了count(case when...then X else y end)与sum(if(condition,x,defualt)))
+-----
+处理日期时间(https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html):
+  TIMESTAMPDIFF()函数,有三个参数,第1个为你想得到的是年,月,日,还是时,分,秒,第2个参数是小日期,第3个参数是大日期;
+   例: SELECT TIMESTAMP(year,'1990-10-20',curdate()) as time;该例中,as time表示用time作为列名,否则就是那一整串表达式作为列名了.
+  空值NULL的检测是用is null或is not null
+  分别提取给定日期的年月日: year(date) month(date) dayofmonth(date)
+  在某个日期的基础上构建日期: date|year|month|dayofmonth(date_add(curdate(), interval n year|month|day))
+  还可以利用取模函数来获取下个月是几月: mod(month(curdate()),12)+1, 因为月份%12的模为0-11,所以后面加上个1就是下个月,可以找个实际的日期套一下就好理解了.
+  可以直接在时间字符串后使用interval n year|month|day来得到新日期; select '2018-10-31'+interval 1 day; 如果时间字符串不正确,如'2018-11-32',则得到的结果是NULL,并会得到一条警告,该警告可以使用show warnings;查看.
+-----
+关联表:
+  select * from pet,event where pet.name=event.name;
+-----
+分组: having
+  group by 
+  因为where后面的条件是列表中的字段+运算符号+值构成的表达式,而如果选择的字段是一个函数而不是表达式,如sum(),而我们还想根据该函数的值进行结果的筛选,此时就不能写 where sum()...了,只能写having sum()...
+-----
+联合:
+  主要用到的就是inner|left|right|cross join. 其中left和right必须和on连用,否则有语法错误, 也就是说left和right必须要有关联条件才行. inner其实就是一个双层for循环后得到的一张大表;left就是拿左边当第一层循环, 然后去右表中找匹配条件的,特点是右表匹配到则显示,匹配不到左表数据全显示,右表数据显示都是NULL;right和left相反,而cross说白了只显示匹配上的.
+  下面这个最经典的结构之前没仔细思考过, 现在一看都是那么合乎逻辑:
+       SELECT pet.name,
+       TIMESTAMPDIFF(YEAR,birth,date) AS age,
+       remark
+       FROM pet INNER JOIN event
+         ON pet.name = event.name
+       WHERE event.type = 'litter';
+   //上面这个结构其实就是select 字段 from 表 where 条件;这个最简单语句的变体.即 from pet inner join event这是一张很大的表, 根据on pet.name = event.name将这张大表缩小了一些. 最后在上面所说的这个缩小的临时表中根据where部分的条件记录的相应字段取出来; select部分用了"pet.name,remark",为什么一个有表前缀一个没有呢,因为得到的临时表有两个name字段,要限制一下取哪个表中的name字段,而remark只有一个表中有. 相明白了这一点,逻辑就捋顺了,因为设计者设计的时候肯定也是有逻辑在里的.
+-----
+行列转置:
+https://www.2cto.com/database/201708/664695.html#  //博客园也留了一份,哪天该站再挂掉了再想看就找不到了: https://www.cnblogs.com/lianrenjujishou/p/17460140.html
+在练习上面链接中的例子时,将sum()函数和group by name去掉后看一下结果,然后再看给的sql语句,应该会有帮助一些. *.如果用了group by,但选择列没有使用聚合函数,则每组只显示第一条记录.
+
+
+======w3school上的教程=====
+mysql sql: 关键字大小写不敏感;用来对关系型数据库进行增删改查;常用的操作有对表中数据的增删改查,新建库,修改库属性,新建表,修改表属性,删除表,新建索引,删除索引;
+select: 选择要检索的表中字段,不同字段间使用逗号分隔, *号表示检索表中所有字段;select distinct用于返回不重复的数据; 被选取的字段和条件部分都可以使用聚合函数,但条件部分使用聚合函数时,要使用关键字having,而不是where;
+where: 筛选满足条件的记录, 不仅可用于select,还可用于update,delete等一般表动作的关键字都可以和where联用;记录中字段值如果是字符串则要用引号引起来,如果是数值则不需要引号;条件部分的操作符可以是:=,>,<,>=,<=,<>,between,like,in;条件部分还支持and,or,not操作符,其中and,or可以连接多个条件,not则是条件结果为flase时,才会显示记录;条件部分有and,or,not参与时,还可以使用括号()将表达式括起来作为一个整体;条件部分,and,or可以直接与not连接,从逻辑上来看也是好理解的;
+order by: 对选择的结果进行排序,默认是升序, 如果想降输出,则在依据的字段后加上关键字desc; 可以对多个字段进行排序,文字描述不好,但意思明白(文中举的例子说的很清楚);在按多字段排时,不同字段的排序可以不同,如第一个字段asc,第2个字段desc;
+insert into: 作用是向表中插入新的记录;一般有两种用法,一种是对所有字段都赋值,语法为: insert into table values(field1_val,field2_val,...), 还一种是对部分字段赋值,此时要在表名后面使用()将赋值的这部分字段名引起来, values()中的参数和字段数相等,insert into table(fieldx,fieldy) values(fileldx_val, fieldy_val);如果表中的某个字段有auto-increment属性,则在使用insert into插入记录时,不必为其赋值,插入时会根据上下文自动填充的;
+NULL values:当插入记录,但没有给某个或某些可选字段赋值时,这些字段的值即为NULL,也就是所谓的空值;测试某个字段是否为NULL,方法是使用关键字is null或is not null;
+update:修改表中记录的字段信息; 特别要注意的是update与where关键字的联用,如果没有使用where关键字,则你修改的是整个表中所有记录中字段的信息;
+delete:删除表中的记录;同样特别需要注意与where的联用,当不加where时,表示的是清空表!,但表的结构属性,索引啥的都会保留;
+limit:限制返回的记录数;  //limit 3返回前三条, limit 3,5从第4条开始返回5条,包括第4条(该种情况下第一个数是从0开始的索引,第二个数为返回的条数)
+min()函数: 返回指定数字列的最小值;
+max()函数: 返回指定数字列的最大值;
+count()函数:返回指定列的记录数;count(1) ; count(*);count(列名);count(distinct 列名); //列是NULL值的,不计; //count(1)和count(*)是完全相同的,没有任何区别甚至同count('hello')的返回值都是相同的, 即此时括号中的内容只是给每一条记录赋值,而count()则是看看赋了多少次,此时所有行都会被数到,包括都是NULL的行; 而count(1/*/xxx)和count(列名)的区别就是count(列名)不记数列值为NULL的行;而count(列名)和count(distinct 列名)就显而易见了,都是不记数NULL值,无distinct的的值要>=有distinct的值;
+avg()函数:返回指定数字列的平均数;  //数字列是NULL值的,忽略;
+sum()函数:返回指定数字列的和;     //数字列是NULL值的,忽略;
+like: 用于where语句中, 对字段值进行模式匹配;最常和like配合使用的两个操作符一个是百分号%,表示匹配0个或我个任意字符,一个是下划线_,用来匹配任意单个字符;可以和关键字AND,OR连用;
+in:在where语句中为字段指定多个值,它是多个关键字or的简要表达方式;常用两种方式,一种是直接给值,如where column_name in (val1,val2,...),一种是使用select语句间接给值,where column_name in (select statement);可以和not连用,即not in;
+between:一般也是用在where语句中和关键字AND连用表示范围;范围值类型可以是字符串,数值或是日期;NOT BETWEEN可以连用;当值是字符串时,表示该字段值为这指定的字符串中间的这部分记录,包括这两个字符串本身所在的记录;
+alias:作用是在查询期间临时为某个表或某个列创建别名,主要目的是可增加可读性,关键字为AS;之前遇到的比较常用的是在选择的字段为某个函数时,在显示结果时使用一个可读性更高的别名; 还有在多表查询时,给表名赋个简单一点的别名,在之后的书写时省力一些//concat_ws(',',field1,...)用来连接字符串,第一个参数为分隔符(这里用的是逗号",")
+join:它是结合多个表,然后将符合ON条件的记录的相应字段打印出来.它的原理是笛卡尔乘积,其实照我理解的话就是双层for循环嵌套.举例来说:
+    SELECT Orders.OrderID, Customers.CustomerName, Shippers.ShipperName
+    FROM ((Orders
+    INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID)
+    INNER JOIN Shippers ON Orders.ShipperID = Shippers.ShipperID);
+对于上面语句,SELECT Orders.OrderID, Customers.CustomerName, Shippers.ShipperName是被选择的字段,那么FROM哪里选呢,从这里选: ((Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID) INNER JOIN Shippers ON Orders.ShipperID = Shippers.ShipperID). 而上面这个语句又分两部分,内括号及外括号,先看内括号部分:(Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID)这是对Orders表和Customers表进行join,此时得到的是下面这个伪代码描述的临时表1:
+    select Orders和Customers表中的所有字段
+    for i in Orders记录:
+      for j in Customers记录:
+        where Orders表中的CustomerID值=Customers.CustomerID值
+然后再看外面括号,(临时表1 INNER JOIN Shippers ON Orders.ShipperID = Shippers.ShipperID)这个原理同临时表1的由来相同,此时得到了一个大的临时表2.这个临地表2拥有三张表的所有字段.最后再根据select的需要,从临时表2中将每条记录相应的字段都打印出来.就该例来说不用括号结果也是一样的.
+在理解join的时候,新建两张有关联的简单表,先不要加ON关键字,直接select * from a join b;看一下结果,就会有很直观的感受了.像上面这个三张表inner join的可以直接用多表联查: select o.orderid,c.customername,s.shippername from orders o, customers c,shippers s where o.customerid=c.customerid and o.shipperid=s.shipperid,而原理还是一样的,在"select xxx from 三张表"的时候,就已经利用笛卡尔积得到了一张包含三张表所有记录的可能组合的临时表了,然后利用where后面的条件从大表中选合适的就行了;
+
+inner join: 先用左表的每一条记录和右表的每一条记录进行笛卡尔乘积得到一个大表,然后再用ON条件对该大表进行筛选,只将大表中符合条件的记录留下来, 然后再根据select的字段将此时大表中每一条记录的相应字段取出即为结果.需要注意的是inner join不用ON条件语句语法也正确.  //对inner join用法的抽象: 在有父子关系的两张表(即子表外键指向父表)中,使用on条件筛掉大表中对应关系不正确的数据; 然后利用where子句选择主表中指定人员对应的子表项(一个好的例子就是顾客表作主表与相应的订单表子表)
+left join: 根据ON条件让左表的每一条记录和右边全表去匹配,在匹配的过程中,如果左表的某条记录和右表的某条记录符合ON条件,则将左右表符合条件的这两条记录合并追加到临时表中; 如果左边的某条记录在和右表全表遍历结束一条符合ON条件的都没有,则也会向临时表中追加一条记录,该记录特征是左表数据都有,右边的全部字段值为NULL; 同时如果左边的某条记录和右边的多条记录都符合ON条件,则临时表中会产生多条结合左右表相应记录的记录.需要注意的是,left join必须要有ON条件,因为设计就是如此,就是要根据ON条件去得到临时表. //left join抽象: 同样使用顾客主表与相应的订单子表作为理解辅助,想知道主表中所有顾客的详细消费情况,则可用 "顾客表 left join 订单表",inner join就不行,如on条件为"主.customer_id=子.customer_id and time between '2021-1-1' and '2022-2-2'", 无论顾客在这段时间有无消费left join都会显示所有的顾客,而inner join则显示的仅仅是消费过的顾客.
+right join: 原理同left join  //其实在含有left join的语句中是可以使用right join进行替换的, 反之亦然,即 replace "from TableA right join TableB" with "from TableB left join TableA",得到的结果中所有的字段都是相同的,唯一不同的地方在于当使用"select *"时,两表中字段的显示位置不同, 即影响的只是观感.
+cross join:In MySQL, JOIN, CROSS JOIN, and INNER JOIN are syntactic equivalents (they can replace each other). In standard SQL, they are not equivalent. INNER JOIN is used with an ON clause, CROSS JOIN is used otherwise. 也就是说在mysql中join,inner join和cross join是等价的,语法相同,都支持on, where关键字.(参考链接:https://dev.mysql.com/doc/refman/8.0/en/join.html) 
+self join: 这个没有join关键字,关键点在于from多个相同的表,只是别名不同, 然后通过在where条件语句中使用不同的别名进行数据打印; //使用场景抽象: 同一个表中字段间存在级别关系,假设有一张公司顾员的表,里面字段包含 "顾员id,顾员姓名,直属领导id",这里"直属领导id"引用"顾员id",因为都属于公司员工嘛.此时你就可以利用inner join得出一张直观显示每个员工名以及对应直属领导名称的表:
+    SELECT e.employee_name AS employee, m.employee_name AS manager
+    FROM Employees e
+    JOIN Employees m ON e.manager_id = m.employee_id;
+union:将多个select语句的结果进行纵向整合;要求:1.选取的字段数必须相同,数据类型相似,位置要一致; 默认会对union后的结果集去重, 如果想保留重复的记录,可以使用关键字union all;union后的结果集字段名称为第一个select中的字段名称,有个小技巧是可以在第一个select中为字段使用关键字AS设置一个可读性高的别名;union连接的多个select语句可以有各自的where子句;select语句被选择的不仅可以是字段,还可以是常量,如下面这个语句会在结果集中让我们知道每个人它是顾客还是供应商:
+    SELECT 'Customer' AS Type, ContactName, City, Country
+    FROM Customers
+    UNION
+    SELECT 'Supplier', ContactName, City, Country
+    FROM Suppliers;
+group by:根据某一个或某几个字段进行分组,通常是和聚合函数一起用;需要注意的是初学者往往在含有group by的语句中,select字段上会出问题,也就是说可能会select的字段会包含歧义,举例来说,select count(customerid),country from customers group by country对于这个语句,group by中只有一个字段为country,咱们在不看select部分的情况下,只看from customers group by country,可以得知此时的临时表中你可以在select中选择的没有歧义的字段只有country,而其它字段如customername,你没法选,因为你是根据country分组的,所以结果中一个country只有一条记录,而一个country可能对应好几个customername,你到底写谁? 在我看来group by就是多个select ... where子句的另一种写法,如group by country我认为就可以变换为"select ... where country='国家1' union select ... where country='国这2' union ...". 不管怎么说吧,感觉mysql中最重要的就是要搞清楚最后得到的这张临时表是啥样的,而具体select哪些字段或是什么聚合函数,只要最后得到的这张临时表你清楚,也就简单了. //group by最常用的一咱形式应该就是 "某一个或某几个字段相同的其它字段的聚合情况",此时select可用且没有歧义的字段为依据分组的字段, 还有聚合函数.最简单的例子: select count(customerid), country from customers group by country此时select中可用且没有歧义的字段就是group by中指定的country,还有聚合函数.
+having:该关键字主要是为了弥补where语句中不能使用聚合函数;所以通常having, groupby和聚合函数会一起出现; //无论多每复杂的语句记住: 1.select是最后选;2.from后面是一张临时表(from后面有无括号好像没啥影响,有括号应该只是为了可读性高一些,至少对我是这样,比如select * from a inner join b对于这句之前我认为是先从a中select *然后再做inner join b的操作,实际上应该是select * from (a inner join b));3.where和having是对临时表进行过滤得到最终供select用的临时表;
+exists操作符:主要有于测试子查询中是否存在记录;也就是说当有exists关键字存在时,整个sql语句至少有两个select,一个是打头的select用于最终选取,一个是exists后面的select用作子查询; exists的返回结果为TRUE或FALSE;可在子查询中使用主表,注意看下面语句子查询中使用的字段名:
+    SELECT SupplierName
+    FROM Suppliers
+    WHERE EXISTS (SELECT ProductName FROM Products WHERE Products.SupplierID = Suppliers.SupplierID AND Price = 22);
+    //工作过程: 遍历Suppliers表,每拿到一条记录后, 遍历Products表, 遍历Products表的过程中看看Products中是否有记录满足"Products.SupplierID = Suppliers.SupplierID AND Price = 22",如果有,则将Suppliers.SupplierName选中作为其中一个输出结果. 使用依代码描述:
+        for1 record in Suppliers:
+	  for2 compare in Products:
+	    if record.SupplierId==compare.SupplierID and compare.price==22:
+	      select record.SupplierName
+	      break for2
+any操作符: 一般用在where语句中,位置在逻辑操作符后,其后跟一个select子句.其实就是多表联查,而在这里的特征是主句中where后面的字段和子句中select选择的字段一致;我猜测使用any操作符的原因是写着更简便一些,不用给字段加上表前缀,写例子:
+    SELECT ProductName
+    FROM Products
+    WHERE ProductID = ANY
+      (SELECT ProductID
+      FROM OrderDetails
+      WHERE Quantity > 99);
+我们可以将"ProductID = ANY 子句"换个写法:
+  select productname from products where productid in (子句结果集);
+all操作符:可用在select后面,select all感觉和不加all的结果一致; 还可用在where,having后,用来决定where,having部分的结果是TRUE或是FALSE.
+总结any,all,拿例子来说: select name from A where id = ANY/ALL (select id from B); 首先子句会得到一个结果集,然后,比如说1,2,3,即 select name from A where id = ANY/ALL (1,2,3), 此时拿A表的第一条记录中的字段id,假设是1,如果是ANY的话,因为1,2,3中包含1,则会将该条记录的name选出来,如果是ALL,则必须要满足1=1,1=2,1=3这三个条件,才会将name从该条记录中选出来.所以ALL关键字的话,一般不和=连用,和大于小于这些不等关系连用的多一些.
+insert into select:从A表中select数据插入到B表;要求是从A表中选择的字段数据类型和要插入的B表中相应位置字段的数据类型要相匹配;语法其实就是insert into语句的变体,只不过将插入值由values()改为了select语句:
+  形一:insert into table2 select * from table1 where condition;
+  形二:insert into table2(col1,col2,...) select col1,col2,... from table1 where condition;
+case: if...else的变体,从上到下评估条件,某个条件满足则返回其后的值,并且停止下面的评估,没有条件满足则返回else后的值,如无else关键字,则返回NULL值;语法:
+  case
+    when conditon1 then result1
+    when condition2 then result2
+    else result
+  end;
+  例子:
+          select * from orders;
+        +---------+------------+-----------+
+        | orderid | customerid | shipperid |
+        +---------+------------+-----------+
+        | a       | 2          | 666       |
+        | b       | 1          | 888       |
+        | c       | 3          | 999       |
+        | c       | 3          | 000       |
+        | NULL    | b          | 111       |
+        | a       | 5          | 222       |
+        +---------+------------+-----------+
+        6 rows in set (0.00 sec)
+        
+        mysql> select * from orders order by ( case when orderid is not null then orderid
+        else customerid end);
+        +---------+------------+-----------+
+        | orderid | customerid | shipperid |
+        +---------+------------+-----------+
+        | a       | 2          | 666       |
+        | a       | 5          | 222       |
+        | b       | 1          | 888       |
+        | NULL    | b          | 111       |
+        | c       | 3          | 999       |
+        | c       | 3          | 000       |
+        +---------+------------+-----------+
+        6 rows in set (0.00 sec)
+  一开始弄不懂为什么case中可能既要根据orderid排又要根据customerid排,这和order by orderid,customerid两个字段排还不一样,case中的例子实际排序的是一(二声)列值,最后弄明白了,你可以这样理解,在orders表中新增一列,这一列key,这例中的值根据每个记录的orderid去填,如果orderid不为空,则值为orderid,如果某一条记录orderid为NULL,则用该条记录的customerid去填充,最终根据key列进行一个排序.即将原语句改为select * from orders order by key. 
+ifnull()函数: ifnull(表达式,val),如果表达式不为NULL,则返回表达式的值,如果表达式为NULL则返回val; 一个常用场景是在select字段中有运算操作,当某个字段充当操作数时,如果值为NULL可能会报错,此时使用ifnull()函数将该字段封装起来,如:
+    SELECT ProductName, UnitPrice * (UnitsInStock + IFNULL(UnitsOnOrder, 0)) FROM Products;
+coalesce()函数:coalesce(val1,val2,...),作用是返回参数中第一个不为NULL的值,就上面这句来说ifnull(unitsonorder,0)可以替换为coalescs(unitsonorder,0),即如果遍历记录时相应字段值为NULL,则取0,因为0是参数列表中第一个非NULL值.
+single line comments: 单行注释以双中横线为起始标记; 从双中横线开始到本行结尾都会被作为注释;单行注释可以单独一行,也可位于被执行语句后面;
+multiple lines comments: 多行注释以/*开头以*/结尾,可以跨越多行;除了常见的多行注释用法外,多行注释还可位于被执行语句中,如:
+    select customername, /*city*,/country from customers; 这种写法在调试的时候应该有用,因为不用显式的删掉暂时不需要的部分.
+操作符:算术操作符,位操作符,比较操作符,复合运算符,逻辑操作符.具体看(https://www.w3schools.com/mysql/mysql_operators.asp)

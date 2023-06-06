@@ -36,6 +36,6 @@ grpc客户端和服务端之间的数据传输共有4种模式,这四种模式�
   a.xxx.pb.go中存放的是proto文件中message转换过来的类型声明以及对类型中字段操作的方法.通过对比,四种模式下, 生成的xxx.pb.go文件中类型声明及相应类型的方法这些基本是一样的:
     type X struct {...}
     type Y struct {...}
-    X作为接收器的方法: Reset(), String(), ProtoMessage() ProtoReflect() Descriptor() GetName()
+    X作为接收器的方法: Reset(), String(), ProtoMessage() ProtoReflect() Descriptor() GetName()           //这里的GetN()方法中的N用message打头的块中定义的变量名替代
     Y作为接收器的方法: Reset(), String(), ProtoMessage() ProtoReflect() Descriptor()  GetMessage()
   b.xxx_rpc.pb.go文件对比见excel表
