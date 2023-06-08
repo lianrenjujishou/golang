@@ -26,7 +26,7 @@ json package
     string  -> strings
     nil     -> null
 即此时我们不管json对象编码前的结构是什么样的, 我们只要声明var f interface{}即可, 然后将f传到json.Unmarshal()中最终就可以得到一个map[string]interface{}类型的对map对象.
-最后,往往还会和type assertion以及switch i.(type)联用,注意和这两个联用时,类型应该只能是上面说的bool.float64,string,nil中的一种.
+最后,往往还会和type assertion以及switch i.(type)联用,注意和这两个联用时,类型应该只能是上面说的bool,float64,string,nil中的一种.
 
 5.对于结构体中字段是pointer,slice或map这三种类型的,在json给其赋值时,如果字段匹配则会新分配一个pointer/slice/map,然后对其赋值(因为这三个类型的初始零值都是nil,而这三个类型如果值是nil,slice直接赋值会报index out of range,map会报不能给nil map赋值,而pointer不知为啥),如果没有匹配的,则直接赋值nil. 
   *.这里有个小技巧:在声明接收变量的结构体时,将所有字段都声明为指针类型,则使用json对象赋完值后,通过遍历该变量,判断哪些值不是nil,就可以知道哪些字段被赋了值.
