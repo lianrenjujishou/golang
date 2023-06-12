@@ -1911,6 +1911,7 @@ Channels
     chan<- <-chan int  // same as chan<- (<-chan int)
     <-chan <-chan int  // same as <-chan (<-chan int)
     chan (<-chan int)
+    *.chan chains  //http://tleyden.github.io/blog/2013/11/23/understanding-chan-chans-in-go/
 
 4.发送接收数据的一般形式: a.将数据送入通道: ch <- v;
                        b.从通道读取数据: v:= <-ch;

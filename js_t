@@ -1628,13 +1628,13 @@ DIGIT = %x30-39            ; 0-9
 
 规律:
 两步+ 一个特殊情况
-一步: 将构建的json文本字符串转成[]/{}需要二得一
+一步: 将构建的json文本字符串使用JSON.parse函数转成[]/{}需要二得一
 二步: 从一步中得到的[]{}输出时,再一次二得一,此时就是最终的结果
-一特殊: json文本转[]/{}时,字符串中双引号前的反斜杠默认被去掉
+一特殊: json文本转[]/{}时,字符串中双引号前的反斜杠默认被去掉  //原因是转换后,最外层都使用单引号括起来了,因此单引号中的双引号就不用特别的进行转义了,这块应该算是优化操作吧
 ----------end json-----------
 目的达到了,知道了如何构建json字符串可以得到想要的结果,但中间过程还有问题
 后端--> 前端  json   字符串
-var str = `{"xy": "my mame is \\"\t1Jack\\"\\\\\\\\"}`  
+var str = `{"xy": "my mame is \\"\\t1Jack\\"\\\\\\\\"}`  
 var j = JSON.parse(str)
 console.log(j)   //['my name is "Jack"\\\\']
 console.log(j[0]) //my name is "Jack"\\
@@ -1680,7 +1680,7 @@ console.log("abc\rdef\rghi")
 
 json:
 0. [] {}
-1. 元素支持的类型: 6种  boolean/null/object/array/string
+1. 元素支持的类型: 6种  boolean/number/null/object/array/string
    *.元素,[x,y,z], {key:value}  key只能是由双引号引起来的字符串类型,value可以是6种型中的任意一种
    *.字符串只能由双引号引起来,区别于js中的字符串(单,双,反)
    *.数字类型除了0外,其它整数不能以0打头(01);小数的话,小数点后至少有1位
