@@ -1977,15 +1977,15 @@ Range and Close
         	ch := make(chan int)
         	go num(ch)   //新建协程并在新协程中执行函数
                 for {
-        	v,ok:= <- ch  //使用<-符号,每次从通道中接收值时,都可以得到两个值,一个是发送到管道的值,一个是管道当前状态,是一直通的(true),还是已经被关闭了(false).
-        		if ok == true{     //通过if...else语句判断通道是否关闭,从而执行不同的逻辑,如果未关,则输出从管道接收的值,如果关闭了,则中止for循环
-                   		//fmt.Println(ok)
-        	        	fmt.Println(v)
+        	value,status:= <- ch  //使用<-符号,每次从通道中接收值时,都可以得到两个值,一个是发送到管道的值,一个是管道当前状态,是一直通的(true),还是已经被关闭了(false).
+        		if status == true{     //通过if...else语句判断通道是否关闭,从而执行不同的逻辑,如果未关,则输出从管道接收的值,如果关闭了,则中止for循环
+                   		//fmt.Println(status)
+        	        	fmt.Println(value)
         	        } else{
-                   		//fmt.Println(ok)
+                   		//fmt.Println(status)
         			break
         		}
-        	}
+        	}      //该for循环还可简化为 for value,status:=<-ch;status==true;value,status=<-ch{fmt.Println(value)}
         }
 
   b.使用range关键字时,返回值只有一个,即从通道获取的值(这个小b才是这小节的内容):
