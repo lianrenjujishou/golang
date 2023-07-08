@@ -10,22 +10,22 @@ json package
   解码过程: 将json格式转换为数据结构的过程;
   *.定义一个结构体变量,将该结构体的地址作为参数传到Unmarshal()函数中,Unmarshal()函数则会对该结构体进行初始化,而初始化的原则是:有字段存在于json格式的对象中则使用json对象中的相应值对该字段进行赋值,没有则使用其零值;
   *.json对象在对结构体变量赋值时也是有顺序的,假设json对象有个key叫Foo,则在结构体变量中寻找被赋值字段的顺序是:
-    1.看看有没有字段的tag叫Foo;
+    1.看看有没有字段的tag叫Foo;  //格式为: Name string `json:"Foo"`
     2.字段名精确匹配Foo;
     3.不精确匹配,但是以F开头,如FOO,foO;
-    4.大小写不敏感的其它foo;
+    4.大小写不敏感的其它foo;  //这个测试没成功
 
 3.通常使用Marshal()函数进行编码;
       *.func Marshal(v interface{}) ([]byte, error)
       使用Unmarshal()函数进行解码;
-      *.func Unmarshal(data []byte, v interface{}) error 
+      *.func Unmarshal(data []byte, v interface{}) error      //大多数时候,第二个参数传的是一个结构体类型指针
 4.我们有时候还会遇到在使用Unmarshal()函数解码时,不清楚被编码的结构体信息, 此时可以利用空接口类型变量可以存储任意类型值的特性. json包使用[string]interface{}和[]interface{}来存储任意json对象,而interface{}部分的转换原则是(键类型一直是string):
    golang       JSON
     bool    -> booleans
     float64 -> numbers
     string  -> strings
     nil     -> null
-即此时我们不管json对象编码前的结构是什么样的, 我们只要声明var f interface{}即可, 然后将f传到json.Unmarshal()中最终就可以得到一个map[string]interface{}类型的对map对象.
+即此时我们不管json对象编码前的结构是什么样的, 我们只要声明var f interface{}即可, 然后将&f传到json.Unmarshal()中最终就可以得到一个map[string]interface{}类型的对map对象.
 最后,往往还会和type assertion以及switch i.(type)联用,注意和这两个联用时,类型应该只能是上面说的bool,float64,string,nil中的一种.
 
 5.对于结构体中字段是pointer,slice或map这三种类型的,在json给其赋值时,如果字段匹配则会新分配一个pointer/slice/map,然后对其赋值(因为这三个类型的初始零值都是nil,而这三个类型如果值是nil,slice直接赋值会报index out of range,map会报不能给nil map赋值,而pointer不知为啥),如果没有匹配的,则直接赋值nil. 
@@ -71,7 +71,7 @@ func main() {
     fmt.Println(dst)  //之所以可以这样写,是因为dst实现了Stringer接口了
   }
 }
-一开始自己的想法是src变量只是一个字符串(即去掉现在的[]byte()函数),然后使用json.Marshal(src)得到一个json-encoded的字节切片b, 最后把这个得到的字节切片b传到Compat函数中, 但最终存到dst中的结果和b完全一模一样,并没有将非必要的空白给去掉.后来传给Marshal函数的切片直接使用[]byte()函数转换而来,就得到了正确结果了. 看来[]byte()函数会处理json字符串中的空白,而json.Marshal()则对json格式的字符串原样编码, 不会预先处理空白字符.另外要多用new()函数得到指针类型变量,这样看着优雅一点; 另外,像上面例子,如果err只有一个,写在if里还是外都行,但是如果函数中有多条语句都返回了err,此时最好写成嵌入式的形式, 因为如果分着写的话, 前面用了err,后面就要用err1,err2等,那样看着就乱了(拿上例来说,err内嵌if中时其作用域就是if语句,和if语句外没关系, 但如果你将err写在了if外,则err的作用域就是其所在的整个函数了).
+一开始自己的想法是src变量只是一个字符串(即去掉现在的[]byte()函数),然后使用json.Marshal(src)得到一个json-encoded的字节切片b, 最后把这个得到的字节切片b传到Compat函数中, 但最终存到dst中的结果和b完全一模一样,并没有将非必要的空白给去掉.后来传给Marshal函数的切片直接使用[]byte()函数转换而来,就得到了正确结果了. 看来[]byte()函数会处理json字符串中的空白,而json.Marshal()则对json格式的字符串原样编码, 不会预先处理空白字符(这么想是不对的,[]byte()函数并没有处理字符串中的空白,可以试一下[]byte(`{ "A":"B"}`),得到的结果是10个数值,如果它处理了空白得到的应该是9个).另外要多用new()函数得到指针类型变量,这样看着优雅一点; 另外,像上面例子,如果err只有一个,写在if里还是外都行,但是如果函数中有多条语句都返回了err,此时最好写成嵌入式的形式, 因为如果分着写的话, 前面用了err,后面就要用err1,err2等,那样看着就乱了(拿上例来说,err内嵌if中时其作用域就是if语句,和if语句外没关系, 但如果你将err写在了if外,则err的作用域就是其所在的整个函数了).
 -----完-----
 func HTMLEscape(dst *bytes.Buffer, src []byte)
 将HTML标签中的<,>,&,U+2028(`(`)和U+2029(`)`)这5个字符分别转换为\u003c,\u003e,\u0026,\u0028,\u0029,目的是json安全的嵌入HTML的<script>标签中.说是由于历史原因,web浏览器不支持标准的HTML转义内嵌在<script>标签中.

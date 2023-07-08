@@ -1136,7 +1136,57 @@ The empty interface
 4.empty interface   //这个没啥说的就是接口定义时没有定义方法
 ***
 Type assertions
-0.type assertion判断当前接口类型值i中存放的underlyint concrete type value的前提是上面该underlying concreate type已经实现了接口中的方法.
+0.type assertion判断当前接口类型值i中存放的underlying concrete type value的前提是上面该underlying concreate type已经实现了接口中的方法.
+0.对于类型断言的结构"i.(T)"来说, i的类型是确定的,为接口类型; 而T的类型分两种情况: 一种是实体类型,如果是实体类型,则断言的是如果实体类型实现了接口变量i的类型,则返回该实体类型; 另一种情况是T也是接口类型,这种情况下,断言的是如果接口变量i的实体类型也实现了接口类型T,则将接口变量i的实体类型返回.//具体参看https://go.dev/ref/spec#Type_assertions
+0.类型断言的另一目的是限定实体类型可调用的方法,如:  //参考https://go.dev/blog/laws-of-reflection
+  var r io.Reader
+  tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+  if err != nil {
+      return nil, err
+  }
+  r = tty  //因为os.OpenFile返回*os.File类型,该类型即实现了Read()方法也实现了Writer()方法,但此时r能调用Read()不能调Write(),因为Go是静态类型语言,它此时的类型为io.Reader接口
+
+  var w io.Writer 
+  w = r.(io.Writer)  //此时w只能调用Write()不能调Read(),因为Go是静态类型语言, w的类型为io.Writer接口
+  另一个简单的例子:
+    package main
+    
+    import (
+      _ "reflect"
+      "fmt"
+    )
+    
+    type A interface {
+      Hello()
+    }
+    
+    type B interface {
+      Hi()
+    }
+    type Test struct{
+      Name string
+    }
+    
+    func (h1 *Test) Hello(){
+     fmt.Println("Hello,",h1.Name)
+    }
+    
+    func (h2 *Test) Hi() {
+     fmt.Println("Hi,",h2.Name)
+    }
+    
+    func main(){
+     var a A
+     var b B
+     t := Test{Name:"张三"}
+     a = &t
+     a.Hello()
+     //a.Hi() //这不行
+     b = a.(B)   //这块注意此时B是类型而不是变量
+     b.Hi()
+    // b.Hello()  这也不行,其实这部分知识用类的知识去理解更好一些, 简单来说就是不同的类有各自不同定义的方法,对象的类型不同所能调的方法自然也不一样
+    }
+
 1."类型断言"的语法为: " i.(T) ", 其中i是接口类型变量,T是某个类型, 官文解释为: 看看T是否为i的实体类型. 通俗一点来讲就是: 看T是否实现了接口i中的方法, 如果是则将T类型的值返回, 如果不是直接就抛出致命错误. //通过看官文的例子, 觉得空接口类型有些时候挺有用的, 因为在后面可以根据需要给空接口类型的变量赋任何类型的值. 我想到的一个类型断言使用场景: 有多个类型X,Y...都实现了接口I中的方法, 然后在代码中使用i.(X|Y...)去判断最近一次给接口i赋的值的类型是否为X|Y... .
   *.其中有个特殊情况就是有多个类型都实现了接口I,但并未将任何一个相应类型的值赋给接口变量i,按照上面讲的, 此时i就是nil interface value.
 2.上面1中说的是我想到的场景,而落实到代码上时,有两种形式:

@@ -228,6 +228,47 @@
       http.ListenAndServe(":8000", nil)
     }
 
+    有时客户端会将json进行base64编码后发送, 此时后端就要先将base64编码的字符串解码为字节类型的json,然后再用json.Unmarshal()进行解码以及后续处理,下面代码无前端交互,仅使用golang进行练习,而前端要将json进行base64编码往往还要依赖外部的js库,自带的btoa对于unicode字符好像编码不了:
+        package main
+        import (
+            "encoding/json"
+            "fmt"
+            "encoding/base64"
+        )
+        func main(){
+          var src []byte = []byte(`{   //json包的文档有说对于直接使用[]byte进行编码的Marshal()得到的是base64格式的编码
+            "Name":"Adam Ng",
+            "Age":36,
+            "Job":"CEO"
+            }
+          `)
+        
+          b,_ := json.Marshal(src)
+        
+          var f interface{}
+          json.Unmarshal(b, &f)
+          fmt.Println(f)
+          var base64string string
+          switch v:=f.(type){
+            case string:
+              base64string = v
+            default:
+              fmt.Println("what?")
+          }
+          var data interface{}
+          decodedBytes,_ := base64.StdEncoding.DecodeString(base64string)
+          json.Unmarshal(decodedBytes,&data)
+          m := data.(map[string]interface{})
+          for k,v := range m {
+            switch vv:=v.(type){
+              case string:
+                fmt.Println(k,"is string",vv)
+              case float64:
+                fmt.Println(k,"is float64",vv)
+            }
+          }
+        }
+
     -----------------------------
     *.由于安全问题,貌似js不能直接读取本地文件,必须通过html标签中转一下
     单个文件(form版)
