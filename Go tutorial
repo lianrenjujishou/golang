@@ -78,7 +78,7 @@ Zero values
   字符串: ""
 Type conversions
 1.Go中的类型转换必须要精确指定要转换到的类型
-，表现在实际的写法上即要将被转换值作为函数名为相应类型函数的参数
+，表现在实际的写法上即要将被转换值作为函数名为目标类型的函数参数
   var i int = 42
   var f float64 = float64(i)
   var u uint = uint(f)
