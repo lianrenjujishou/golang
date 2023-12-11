@@ -85,7 +85,7 @@ Type conversions
   还可以使用:=形式:
     i := 42
     f := float64(i)
-    u := uint(f)        //对于数值和字符串相转换,如var a int = 97 , var b string = string(a) 这种写法得到的b是小写字母"a",而不是我们想要的"97", 想要得到"97"要使用strconv包的Itoa函数, var b string = strconv.Itoa(a), 得到b为"97" (https://yourbasic.org/golang/convert-int-to-string/)
+    u := uint(f)        //对于数值和字符串相转换,如var a int = 97 , var b string = string(a) 这种写法得到的b是小写字母"a",而不是我们想要的"97", 想要得到"97"要使用strconv包的Itoa函数, var b string = strconv.Itoa(a), 得到b为"97" (https://yourbasic.org/golang/convert-int-to-string/)      Itoa is short for "Integer To Ascii"
 Type inference
 1.到目前为止变量声明的几种形式:
   var a int  //默认会为a赋值0
