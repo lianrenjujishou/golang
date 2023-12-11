@@ -178,7 +178,7 @@ If and else
 Exercise: Loops and Functions
 1.练习做了,主要学到的倒不是循环和函数的用法, 而是求平方根的方法,牛盾法, 大概的方法是使用公式z-=(z^2-x)/(2z), 使用for循环,循环执行该语句, 直到z值不变或是变动很小时停止,则最后这个值就是我们求得的平方根结果.其中x是被求平方根的值,z通常是1.0, x或x/2.
 Switch
-1.Switch语句其实是if...else...的更短的一种书写形式，但if...else...过多的时候使用switch语句可读性会好一些; switch同if一样,也可以有initializer部分,同条件部分用分号隔开,当然也可以省略initializer部分,具体用不用根据实际情况去定; 使用switch时,当所有条件都不满足时,执行的是default关键字下的语句,这点要注意.
+1.Switch语句其实是if...else...的更短的一种书写形式，当if...else...过多的时候使用switch语句可读性会好一些; switch同if一样,也可以有initializer部分,同条件部分用分号隔开,当然也可以省略initializer部分,具体用不用根据实际情况去定; 使用switch时,当所有条件都不满足时,执行的是default关键字下的语句,这点要注意.
 2.在像C等一些语言中也有swtich语句，在这些语句中，每个case下的执行语句都要有一个break来跳过继续对下面case检测执行。但在Go中不需要在每条case下的执行语句中都加上break语句，实际上是Go已经为我们考虑好了，那个break是程序执行时自动加上去的，不用我们干预，本质上来说还是有的
 3.Go中case后面的类型不限于变量，且相应case部分也不一定要是整数. 从官文给出的例子来看,常见的形式有三种: 
     switch下是变量名,case下是变量名所匹配的值;  switch var {case 1: xxx; case 2: xxx; default: xxx}  //为了写在一行,不同case用分号隔开,但实际能否这样用还没试过
