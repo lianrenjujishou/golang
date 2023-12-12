@@ -261,7 +261,7 @@ Struct Literals
     	v3 = Vertex{}      // X:0 and Y:0
     	p  = &Vertex{1, 2} // has type *Vertex
     )
-    *.这是该小节的第一句话, A struct literal denotes a newly allocated struct value by listing the values of its fields. 其中newly翻译为"重新"而不是"最近",listing翻译为"登记"而不是"列出",整个句子的意思应该更好理解一些
+    *.这是该小节的第一句话, A struct literal denotes(表示) a newly(新) allocated struct value by(通过) listing(列出/登记) the values of its fields. 
 2.我感觉把Struct Literal叫做结构体的实例化方法或叫创建结构体的对象的方法比较合适(根据给出的例子推想出来的)
 Arrays
 1.数组类型的声明: [n]T   //一个含有n个类型为T的数组(声明一个数组，该数组包含n个类型为T的元素)
