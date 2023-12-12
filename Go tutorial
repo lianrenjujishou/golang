@@ -408,7 +408,7 @@ Appending to a slice
 1.这个很好理解，和python的列表追加函数是一个意思，但是用法不一样；
 2.append函数的定义: func append(s []T, vs...T) []T
 3.append函数的实际用法: s = append(s,1)  //其中s是slice;可同时追加多个值
-4.当追加的元素个数超过了slice当前可以包含的最大个数cap(slice)时，Go会给slice重新分配一个array,并且将返回的slice指向这个新的underlying array(这个应该就是原先那块地不够存了，然后根据返回的slice的长度重新找一块地存储它，并且将slice指向新的array,也就是说如果返回后的slice的长度如果超过了当的undelying array的长度后，slice append之前的&slice[0]和slice append之后的&slice[0]已经不是一个值了):
+4.当追加的元素个数超过了slice当前可以包含的最大个数cap(slice)时，Go会给slice重新分配一个array,并且将返回的slice指向这个新的underlying array(这个应该就是原先那块地不够存了，然后根据返回的slice的长度重新找一块地存储它，并且将slice指向新的array,也就是说如果返回后的slice的长度如果超过了当前的undelying array的长度后，slice append之前的&slice[0]和slice append之后的&slice[0]已经不是一个值了):
     func main() {
     	age := [3]int{1,2,3}
     	fmt.Println(&age[0]) //原始数组第一个元素的地址
