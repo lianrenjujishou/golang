@@ -264,33 +264,33 @@ Struct Literals
     *.这是该小节的第一句话, A struct literal denotes(表示) a newly(新) allocated struct value by(通过) listing(列出/登记) the values of its fields. 
 2.我感觉把Struct Literal叫做结构体的实例化方法或叫创建结构体的对象的方法比较合适(根据给出的例子推想出来的)
 Arrays
-1.数组类型的声明: [n]T   //一个含有n个类型为T的数组(声明一个数组，该数组包含n个类型为T的元素)
+1.数组类型的声明: [n]T   //一个含有n个元素类型为T的数组(声明一个数组，该数组包含n个类型为T的元素)
   var a [2]string  //声明一个数组a,该数组中有2个类型为string的元素
-2.数组的引用和赋值与其它语言一样，都是使用角标的形式
+2.数组的引用和赋值与其它语言一样，都是使用索引的形式
   a[0] = "Hello"
   a[1] = "World"
 3.声明数组时如果限定了长度，则以后使用该数组时，长度就是固定的了，不可以对数组的长度进行重定义;但最后一句话不是很明白:This seems limiting, but don't worry; Go provides a convenient way of working with arrays.它说的意思是明白，前面说了声明时带有长度的数组后期不可改变大小，但又说这种限制不用担心，Go为我们提供了一种方便的方式来使用数组，这句话指的是什么?指的是后面要说到了声明时可以不定义长度的形式吗?
 4.声明数组时赋值(或者叫声明一个带有初始化器的数组?) [n]T{value1, value2, ...}
-  var primes := [6]int{2, 3, 5, 7, 11, 13}  //这里看出错误了，因为这里的声明用的是短形式:=,所以说打头的关键字var是没有必要的，看了一眼原文也是这样，先不去掉var,暂且留在这里吧
+  var primes := [6]int{2, 3, 5, 7, 11, 13}  //这里看出错误了，因为这里的声明用的是短形式:=,所以说打头的关键字var是没有必要并且一定不能有的，看了一眼原文也是这样，先不去掉var,暂且留在这里吧
 5.总结一下数组的声明赋值常用方法:
   a := [2]int{1,2} //短形式的海象符必须在声明时就赋值
   var a [2]int   a[0]=1  a[1]=2  //使用var可以先声明,后面使用索引的方式赋值
   var a [2]int = [2]int{1,2}  //使用var同样可以连声明和赋值在一块做了
   var a = [2]int{1,2} //使用var可以省略左边声明部分的显式类型说明,因为可以根据右边推断出来
-6.数组的长度必须是一个固定的数值,不可以是变量,因为Go是一门静态类型的语言, 所以必须要在编译时知道其长度.如果想声明一个大小不固定的"数组",可以考虑使用下面要说的分片,slice.  //https://stackoverflow.com/questions/46809499/why-cant-you-put-a-variable-as-a-multidimensional-array-size-in-go
+6.数组的长度必须是一个固定的数值,不可以是动态的,因为Go是一门静态类型的语言, 所以必须要在编译时知道其长度.如果想声明一个大小不固定的"数组",可以考虑使用下面要说的分片,slice.  //https://stackoverflow.com/questions/46809499/why-cant-you-put-a-variable-as-a-multidimensional-array-size-in-go
 7.官文有这么一句话: "An array's length is part of its type, so arrays cannot be resized",所以当别人问你var animals [3]string中,变量animals的类型时,回答是[3]string, 而非[]string,或string.
 Slices
 1.首先说了array的大小是固定的。接着引出相对而言slice是变化的，slice在其它语言中经常翻译为分片，通过看他的描述，在Go里对slice翻译为分片也是合适的。而分片其实指的是取array的一部分，也就是说slice一般是和array联用,更准确一点说slice的underlying是array;
 2.slice也有类型，为[]T,即未指定大小，[]中未指定分片的大小，也就是说大小是动态的，T一般为相应array中所包含元素的类型;
-3.分片通常的用法是先声明一个数组，然后通过指定数组的上限和下限来为slice赋值(或说得到一个slice类型对象)
+3.分片通常的用法是先声明一个数组，然后通过指定数组的上限和下限来为slice类型变量赋值(或说得到一个slice类型对象)
   *. primes := [6]int{2, 3, 5, 7, 11, 13}
      var s []int = primes[1:4]   //这里面的[]int是可以省略的，也可写作:
      s := primes[1:4]
-4.接着3说，数组的分片一般是包前不包后的，即a[1:4]是指数组a中第1到第3个元素
+4.接着3说，数组的分片一般是包前不包后的，即a[1:4]是指数组a中索引1到索引3这三个元素,并不包含索引4指向的元素.
 *.第三条的例子，可以看出分片s的类型是[]T,这个现在就死记吧，数组的分片(感觉叫切片更生动一些)(不知道将slice和array连起来说准不准确，暂且先这样记吧)，一开始我以为[]T只是因为方便不用刻意的去关心分片的大小，事实上Go可能也是这样考虑的；我尝试着将分片s的类型换成[3]int,因为后面的分片就三个元素嘛，但是执行失败了。而且回显明确告诉我分片的类型是[]T(不能指定slice包含元素的数量)
 Slices are like references to arrays
-1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice相应的underlying array.举例来说 underlying array为base:=[10]int{1,2,3,4,5,6,7,8,9,10}这10个数，然后我对该underlying array做了一个切片，比如slice:=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名
-2.既然slice会直接改变它underlying array中的数据，则其它的slice肯定也会受到影响
+1.slice不存储任何数据，对slice中任意元素的更改其实是直接改变该slice所对应的underlying array.举例来说 underlying array为base:=[10]int{1,2,3,4,5,6,7,8,9,10}这10个数，然后我对该underlying array做了一个切片，比如slice:=base[0:5],我们都知道变量声明完之后其实是在内存中分配了一片空间，然后使用变量时，其实是利用变量的地址准确的找到变量数据在内存中的位置(大概是这样，具体的也记不清了)，再说这里的分片，其实也是内存中的一段地址，特殊的是这个地址是在underlying array的范围内取，这样一来，其实对分片数据的更改，就直接作用到underlying array中的数据。一开始我想用array的别名来描述slice,但是这样不准确，因为别名是对underlying array的完全引用而slice可以是整个基础数组也可能是基础数组的一部分,所以不能把slice理解成其underlying array的别名
+2.既然slice会直接改变它underlying array中的数据，则引用同一个array的其它slice可能也会受到影响,具体受不受影响就看两个slice在引用同一个array时有没有取到相同的索引.
 Slice literals
 1.前面有个struct literal从例子中看，struct literal就是一个创建结构体实例或是对象的方法或叫手段,即通过给结构体中字段进行赋值的方法来得到struture value(也就是所谓的结构体实例或对象)
 2.对slice literal官方tour给的描述是:"a slice就像是一个没有长度的array literal"， 参考struct literal就很好理解了,其实总结起来就是:
@@ -298,11 +298,11 @@ Slice literals
     1. T literal是得到T value的一种手段或方法;
     2. T literal的具体表现形式为: "T{val1,...}"; 
     *.拿结构体和本节的slice举例来说:
-     假设有结构体type Person struct{ Age int },则Person{18}就是一个Person value,它是通过给结构体定义中的字段赋一个实际值得到的,也就是所谓的Person literal.
+     假设有结构体type Person struct{ Age int },则Person{18}就是一个Person value,它是通过给结构体定义中的字段赋一个实际值得到的,也就是通过所谓的Person literal方式.
      再说slice, []int{1,2,3}这是一个slice value, 它是通过实际给出slice元素值来得到的, 也就是所谓的slice literal,这种通过给出实际类型值的方式或手段就叫做T literal,得到的结果就叫做T value
 3.声明一个array literal: [3]bool{true, true, false}
 4.声明一个slice literal: []bool{true, true, false}
-*.其中3和4的区别是，3只是简单的声明一个含有三个为bool类型的array并赋值；而4其实可以理解为2步，第一步是创建一个无名array第二步是基于第一步的无名array创建一个大小和无名array完全一样的slice, array[:]. 
+*.其中3和4的区别是，3只是简单的声明一个含有三个元素类型为bool的array并赋值；而4其实可以理解为2步，第一步是创建一个无名array第二步是基于第一步的无名array创建一个大小和无名array完全一样的slice, array[:]. 
 5.对于元素类型为结构体的slice,在声明时初始化需要注意的是,不能像对单个结构体初始化一样,只给部分field赋值,剩下的field自动获得相应类型的初始值; 必须要将结构体中所有的field都赋值,否则会报错.
   s := []struct {
     i int
@@ -314,10 +314,10 @@ Slice literals
     {7, true},
     {11, false},
     {13, true},
-  }  //这个例子中还有需要注意的地方呢,当初始化array或slice时,如果结尾花括号,},和最后一个元素在同一行,则最后一个元素后的逗号可加可不加, 但如果像该例中这么写,即最后一个元素和结尾花括号不在一行,则最后一个元素后一定要加逗号.
+  }  //这个例子中还有需要注意的地方呢,当初始化array或slice时,如果结尾花括号,},和最后一个元素在同一行,则最后一个元素后的逗号可加可不加, 但如果像该例中这么写,即最后一个元素和结尾花括号不在一行,则最后一个元素后一定要加逗号,不然会报错.
   *.上面这个例子中slice元素实际上是简写的, 这样想啊, 元素其实是某个类型的实例, 而结构体的实例化语法正常来说应该是T{val...},而这里省了T,直接写的是{val...},拿第一个元素举例,完整的写法应该是: struct{i int; b bool}{2, true},需要注意的是这里面struct"{i int; b bool}"才是类型(字段间我用分号隔开的, 因为这样可以写在一行, 也可以用常规写法, 即每个字段占一行), 而不是"struct",之所以这样说可以抽象一下,slice实例化的语法为[]T{val...},也就是说右方框号,],到左花括号,{,中间的部分的所有内容表示的是元素类型.
 6.总结一下：参照structure literal, 所谓的slice literal就是使用[]T{x,...}的方式得到slice value的一种方法
-7.再多说一句，从之前的struct literal,到array literal, 再到slice literal,其实头两个基本上就是之前讲的变量声明的时候就顺带赋值了，而slice literal虽说也是声明的时候就赋值了，但是不要忘了，slice是要基于array的，这句话是关键。所以再理解slice literal的时候就要分两步理解，第一步是array的创建，第二步是slice的build(叫构建，生成啥的，随便叫吧)
+7.再多说一句，从之前的struct literal,到array literal, 再到slice literal,其实头两个基本上就是之前讲的变量声明的时候就顺带赋值了，而slice literal虽说也是声明的时候就赋值了，但是不要忘了，slice是要基于array的，这句话是关键。所以在理解slice literal的时候就要分两步理解，第一步是array的创建，第二步是slice的build(叫构建，生成啥的，随便叫吧)
 8.slice也是有类型的，它的类型是"没有长度的数组类型" []T
 9.再说一下slice literal的官方定义：slice literal就像是一个没有长度的array literal
 Slice defaults
@@ -332,14 +332,15 @@ s := []int{2, 3, 5, 7, 11, 13}  //这个s是对右侧无名数组的一个分片
 s = s[1:4]  //这个是从上面那句得到的s中取第1，2，3个元素(3,5,7)
 s = s[:2]   //这个是在上面那句s的结果取第0和第1个值(3，5)
 s = s[1:]   //这个是在上面那句的s的结果取第1个值(5)
-*.上面几节也说过slice其实是对array的引用，我理解slice其实存的是地址，而不是值，对slice[1]的修改，其实是对在slice[1]中存储的地址所指向的数据进行修改，所以才会有之前说的对一个slice的修改，可能会影响到其它的slice,如果它们有相同引用的话. //现在想来, 首先这句话说的没问题, 但又有不恰当的地方,其实所有的变量都是对地址的引用, 只不过slice不同的是系统没有为其分配新内存,而是局限在给underlying array分配的内存范围. 下面的知识会提到如果追加的内容超出了underlying array的范围会重新给underlying array分配一块足够的地方, 但slice本身还是被局限在这块给underlying array新分配的内存上,本质是没变的.
+*.上面几节也说过slice其实是对array的引用，我理解slice其实存的是地址，而不是值，对slice[1]的修改，其实是对相对应的array在内存中的数据进行修改，所以才会有之前说的对一个slice的修改，可能会影响到其它的slice,如果它们有相同引用的话. //现在想来, 首先这句话说的没问题, 但又有不恰当的地方,其实所有的变量都是对地址的引用, 只不过slice不同的是系统没有为其分配新内存,而是局限在给underlying array分配的内存范围. 下面的知识会提到如果追加的内容超出了underlying array的范围会重新给underlying array分配一块足够的地方, 但slice本身还是会被局限在这块重新给underlying array分配的内存上,本质是没变的.
 *.上面那4个s,第2，3，4分别是以上一句为源进行截取，但是下一节会讲到，它们是可扩展的，对于:
   s = s[1:4]来说, s的长度最大扩展到5, 即 s = s[:5], 因为cap(s[1:4])=5;
   s = s[:2]来说, s的长度最大扩展到5,即 s = s[:5], 因为cap(s[:2])=5;
   s = s[1:]来说, s的长度最大扩展到4,即 s = s[:4],因为cap(s[1:])=4;
-  *.所以弄清slice扩展的原则就是:对于sliceA = sliceB[]来说,要明确知道:
-      a.cap(sliceB)是多少;
-      b.sliceB的内容是啥;
+上面这三个例子还可以换种角度去理解, 拿最后一个s = s[1:]来说, 你要弄清这里的最低索引1在基础数组中的索引是几,比如是2, 然后用基础数组的长度L-2,就是此时s的capacity, 分片少的话可以使用这种方法,分片多的话还是上面说的这种方式合理, 即基于上一个分片的情况进行计算.
+  *.所以弄清slice扩展的原则就是:对于sliceA = sliceB[[low]:[high]]来说,要明确知道:
+      a.cap(sliceA)是多少;
+      b.sliceA的内容是啥;
     此时sliceA索引的最小值总是为0.
 Slice length and capacity
 1.每个slice都有两个属性，一个叫length,一个叫capacity.
@@ -362,18 +363,18 @@ func TestSlice() {
   可以通过cap(s)来得到分片s的cap(s)属性值   //看到这明白了goroutines 有一节的代码中的cap()函数是啥意思了
   *.len(s)理解为当前slice的长度; cap(s)理解为当前slice可能的最大长度
   *.len()函数没啥说的，好理解; 而cap()函数我觉得应该理解为:"左值不动, 只能右值向右扩展"，此时再去理解cap()的值是len(array)-slice(low bound)就通了
-3.capacity其实可以理解为当前分片最多可以拥有的元素个数，这个个数不要和当前分片的长度相混淆，当前分片的长度指的是当前分片已有元素的个数，而当前分片最多可以拥有元素的个数倾向于分片的扩展性，而这个扩展性是看你当前是基于谁进行的分片,如cap(slice)的值为4,则slice2:=slice[这里的长度不能超过4],因为此时slice2的内容是基于slice来的,所以要注意不是说分片参考的就一定是underlying array, 还有可能参考的是另一个分片.
+3.capacity其实可以理解为当前分片最多可以拥有的元素个数，这个个数不要和当前分片的长度相混淆，当前分片的长度指的是当前分片已有元素的个数，而当前分片最多可以拥有元素的个数倾向于分片的扩展性，而这个扩展性是看你当前是基于谁进行的分片,如cap(slice)的值为4,则slice2:=slice[这里的长度不能超过4],因为此时slice2的内容是基于slice来的,所以要注意不是说分片参考的就一定是underlying array, 还有可能参考的是另一个分片(但本质上基于的还是underlying array).
 4.对于所谓的扩展slice的长度,要从以下几点考虑:
   a.最原始的那个slice或是array,因为此时length和capacity相等且最大;
-  b.你要扩展的是谁,因为它决定了capacity的大小, 你只有知道了它的capacity才能知道你扩展后的slice的capacity最大是多少
+  b.你要扩展的是谁,因为它决定了capacity的大小, 你只有知道了你所基于的这个slice或array的capacity才能知道你基于此得到的新slice的capacity最大是多少
   originalSlice := []int{1,2,3,4,5}  //原始slice的length和capacity相等为5
   firstSlice := originalSlice[2:4]   //此时firstSlice的length为4-2=2;capacity为原始slice减去low,即5-2=3;所以下面如果想要以firstSlice进行扩展,最大长度不能超过3
   resultSlice := firstSlice[:3]  //此时high索引最大只能到3,因为你是根据firstSlice这个slice取的, 而firstSlice的capacity为3.
-  *.由cap()函数引出的问题, 什么时候会用到这个函数呢? 首先说用到该函数, 其实用的是它的特性, 那么它的特性是啥呢,即可以知道当前slice可容纳的最大元素个数,结合len()函数,即可以知道当前slice可扩展的空间有多大(或者理解为当前slice还剩多少空间). 虽说下面会讲到当使用append()函数向slice追加元素时, 当追加的元素个数超出了slice的capacity后,会重新给underlying array分配一块地儿,但重新分配后,内存地址就改变了. 具体码代码时, 可以根据这段话所描述的特性去使用cap()函数.
+  *.由cap()函数引出的问题, 什么时候会用到这个函数呢? 首先说用到该函数, 其实用的是它的特性, 那么它的特性是啥呢,即可以知道当前slice可容纳的最大元素个数,结合len()函数,就可以知道当前slice可扩展的空间有多大(或者理解为当前slice还剩多少空间). 虽说下面会讲到当使用append()函数向slice追加元素时, 当追加的元素个数超出了slice的capacity后,会重新给underlying array分配一块地儿,但重新分配后,内存地址就改变了. 具体码代码时, 可以根据这段话所描述的特性去使用cap()函数.
 Nil slices
 1.之前讲过如果变量声明的时候(使用关键字var,不能是海象符,使用海象符时一定要进行赋值操作)如果没有初始化器，也就是说如果声明时不赋值，则Go会按类型给相应的变量赋一个值，这个值Go叫它zero value,也就是零值。不管叫啥明白这个意思就好。同样的slice如果声明时不赋值也会默认有一个zero value,为nil.
 2.从例子来看，所谓slice声明时不赋值，指的是没有右边的数组那部分，var s []int,这样的slice,它的len()和cap()都是0，因为这个slice没有underlying array(这个词我还是觉得翻译为基础数组好一些)
-3.一般是用if语句去判断slice是否未初始化.这块就要注意了, "var a []int" 和 "var a = []int{}" 是不一样的,前者是没有初始化,此时a值为nil,而后者的值不是nil, 另外通过实践还从编译器得到一名话,"slice can only be compared to nil",即在使用if语句判断的时候,条件部分的"=="号一边是slice名称,另一边只能是nil.//得到提示使用的例子为:var x []int = []int{} if x==[]int{}{ fmt.Println("not nil!")}
+3.一般是用if语句去判断slice是否未初始化.这块就要注意了, "var a []int" 和 "var a = []int{}" 是不一样的,前者是没有初始化,此时a值为nil,而后者的值不是nil, 另外通过实践还从编译器得到一句话,"slice can only be compared to nil",即在使用if语句判断的时候,条件部分的"=="号一边是slice名称,另一边只能是nil.//得到提示使用的例子为:var x []int = []int{}; if x==[]int{}{ fmt.Println("not nil!")}
 Creating a slice with make
 1.首先Go提供了一个内建的函数,make,它的返回值就是一个slice；文中还有一句"this is how you create dynamically-sized arrays"也就是make是用来创建动态数组的方式，记得其它语言中当数据的类型为[]T时声明的就是动态数组，但是在Go中，[]T只是slice的类型，数组array的类型必须是[n]T即必须指定大小。还接着上面那句英文，感觉给的例子不是创建的动态数组呀，"a := make([]int, 5)"还是指定了数组的大小了，哎，这块有点不明所以。 //现在感觉呀,golang中所谓的动态数组和C中的还不太一样, golang中的动态数组的动态是有一个大前提的,即在underlying array下的动态, 这么想应该就通了
 2.内建函数make的参数可以是两个，也可以是三个，但是第一个一般都是slice的类型:
