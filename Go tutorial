@@ -727,8 +727,8 @@ Function closures
   	}
   }   
   *.你可以将adder()理解为类, pos,neg := adder(), adder()相当于类adder的实例化,得到两个实例pos和neg, 此时因为是两个实例,所以操作pos时对neg是没有影响的, 反之亦然, 但正如上面例子所说, 多次操作同一个实例时,如果多次调用都会用到同一个变量(引用closing function中的),则前面调用时产生的结果会影响后面调用时该变量的初始值,原因很明显, 同一个实例中,同一个变量在内存中的地址是固定的.//这段话也可以理解为function closure(函数闭包)的使用场景
-*.上面关于function closure的说法应该不完全正确, 感觉只是其中的一种应用形式.//但function values一节说function values(function value从形式上看其实就是一个完整的函数)可以用于函数参数或函数返回值, 而这一节又说在function closure中引用closing function中的变量,所以只有匿名函数作为返回值才满足可以在函数体中调用closing function中变量的情况(这句话说的不完全对, 内嵌函数也可以有名,只不过内嵌函数不能用func的形式声明,只能用海象符的形式,如inner:=func(){}).
-*.也就是说closure function指的是:"a.内嵌于函数A中","b.作为return参数"并且"c.引用A中变量"的"  //返回值的形式可以是reutrn func(){} 也可以是先用海象符声明inner:=func(){}, 然后再return inner.即,可返回有名函数也可返回匿名函数
+*.上面关于function closure的说法应该不完全正确, 感觉只是其中的一种应用形式.//但function values一节说function values(function value从形式上看其实就是一个完整的函数)可以用于函数参数或函数返回值, 而这一节又说在function closure中引用closing function中的变量,所以只有匿名函数作为返回值才满足可以在函数体中调用closing function中变量的情况(这句话说的不完全对, 在函数内声明一个函数类型的变量也然后将该函数类型的变量作为返回值也满足闭包函数的要求,只不过内嵌函数不能用func的形式声明,只能用海象符的形式,如inner:=func(){}).
+*.也就是说closure function指的是:"a.内嵌于函数A中","b.作为return参数"并且"c.引用A中变量"的"  //返回值的形式可以是reutrn func(){} 也可以是先用海象符声明inner:=func(){}, 然后再return inner.即,可返回有名函数也可返回匿名函数, 而可以看到, 这里的有名函数其实也是由匿名函数得来的, 所以本质上还是匿名函数.
 **.在看net/http/server.go的源码时发现了函数的另一种用法:
     import "fmt"    
     
