@@ -802,10 +802,9 @@ func main() {
     	fmt.Println(baoshijie.drive())
     	fmt.Println(baoshijie.stop())
     }
-上面这个例子将接口,interface,也给带出来了, 如果要说interface的常用方法,上面这个例子还不够,如果再定义一个type Alien struct{}类型,然后Alien类型再实现drive()和stop()方法,这样,"var baoshijie Car = "后面的值就即可以是YQ,也可以是Alien了,因为这两个类型都实现了Car这个接口的方法,而具体baoshijie的值是YQ还是Alien,就根据实际需求了. //抽象出来说明就是: 接口中定义的方法可以被N多的类型实现, 但不同类型有不同的实现方法, 当一个变量声明为相应的interface类型时, 可以根据实际情况将相应实现其方法的类实例赋给变量.
-
-
+上面这个例子将接口,interface,也给带出来了, 如果要说interface的常用方法,上面这个例子还不够,如果再定义一个type Alien struct{}类型,然后Alien类型再实现drive()和stop()方法,这样,"var baoshijie Car = "后面的值就即可以是YQ,也可以是Alien了,因为这两个类型都实现了Car这个接口的方法,而具体baoshijie的值是YQ还是Alien,就根据实际需求了. //抽象出来说明就是: 接口中定义的方法可以被N多的类型实现, 但不同类型对接口中定义的方法有不同的实现, 当一个变量声明为相应的interface类型时, 可以根据实际情况将相应实现其方法的类实例赋给该接口类型变量.
 *.也就是说这节说的receiver, 说白了就是一个"类"!
+
 Methods are functions
 1.这一节就着重强调了: method is just a function with a receiver argument
 2.拿一个例子来说明了，将method的receiver部分放到function的参数位置，则function和method实现的功能是一样的(不知道是否所有的method和function都可以这样转换，这个后期再讨论)
@@ -819,7 +818,7 @@ Methods are functions
   引用的时候:
   v := Vertex{3, 4}
   fmt.Println(v.Abs())   //Abs()里面没有参数，因为Abs()函数体可以直接从v中取
-                       //这遍看突然发现，方法的引用好像不对，打印函数中参数应该是v.Abs(),现在只写了Abs()  //已在Abs()前补上receiver v补上
+                       //这遍看突然发现，方法的调用好像不对，打印函数中参数应该是v.Abs(),现在只写了Abs()  //已在Abs()前补上receiver v
   
   函数的形式:
   func Abs(v Vertex) float64 {
@@ -828,7 +827,7 @@ Methods are functions
   引用的时候:
   v := Vertex{3, 4}
   fmt.Println(Abs(v))  //Abs()里面要加参数v,否则函数体中引用的v.X和v.Y就会报错了
-*.还是上面说的，就现在的理解method之于function来说只是给function加了一个环境(用环境这个词好像不太形象，理解就好。)，这个环境的数据在function中可以引用，仅此而已(强调：是目前这么理解!)
+*.还是上面说的，就现在的理解method之于function来说只是给function加了一个环境(用环境这个词好像不太形象，理解就好。)，这个环境的数据在函数体中可以引用，仅此而已(强调：是目前这样理解!)
 Methods continued
 1.前面讲的方法，接收器的类型是struct,其实对于非struct类型也是可以的
 2.receiver的类型必须是在method所在的包内声明，在其它包中声明的类型(包括内建的包)不能作为本包method中receiver的类型  //举例来说, 像int, float64这样的内建类型,因为它们不是在你定义方法的那个包中声明的, 所以你不可以直接将它们作为接收器类型,如果确实想用其它包中或是内建的类型, 首先要保证该类型在本包内可访问(这主要是针对非内建包,因为内建的许多类型所在的包都是默认导入的),然后再使用"type 别名 非本包内声明的类型名"的方式,在本包内声明一下, 然后再使用这个 "别名" 作为某方法的接收器类型就可以了.
