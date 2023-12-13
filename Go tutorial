@@ -907,13 +907,13 @@ Methods and pointer indirection
     func main() {
         var p = &x
     	
-    	fmt.Println(x)        //5
-    	fmt.Println(p)        //x的地址
-    	fmt.Println(&x)       //x的地址
-    	fmt.Println(&p)       //p的地址
-    	fmt.Println(*p)       //5
-    	fmt.Println(*(&x))    //5
-    	fmt.Println(**(&p))   //5
+    	fmt.Println(x)        //5                   x地址处的内容
+    	fmt.Println(p)        //x的地址              p地址处的内容
+    	fmt.Println(&x)       //x的地址              x地址
+    	fmt.Println(&p)       //p的地址              p地址
+    	fmt.Println(*p)       //5                   p地址处的内容指向(*)的内容
+    	fmt.Println(*(&x))    //5                   x地址(&x)指向(*)的内容
+    	fmt.Println(**(&p))   //5                   p地址(&p)指向(*)的内容(x地址)指向(*)的内容
     }
     输出为:
     5
