@@ -1111,7 +1111,7 @@ func main(){
     if t == T{} {}   //简单来说就是这么写, 乍一打眼看是正确的, 但因为运算符的优先级问题, 我们需要给T{}加上括号才行(等号用来判断两个变量值是否相等, 而T{}不加括号的话认为是T的一个新实例,也就是说两个结构体比较是否相等的话,其实比的是两个结构体中的字段值是否相同,相等.而例子中如果T{}不加括号的话, 表示带有默认字段值的类型T的新实例; 也就是说此时是用t的零值和T的新实例进行比较, 二者是两个维度的东西,其实这个答案细节自己也不是很明白,这是自己对chatGPT回答的理解),即正确的写法为:
     if t == (T{}) {}  //当然因为结构体的零值其实里面的字段也是相应的零值,我们可以不写,写上也不算错.参考链接: https://freshman.tech/snippets/go/check-empty-struct/
 
-2.interface value如果保存的实体类型的值是nil,则这个interface value也不是空的。通过例子来看:
+2.interface value即使其实体类型的值是nil,这个interface value也不是nil。通过例子来看:
     type I interface {ok() int}
     type T struct { S int }
     
@@ -1129,7 +1129,7 @@ func main(){
     	}
     }
 
-*.Golang中类型pointer, map, slice(array的零值为相应元素类型的零值,如var a [3]int, 输出a的值为[0,0,0]), channel, interface, function 的零值为nil.
+*.Golang中类型pointer, map, slice(array的零值为相应元素类型的零值,如var a [3]int, 输出a的值为[0,0,0]), channel, interface, function 的零值为nil.  指f字m分s通c接i函f
 Nil interface values
 1.标题所谓的"nil interface values"说白了就是定主的了接口类型变量,var i I,但没有给i赋值,此时i会被编译器赋值,nil. 这种情况下使用i直接调用接口中的方法,如上面所说的i.ok(),则会产生一个run-time错误,其因想想也简单, 此时没有和i挂购的concrete type, 你执行谁去?。这和有没有类型实现I中的方法没有关系, 假使V类型实现了I中的方法, 但你在var i I之后, 没有给i赋值V也没用啊.
   var i I  //定义接口变量i
