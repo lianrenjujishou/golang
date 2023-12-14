@@ -940,8 +940,8 @@ Methods and pointer indirection(2)
   *.p.Abs()会被解释为(*p).Abs()
 **.对上两小节的主要内容总结一下吧:
     1.无论方法的接收器是value类型还是pointer类型，在进行调用时都可以使用value类型或是pointer类型进行调用, 编译器会进行相应的转换
-        a.接收器为value类型,则如果使用&p进行调用，则编译器会将&p转化为*(&p)
-        b.接收器为pointer类型，则如果使用v进行调用,则编译器会将v转化为&p
+        a.接收器为value类型,则如果使用&v进行调用，则编译器会将&v转化为*(&v)
+        b.接收器为pointer类型，则如果使用v进行调用,则编译器会将v转化为&v
     2.接1说，但是函数定义中的参数如果是value类型则传参时必须是value类型，如果是pointer类型则必须传pointer类型  //这个就不说了上面都有例子
   /*当接收器类型为指针时,在调用相应的方法时,无论你是使用指针类型进行调用还是使用值调用,调用结果是一样的,都遵循"方法定义时所使用的接收器类型". 换句话说,当接收器为指针类型时,如果你使用指针类型调用,正好,这是常规逻辑; 如果你使用的是值调用,则在真正执行的时候,编译器也会根据相应的方法在定义时前面的接收器类型,给你的值调用前加上个"&"(既然说到编译器,则这么说就不恰当了,更恰当一点的说法是编译器会自动帮你校正接收器对象的地址),然后再进行执行. 也就是说,当接收器为指针类型的变量时, 你在调用相应的方法时,无论是使用的值调用还是指针调用,最后执行的语句都是一样的,即都是指针调用,因此得到结果也是一样的.就下面的例子而言,ZS声明时的类型为普通Person类型,当你引用的时候写的是:
 ZS.multiply() 时, 在正式编译前会检测multiply()方法定义时的接收器类型,将该句预处理为:(&ZS).multiply(),然后再进行编译执行.
@@ -959,6 +959,8 @@ ZS.multiply() 时, 在正式编译前会检测multiply()方法定义时的接收
     	fmt.Println(ZS.name, ZS.age)
     	ZS.multiply() //ZS-> (&ZS)
     	fmt.Println(ZS.name, ZS.age)
+
+        fmt.Println(ZS)
     }*/
     
   /*下面的multiply()方法的接收器是普通类型,而下面的main()函数中,ZS变量是指针型变量,此时当我们在调用multiply()方法时写的是:
@@ -976,6 +978,8 @@ ZS.multiply() 时, 在正式编译前会检测multiply()方法定义时的接收
     	fmt.Println(ZS.name, ZS.age)
     	ZS.multiply() //ZS-> (*ZS)
     	fmt.Println(ZS.name, ZS.age)
+
+        fmt.Println(ZS)
     }*/
 
 Choosing a value or pointer receiver
