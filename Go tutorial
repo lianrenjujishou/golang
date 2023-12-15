@@ -1350,12 +1350,13 @@ Type switches
 
 Stringers
 1.这节主要讲的是fmt包中定义了一个名为Stringer的接口,type Stringer interface {String() string},而fmt包中所有的打印函数以及某些包的打印功能在打印类型实例时,会先看一下该实例的类型有没有实现Stringer接口,如果实现了,则直接调用该实例的String()方法; 如果没实现则直接把该类型实例输出. 重点来了, 所以如果我们想要自定义A类型值和B类型值的打印内容,就可以使用A和B分别实现Stringer接口的String()函数,这样我们在使用类似于fmt.Println(A,B)的时候,实际上执行的是A.String(), B.String().下面通过一个例子看一下
-    type Person struct { Name string, Age int }
-    func (p Person) String() string { return fmt.Sprintf("%v (%v years)", p.Name, p.Age) }   //Person类型实现了fmt包中Stringer接口中的String()方法
+    type Person struct { Name string; Age int }
+    func (p Person) String() string { return fmt.Sprintf("%v (%v years)\n", p.Name, p.Age) }   //Person类型实现了fmt包中Stringer接口中的String()方法
     func main() {
-        a := Person{"Arthur Dent", 42}}   //得到Person类型变量a
+        a := Person{"Arthur Dent", 42}   //得到Person类型变量a
         z := Person{"Zaphod Beeblebrox", 9001}  //得到Person类型变量z
-        fmt.Println(a, z)  //该句在实际执行的时候,其实执行的是a.String()和z.String()
+        fmt.Println(a,z)  //该句在实际执行的时候,其实执行的是a.String()和z.String()
+    }
 *.官文中还讲了实现String()方法以达到自定义输出内容格式,在写go代码时十分常见.
 Exercise: Stringers
 1. 我的代码:
@@ -1410,7 +1411,7 @@ Exercise: Stringers
    =====
 
    总结: 还是ChatGPT的代码更少, 更易理解,我的代码,多引入了两个包, 还一堆转换.
-   *.另外之前只接触了fmt.Println函数输出变量时,会调变量.String();这节又接触了fmt.Printf函数在格式化输出时逻辑为先调用变量.String()替换掉双引号中的格式符, 然后再进行格式化输出.拿上面这个例子来说, 先将"%v: %v\n"中的两个v给替换掉,name为string类型变量,其默认就是原样输出,此时变为"loopback: %v\n",再看ip,其实现了Stringer接口,调用相应的String函数后,使用返回值进行替换,近而得到"loopback: 127.0.0.1\n",最后对这个替换后的字符串进行格式化输出,\n被解释为换行.googleDNS的输出原理同loopback.
+   *.另外之前只接触了fmt.Println函数输出变量时,会调变量.String();这节又接触了fmt.Printf函数在格式化输出时逻辑为先调用变量.String()替换掉双引号中的格式符, 然后再进行格式化输出.拿上面这个例子来说, 先将"%v: %v\n"中的两个%v给替换掉,name为string类型变量,其默认就是原样输出,此时变为"loopback: %v\n",再看ip,其实现了Stringer接口,调用相应的String函数后,使用返回值进行替换,近而得到"loopback: 127.0.0.1\n",最后对这个替换后的字符串进行格式化输出,\n被解释为换行.googleDNS的输出原理同loopback.
 Errors
 1.在go中, 内建类型中非有一个叫error的接口,其定义为: type error interface { Error() string },我们在使用fmt包中的打印函数打印error类型值时,默认先看一下其underylying type是否实现了error接口,如果实现了,则调用underlying type的Error()方法.如果没实现,则原样输出error实例.
 2.到目前为止接触了两个比较常用的接口,一个是之前讲的fmt包中的Stringer接口,还有一个就是上一条说的内建的error接口,通过实践发现, 在使用fmt包的打印函数时,先找的是Error()函数, 然后才是找String()函数(这句话主要想表达, 即使没有返回error接口类型的变量, Error()方法也可能会被调用).见例子:
