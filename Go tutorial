@@ -1231,9 +1231,9 @@ func main() {
   var a1 Animal = Animal{age1: 18}
   fmt.Println(a1,p1)
   var z X = a1       //这句是焦点
-  t := z.(Animal)   //判断z的基础类型是否为Person   z是接口值,即 (a1,Animal),所以z.(Animal)相当于(a1,Animal).(Animal),即判断前面的类型是否为Animal,是的话将a1返回,否则panic   //最近一次,或最后一次这个词在这里也有助于理解
+  t := z.(Animal)   //判断z的基础类型是否为Person(或叫判断z中存储的值类型是否为Animal)   z是接口值,即 (a1,Animal),所以z.(Animal)相当于(a1,Animal).(Animal),即判断前面的类型是否为Animal,是的话将a1返回,否则panic   //最近一次,或最后一次这个词在这里也有助于理解
                     //*.这种是常规写法,即T用的是普通类型,下面看一下T也是一个接口类型的情况
-  t1 := z.(Z)       //判断a1的基础类型是否也实现了Z接口,如果是将a1返回,否则panic
+  t1 := z.(Z)       //判断z中存储的值a1其类型是否也实现了Z接口,如果是将a1返回,否则panic  //本来如果是 "接口变量.(类型名称)"的形式时很好理解,就是看看 接口变量 中存储的值 其类型是否为 类型名称 如果是就将相应的类型值返回给t1,如果不是就panic; 现在变成了 "接口变量.(接口类型)"这种形式了, 其实也好理解,就是把 接口变量 中的值拿出来, 看看该值的类型是否也实现了 接口类型 如果是就将这个值返回给t1,否则panic.
  // t := z.(W)
  // t := z.(Z)
   fmt.Println(t)
@@ -1241,11 +1241,11 @@ func main() {
 }
 //对于t:=i.(T)或t,ok:=i.(T)来说:
     首先,i指的是接口类型变量; T指的是类型名;
-    其次,关键点在于接口变量赋值语句,拿上例来说就是var z X = a1,也就是说对于t:=z.(Animal)考察的是a1的类型是否为Animal; T还有可能是另一个接口,比如t:= z.(Y),此时考察的是接口变量z值(a1,Animal)的concreate类型Animal是否也实现了接口Y,如果是,则将a1返给t.
+    其次,关键点在于接口变量赋值语句,拿上例来说就是var z X = a1,也就是说对于t:=z.(Animal)考察的是接口变量z中存储的值(a1,Animal)的类型是否为Animal; T还有可能是另一个接口,比如t:= z.(Y),此时考察的是接口变量z值(a1,Animal)的concreate类型Animal是否也实现了接口Y,如果是,则将a1返给t.
     最后,返回两个值的就不说了, 说白了就是T不是接口变量i值的concreate type,也不会报错, 只是返回相应类型的零值和false.
-  //*.特殊情况,当T也是接口类型时,无论接口变量i值的concreate type有无实现这个T,编译阶段都不会报错, 报错发生在运行阶段.
-*.对于i.(T)这种形式, 考察的是最近一次赋给接口变量i的值类型是否为T; 或者说最近一次赋给接口变量i的值类型是否也实现了接口类型T(后一句是似T为接口类型的场景).
-*.使用场景: 你拿到一个接口类型变量i后, 要根据最近一次赋给它的值的类型是否为T(针对第二种情况就是赋给i的这个值是否既实现了接口T又实现了接口i)去判断是否要做某些操作.
+  //*.特殊情况,当T也是接口类型时,无论接口变量i值的concreate type有无实现这个T,编译阶段都不会报错, 如果该concreate type没有实现T,则在运行阶段才会报错.
+*.对于i.(T)这种形式, 考察的是最近一次赋给接口变量i的值类型是否为T; 或者说最近一次赋给接口变量i的值类型是否也实现了接口类型T(后一句是T也为接口类型的场景).
+*.使用场景: 你拿到一个接口类型变量i后, 要根据最近一次赋给它的值的类型是否为T(针对第二种情况就是赋给i的这个值是否既实现了接口T又实现了接口变量i所对应的接口类型)去判断是否要做某些操作.
 *.目前在理解type assertion时可以采用倒序的方式,即已经知道了i的值,拿下面代码举例: 
 type Person struct{Name string; Age int}
 type I interface {OutName() string; OutAge() int}
@@ -1259,17 +1259,17 @@ func (p * Person) OutAge() int {
 func main(){
   var i I
   var p *Person = &Person{Name:"张三"; Age: 10}
-  i = p  //因为i是接口值,其是一个二维数组,此例为"(&Person{Name:"张三";Age:10}, *Person)".而下面这句查的正好是当前i这个二维数组中的类型是否为*Person,是的话就把&Person{Name:"张三";Age:10}和true返回来; 如果不是,则返回的是*Person的零值nil和false.   
+  i = p  //因为接口变量i的值是一个二元组,此例为"(&Person{Name:"张三";Age:10}, *Person)".而下面这句查的正好是当前i这个二元组中的类型是否为*Person,是的话就把&Person{Name:"张三";Age:10}和true返回来; 如果不是,则返回的是*Person的零值nil和false.   
   if val, ok := i.(*Person); ok {
     fmt.Println(val, ok)
   }
 }
-*.上面这段代码的例子其实现实中用的不多, 因为如果我们的需求是返回当前接口i中存放的underlying type value,但由于上下文很繁索, 我们只知道有N个类型已经实现了接口中的方法, 但不知道当前存的到底是哪一个类型的实例,此时我们就可以用到下面Type switches小节要讲到的方法了, 说白了就是穷举,把可能的实例都写出来, 从上往下捋,哪个是用哪个,全都不是还有default在那兜着呢.
+*.上面这段代码的例子其实现实中用的不多, 因为如果我们的需求是返回当前接口i中存放的underlying type value,但由于上下文很繁索, 我们只知道有N个类型已经实现了接口中的方法, 但不知道当前存的到底是哪一个类型的实例,此时我们就可以用到下面Type switches小节要讲到的方法了, 说白了就是穷举,把可能的实例都写出来, 从上往下捋,哪个是就用哪个,全都不是还有default在那兜底呢.
 
 Type switches
-0.Type switch其实就是让我们可以连续的进行type assertion.
-0.所有case后面跟的"一定"要是在前面已经实现了接口i的类型名,这是前提, 而swtich i.(T)判断的其实是最后一次赋给接口变量i的underlying concreate type是谁.
-/*这里的switch的作用是在一个结构中判断当前接口变量i的underlying concreate type是啥(假设已经有多个类型已经实现了接口中定义的方法)的值. 而每个case T,就是一个判断条件.当接口变量i的underlying concreate type为某个关键字case后面的T时,执行相应case下的代码.如果接口变量i的underlying concreate type和任何一个关键字case后的类型都不匹配,则执行default关键字下面的代码.
+0.Type switch其实就是让我们可以连续的进行type assertion, 类似于穷举的概念, 直到找到符合的, 实在没有符合的就让default兜底.
+0.所有case后面跟的"一定"要是在前面已经实现了接口i的类型名,这是前提; 而swtich i.(T)判断的其实是最后一次赋给接口类型变量i的underlying concreate type是不是T.
+/*这里的switch的作用是在一个结构中判断当前接口变量i中的underlying concreate type是啥(假设已经有多个类型已经实现了接口中定义的方法). 而每个case T,就是一个判断条件.当当前接口变量i中存放的值的类型为某个关键字case后面的T时,执行相应case下的代码.如果接口变量i中存放值的类型和任何一个关键字case后的类型都不匹配,则执行default关键字下面的代码.
 而在落实到代码上时, 又分为两种情况:
   a. 当switch条件部分没有定义接收变量时,仅仅是做类型的匹配以及执行匹配上类型的代码块;
         type I interface {ok() int}
@@ -1325,8 +1325,8 @@ Type switches
         		fmt.Println(v)
         	default:
         		fmt.Println("other")
-        		fmt.Println("v = %T\n",v)
-        		fmt.Println("i = %T\n",i)
+        		fmt.Printf("v = %T\n",v)
+        		fmt.Printf("i = %T\n",i)
         	}
         }
 	**.其实上面a,b两点说的是一回事, 因为同一时刻接口i只有一个类型值, 无论case中的类型是否为i当前值的类型,最终v的值和类型都和前面i的相同.
