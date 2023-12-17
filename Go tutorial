@@ -1713,7 +1713,8 @@ Images
 1.这节我之前认为是一个exercise了,其实不是, 但它只是介绍了go中image包,而不是讲解相应的语法
 Exercise: Images
 1.已看, 看着没引入新的语法,只是要告诉我们go可以处理图片.
-Type Parameters
+??下两节关于泛型的这次没有好好看,再看原文的时候最重要的是把里面的涉及到的概念都清楚的明白到底指的是什么东西 2023-12-17
+Type Parameters   
 0.如果想看例子,可以参考: https://benjiv.com/golang-generics-introduction/
   官方想关说明: https://go.dev/ref/spec#Type_constraints
 0.直译为"类型参数",但还有另一种更常见的叫法: 泛型函数
@@ -1740,7 +1741,7 @@ Generic Types
 =====该范围中是对specification中关于泛型类型的一个翻译,没翻译完===
 类型参数声明
 A type paramter list declares the type paramters of a generic function or type declaration.
-一个"类型参数列表" 声明了 一个'泛型函数'或是一个'类型声明'的 "类型参数" //说白了就是限制函数中的形参类型以及 普通type声明的普通类型.  "类型参数列表"拆成两部分就好理解了 "类型" 和 "参数列表", 后者是用来修饰前者的,说修饰不如说限制更好一些, 具体的实际上来看就是说在你实例化给变量传值时,这个实例必须要满足修饰这个类型的参数列表才行.
+一个"类型参数列表" 声明了 一个'泛型函数'或是一个'类型声明'的 "类型参数" //说白了就是限制函数中的形参类型以及 普通type声明的普通类型.  "类型参数列表"拆成两部分就好理解了 "类型" 和 "参数列表", 后者是用来修饰前者的,说修饰不如说限制更好一些, 从具体的使用上来看就是说在你实例化给变量传值时,这个实例必须要满足修饰这个类型的参数列表才行,举例来说,对于[T comparable]来说你传的实例类型要满足comparable这个限制.
 The Type parameter list looks like an ordinary function parameter list except that the type parameter names must all be present and the list is enclosed in square brackets rather than parentheses.
 "类型参数 列表"表面看上去就像普通函数的参数列表(有参数名和相应的类型,但又不同,"类型参数"中叫 "参数名 参数名必须满足的限制"), 不同的是"类型参数"中参数名必须全部显式的给出(我们平时在单独声明函数时形参名可省可不省,看你在body中是否引用它; 而当函数类型作为类型参数时,形参只需要给个类型名就好,不需要给定形参名;而"类型参数"就相当于普通函数里的形参名, 但它不能省略,一定要存在,话说你省略了也就没法引用了)并且这个列表是由方括号括起来的, 而为普通函数中的圆括号.
 "类型参数"声明的语法:
@@ -1762,7 +1763,7 @@ The type parameter is replaced with a type argument upon instantiation of the ge
 Just as each ordinary function parameter has a parameter type, each type parameter has a corresponding (meta-)type which is called its type constraint.
 就像每一个"普通函数参数(形参)"都要有一个相应的"(形参)类型"一样, "类型参数"也有一个相应的"元类型",我们通常把这个"元类型"叫做"类型参数"的限制.
 *.使用一个小例子解释一下常见的概念:
-  type A[X B] struct {    //声明一个泛型类型A,它的类型参数为X,限制为这个X必须要实现B
+  type A[X B] struct {    //声明一个泛型结构体A,它的类型参数为X,限制为这个X必须要满足B
       x X
   }
 
@@ -1770,7 +1771,7 @@ A parsing ambiguity arises when the type parameter list for a generic type decla
 在声明泛型类型的时候还需要注意的一点是,有些时候当我们声明一个"只有一个"类型参数和相对应的参数限制时, 由于类型参数和对应的限制符合Go的语法规则而被规有为其它的意思, 为了避免这种情况的发生,有两种解决办法, 一种是将参数限制放到interface{}中; 另一种是在参数限制后面追加个逗号.
 
 声明一个方法时, 接收器类型也可以使用泛型,但写法上有注意:当接收器类型为泛型类型时, 不能只写泛型类型名, 也要将其类型参数写上, 但此时类型参数不必非得和泛型类型声明时写的一样,但必须唯一, 还有一点相应类型参数后的参数限制不用写:
-   如有一个泛型类型定义为: type A[B C,D E],则在声明一个方法时,接收器类型的正确写法为: func (a A[B,C]) MethodName(){} 类型参数必须写上
+   如有一个泛型类型定义为: type A[B C,D E],则在声明一个方法时,接收器类型的正确写法为: func (a A[B C]) MethodName(){} 类型参数必须写上
         func (a A[o,p]) MethodName(){} 类型参数名不必和声明时的一致
 
 在泛型类型T的类型参数列表中, 类型参数的限制不能直接或间接的引用T
