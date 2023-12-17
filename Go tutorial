@@ -1718,14 +1718,25 @@ Type Parameters
   官方想关说明: https://go.dev/ref/spec#Type_constraints
 0.直译为"类型参数",但还有另一种更常见的叫法: 泛型函数
 0.该节的重点要区别于下一节的Generic types(泛型,或更通谷的叫做"通用类型",即啥类型都行), 泛型讲的是传啥类型都行, 而Type Parameters侧重于对类型的"限制", 你泛型不是啥类型都行嘛, 而Type Parameters讲的是不能是啥类型都行, 必须是满足该限制的类型才可以.
-1.初看之下, 类型参数是用于函数中, 位于函数名和圆括号之间; 用法是设定一个带有限制的通用类型, 然后在函数参数中使用该受限类型. 也就是说 Type Parameters讲究一个通用,但更讲究一个限制. 官方示例:
+1.初看之下, 类型参数特指用于函数中, 位于函数名和圆括号之间; 作用是设定一个带有限制的通用类型(也就是说即要有类型,也要有对该类型的约束条件,如[T comparable]), 然后在函数的参数类型中使用该受限类型. 也就是说 Type Parameters讲究一个通用,但更讲究一个限制. 官方示例:
   func Index[T comparable] (s []T, x T) int {}
   *.最基础的泛型函数应该是Index[T],然后才进阶到对类型的限制,Index[T comparable]吧?  //实际测试并不是,即泛型函数中的参数T必须要有一个constraint存在
   *.拿这个例子来说, 你可以给Index中的参数传传何的类型(T), 但有个前提,传的这个类型值必须是能进行比较的(T comparable)
 2.具体像类似于comprable这样的限制还有啥就要看specification了
 Generic Types
-0.这节的侧重点是"通用类型",即啥类型都可以; 而从应用角度来看,泛型类型主要是用于非primitive类型外的其它类型, 如结构体,数组,分片.原因也很简单, 像int, float这样的你没法给它限定类型,因为它本身就是类型的最小单位; 而struct, array, slice这些它们可以看作是一个大类型,里面又包含了许多小类型,因此这里的泛型主要是扩展这些大类型里面的小类型可以是"泛型",即啥类型都行. 
+0.上节主要讲的是如何将函数参数声明为泛型类型. 这节的侧重点是"通用类型",即啥类型都可以; 而从应用角度来看,泛型类型主要是用于非primitive类型外的其它类型, 如结构体,数组,分片.原因也很简单, 像int, float这样的你没法给它限定类型,因为它本身就是类型的最小单位; 而struct, array, slice这些它们可以看作是一个大类型,里面又包含了许多小类型,因此这里的泛型主要是扩展这些大类型里面的小类型可以是"泛型",即啥类型都行. 
   *.上一节我用的更多的一个词是"限制", 因为明明是T, 你非要说并不是啥T都行,要满足comprable的T才可以; 这节我用了一个词叫扩展, 拿array举例, 之前声明一个array,里面的元素类型是固定的某个类型, 而用上泛型后, 每次都可以是任意的类型.
+对于泛型类型的声明, 貌似必须要用type Name[T any] []T, 而实际赋值的时候,将T替换为满足限制的类型即可:
+    package main
+    import "fmt"
+
+    type Name[T any] [3]T              //这是声明时的形式
+    func main(){
+    var n Name[int] = [3]int{1,2,3}     //这是实例化时的形式, 注意此时要用实际的类型替换掉T
+    o := Name[string]{"壹","贰","参"}    //同上一句
+    fmt.Println(n)
+    fmt.Println(o)
+}
 =====该范围中是对specification中关于泛型类型的一个翻译,没翻译完===
 类型参数声明
 A type paramter list declares the type paramters of a generic function or type declaration.
