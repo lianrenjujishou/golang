@@ -2208,14 +2208,36 @@ func main(){
 }
 
 Select
-1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句(之前认为select也是从上到下循环的检测case,检测到哪个case条件满足了就执行相应的语句,但通过它说如果多个都满足随机选一个执行,就感觉机制应该是某一检查时刻查看所有case下的通道数据情况,如果有1个,则执行相应case下的语句,如果有多个通道都收到数据了,则随机选一个("随机"这两个字提醒我们在实际写代码时,两个case后面的通道执行虽然有先后顺序, 但可能在两个通道都完成接收或发送值了,线程还没执行到select这,所以当线程执行到select这时,之前两个通道谁先执行完谁后执行完的顺序就没意义了,因为此时两个case都处于ok状态,所以具体执行谁是随机的),执行相应case下的语句.如果按之前想的不停的循环switch下的case,则即使多个通道都有内容了,也是当前循环到谁谁执行,并不是随机.话又说回来了,按照这个逻辑好像也有随机的意思) //需要注意的是这里为什么c通道执行完成后不用执行close()函数? ::因为用close()函数关闭通道的情况是,接收端一直处于接收状态,如果不通知接收端通道已关闭没有内容,如果接收端运行在主协程中则会造成死锁.而本节的例子,由于有两个通道,虽然当i=10时不再给c通道发送内容了,但会向quit通道发送内容,而且最后程序还正常退出了.还是那句话,用不用close()要看实际情况,具体上面range and close那小节也提到了
-2.注意for{select{}}的连用，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句   //是因为return的执行导致fibonacci()函数执行完毕,而该函数也是主协程的最后一条语句,因此主协程正常结束,整个程序也就正常结束了,即使不关闭通道也不会发生主协程死锁的情况,因此不用加
+1.select语句块有多个case,多个case同时对每个case中的channel进行监听，哪个先进来则执行哪个case下的语句, 如果线程执行到该协程中时有多个case中的channel都满足条件了则会随机选择一个满足条件的case执行相应的语句(之前认为select也是从上到下循环的检测case,检测到哪个case条件满足了就执行相应的语句,但通过它说如果多个都满足随机选一个执行,就感觉机制应该是某一检查时刻查看所有case下的通道数据情况,如果有1个,则执行相应case下的语句,如果有多个通道都收到数据了,则随机选一个("随机"这两个字提醒我们在实际写代码时,两个case后面的通道执行虽然有先后顺序, 但可能在两个通道都完成接收或发送值了,线程还没执行到select这,所以当线程执行到select这时,之前两个通道谁先执行完谁后执行完的顺序就没意义了,因为此时两个case都处于ok状态,所以具体执行谁是随机的),执行相应case下的语句.如果按之前想的不停的循环switch下的case,则即使多个通道都有内容了,也是当前循环到谁谁执行,并不是随机.话又说回来了,按照这个逻辑好像也有随机的意思. 这次读来感觉应该就是这个意思,从上到下循环遍历case后的通道, 可能某一时刻多个通道都满足条件, 但那一刻遍历到哪个case后的通道满足条件就执行哪个case下的语句) //需要注意的是这里为什么c通道执行完成后不用执行close()函数? ::因为用close()函数关闭通道的情况是,接收端一直处于接收状态,如果不通知接收端通道已关闭没有内容,如果接收端运行在主协程中则会造成死锁.而本节的例子,由于有两个通道,虽然当i=10时不再给c通道发送内容了,但会向quit通道发送内容,而且最后程序还正常退出了.还是那句话,用不用close()要看实际情况,具体上面range and close那小节也提到了
+2.注意for{select{}}的连用(这里for和select并不是固定用法, 只不过是上下文逻辑中要不断的向通道中传值,是逻辑驱动的,并不是啥固定搭配)，注意到select有一个case的语句中有return语句，所以猜测这个return语句退出了函数的执行，所以说不会出现通道的读取情况了，因此省略了close()语句   //是因为return的执行导致fibonacci()函数执行完毕,而该函数也是主协程的最后一条语句,因此主协程正常结束,整个程序也就正常结束了,即使不关闭通道也不会发生主协程死锁的情况,因此不用加
 3.另外在这节还学到了,接收通道的内容不一定要有变量,如print(<-c), case <-c,这两个语句都是成立的;另外,还可以直接使用匿名函数,如 go func() {}() //注意最后的括号一定要有,前面的表示匿名函数,你只有加上最后的一对(),才叫对匿名函数的调用
+-----select是协程阻塞的例子-----
+package main
+
+import "fmt"
+import "time"
+
+func main(){
+  ch := make(chan int)
+  ch1 := make(chan int)
+
+  go func(c chan int) {
+    time.Sleep(10*time.Second)
+    ch <- 0
+  }(ch)
+  select {                //上面的go前缀新建了一个协程, 正常来说如果select是非阻塞的,则会立刻退出执行, 实际情况是进程一直处于阻塞状态,直到上面的匿名函数10秒倒计时结束后有数据写入通道,进程才正常退出
+    case <- ch: 
+      fmt.Println(1)
+    case <- ch1:
+      fmt.Println(2)
+  //    default:            //这里default部分被我注掉了, 它的存在导致select不会发生阻塞,第一次遍历所有case后,如果所有case后的通道读或写都不成功, 则会执行default后的语句
+  //   fmt.Println(3)
+  }
+}
 Default Selection
 0.网上搜的,还可以定义单向通道,用来生成只读或只写的通道, 只读通道: var readOnly <-chan int; 只写通道: var writeOnly chan <- int
-1.这个简单，类似于switch中的default,即其它语句都不满足的情况下执行default下的语句，具体执行是每次线程执行到该协程时如果如果其它case都不满足的话都会执行一遍default下的语句  // 大机制上来说，select本就类似于多条件分支语句switch
-*.看来select不是阻塞的,即必须有一个case满足才能往下执行,而是执行到select后, 看看当时如果所有case后的条件都不满足就过了(有default的话执行default下的语句),所以大多数情况下, select都被放到for循环中,这样可以保证必须有一个case满足,最后在相应case语句块结尾放处放上关键字break,结束掉for循环.
-*.还有很重要的一点, break除了能结束for循环,还能结束select块,也就是说当select语句块内嵌于for循环中时,我们如果想在select中结束掉for循环,此时不能在case或default下的语句块中使用break关键字,而要用return. 因为由于break位于select中,所以它此时结束的仅仅是select而非外层的for循环,而return则会直接退出当前函数的执行.
+1.这个简单，类似于switch中的default,即其它语句都不满足的情况下执行default下的语句，具体执行是每次线程执行到该协程时如果如果其它case都不满足的话都会执行default下的语句  // 大机制上来说，select本就类似于多条件分支语句switch
+*.还有很重要的一点, break除了能结束for循环,还能结束select语句块,也就是说当select语句块内嵌于for循环中时,此时在case或default下的语句块中使用break关键字,只能跳出select语句块, 而想要再跳出外层的for循环还要单独break. 而如果逻辑上可以直接跳出整个函数, 则可以使用return. ,return会直接退出当前函数的执行.
   ====
   package main
 
@@ -2258,10 +2280,34 @@ Outerloop:            //注意这句
     }
   }
 }
-:label可以作为goto, break,continue的目标;label语法其实是: label:statement,也就是说上面的代码其实可以写在一行: Outerloop: for {... break Outerloop}
-2.time.Tick()    //这两个都是定时器,Tick是每隔多久返回当时的时间(会多次返回); 而After是多久之后返回当时的时间(只返回一次).
-3.time.After()
-4.time.Sleep()
+:label可以作为goto, break,continue的目标;label语法其实是: label:statement,也就是说上面的代码其实可以写在一行: Outerloop: for {... break Outerloop}   //还是要没事就多看看specification,里面的语法说明全一些
+2.time.Tick()    //这两个都是定时器,Tick是每隔多久返回当时的时间(会多次返回),感觉Tick()这种方法应该是单起协程执行的; 可以和After函数配合来结束掉Tick()方法的执行
+3.time.After()   //After是多久之后返回当时的时间(只返回一次);
+  -----
+  package main
+
+  import (
+	"fmt"
+	"time"
+  )
+
+  func main() {
+	ticker := time.Tick(500 * time.Millisecond)           //现在先理解为对于Tick()和After()方法,谁先执行就谁先计时,所以会输出两个Tick和一个Stopping ticker, 拆开来看, 第一个500ms时,After()方法还没向通道输入内容,所以select输出一个Tick, 1000ms即1s时,虽然两个函数都满足条件了, 但因为ticker是先执行的语句所以先计时,所以ticker()先向通道输入内容,因此select输出了第二个Tick.此时离第三次Tick()方法向通道输入内容还差500ms,但此时After()的1秒倒时时间到了, 所以After()向通道输入内容,此时输出Stopping ticker,并且将整个函数返回.
+	stop := time.After(1 * time.Second) // Stop after 5 seconds
+
+	for {
+		select {
+		case <-ticker:
+			fmt.Println("Tick")
+			// Your periodic task goes here
+
+		case <-stop:
+			fmt.Println("Stopping ticker")
+			return
+		}
+	}
+  }
+4.time.Sleep()  //协程阻塞的时间, time.Sleep(10*time.Second);
 Exercise: Equivalent Binary Trees
 sync.Mutex
 1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题.而具体的用法是:新建一个结构体,里面有一个特殊的字段类型是sync.Mutex.其它字段自己加.然后调的时候,先实例化这个结构体,最后调的时候将结构体中的变量放在Lock()和Unlock()方法中间,基本就完事了.  //原理是多个协程在执行同一个函数时,因为1000个协程同时执行Lock()方法时,同一时刻只有一个协程可以继续向下,剩下999个就只能等着, 等到这个协程执行完相应的操作,然后调用Unlock()后,999个协程中的一个幸运儿里的Lock()才会执行完毕,一直这样循环,这样就会导致这个对象里Lock()和Unlock()中间变量的操作同一时刻只有一个协程可以改变.
