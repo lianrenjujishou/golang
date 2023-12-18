@@ -2176,13 +2176,35 @@ import "sync"
 
 func main(){
   var wg sync.WaitGroup   //首先要定义一个WaitGroup类型的对象
-    go func(){
-      wg.Add(1)           //Add()函数会将WaitGroup中的计数器加一个值, 通常该值为1(还可以是其它值) 
+    wg.Add(1)             //Add()函数会将WaitGroup中的计数器加一个值, 通常该值为1(还可以是其它值),关键的是Add()的调用最好是在协程调用前面, 因为如果将Add()放到协程里面,当协程过多时, 可能部分协程还在队列中排队呢, WaitGroup中的计数器就已经是0了,从而导致部分协程未被执行; 而放到协程外面就不一样了,放到协程外面会导致计数器先加了个1,此时由于减一操作(Done()函数的调用)是在协程中并且还有defer关键字加持,所以可以保证协程一定会被执行
+    go func(){ 
       //协程中被执行的语句, 但WaitGroup单独使用不适合synchronous情况
       defer wg.Done()     //Done()会将WaitGroup中的计数器减1,所以为了保证相应的协程执行完成,一般都是将Done()函数的调用放在被协程执行的函数中,并且加上defer前缀
     }() 
 
   wg.Wait()   //最后执行它其实就是等待计数器的值为0,不为0则一直阻塞协程,为0则继续向下执行
+}
+-----sync.Mutex与sync.WaitGroup配合使用的例子-----
+package main
+
+import "fmt"
+import "sync"
+
+func main(){
+  var mu sync.Mutex            //当只有sync.Mutex时,可以保证多个协程在执行时,sum变量的同步, 但不能保证所有协程都能执行完, 所以引入了sync.WaitGroup确保所有协程执行完. 教程中sync.Mutex一节给的用法是将sync.Mutex与要同步的变量放到一个结构体中, 那种方式应该算是最佳实践吧, 也就是说实际写代码时那种形式应该用的比较多
+  var wg sync.WaitGroup
+  sum := 0
+  for i:=0; i<100000;i++{
+    wg.Add(1)                  //参考上一段代码关于Add()函数的备注, 试着将该句放到下面这个函数中看看输出结果,就不是100000了,原因在上一段代码的Add()函数的备注中已讲
+    go func(){
+      defer wg.Done()
+      mu.Lock()
+        sum += 1
+      mu.Unlock()
+  }()
+  }
+  wg.Wait()
+  fmt.Println(sum)
 }
 
 Select
