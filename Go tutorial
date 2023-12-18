@@ -2307,7 +2307,31 @@ Outerloop:            //注意这句
 		}
 	}
   }
-4.time.Sleep()  //协程阻塞的时间, time.Sleep(10*time.Second);
+4.time.Sleep()  //协程阻塞的时间, time.Sleep(10*time.Second);   //还可以看一下这小节的例子,将这三个函数都用上了:
+  -----
+  package main
+
+  import (
+	"fmt"
+	"time"
+  )
+
+  func main() {
+	tick := time.Tick(100 * time.Millisecond)        //Tick()
+	boom := time.After(500 * time.Millisecond)       //After()
+	for {
+		select {
+		case <-tick:
+			fmt.Println("tick.")
+		case <-boom:
+			fmt.Println("BOOM!")
+			return
+		default:
+			fmt.Println("    .")
+			time.Sleep(50 * time.Millisecond)    //Sleep()
+		}
+	}
+  }
 Exercise: Equivalent Binary Trees
 sync.Mutex
 1.讲的是sync包中的Mutex模块这里面有两个方法Lock和Unlock，用来处理sync问题.而具体的用法是:新建一个结构体,里面有一个特殊的字段类型是sync.Mutex.其它字段自己加.然后调的时候,先实例化这个结构体,最后调的时候将结构体中的变量放在Lock()和Unlock()方法中间,基本就完事了.  //原理是多个协程在执行同一个函数时,因为1000个协程同时执行Lock()方法时,同一时刻只有一个协程可以继续向下,剩下999个就只能等着, 等到这个协程执行完相应的操作,然后调用Unlock()后,999个协程中的一个幸运儿里的Lock()才会执行完毕,一直这样循环,这样就会导致这个对象里Lock()和Unlock()中间变量的操作同一时刻只有一个协程可以改变.
