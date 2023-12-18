@@ -1964,7 +1964,7 @@ Channels
   *.定义单向写通道: only_write := make(chan<- int)
     定义单向读通道: only_read := make(<-chan int)
    
-    单向通道的作用同其名,即限制用户只能同一方向操作,一般的用法是定义一个双向通道,然后将其作为参数传递到形参为单向通道的函数中:
+    单向通道的作用同其名,即限制用户只能同一方向操作,一般的用法是定义一个双向通道变量,然后在函数调用时, 将其作为实参传递到形参类型为单向通道的函数中:
     /*1.bidirection can assign to undirection
       用父类与子类的思维去理解,双向相当于子类,单向相当于父类,
       所以你是可以将子类型的实例传递给父类型的变量的,只不过此
@@ -1984,7 +1984,7 @@ Channels
     chan<- <-chan int  // same as chan<- (<-chan int)
     <-chan <-chan int  // same as <-chan (<-chan int)
     chan (<-chan int)
-    *.chan chains  //http://tleyden.github.io/blog/2013/11/23/understanding-chan-chans-in-go/
+    *.chan chains  //http://tleyden.github.io/blog/2013/11/23/understanding-chan-chans-in-go/   通道链通过将通道B作为元素传递到通道A中, 使得本来私有声明的通道B可以被任何从通道A中读取信息的其它函数所获取, 也就是说通道链使得私有不再变得私有
 
 4.发送接收数据的一般形式: a.将数据送入通道: ch <- v;
                        b.从通道读取数据: v:= <-ch;
