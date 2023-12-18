@@ -2292,7 +2292,7 @@ Outerloop:            //注意这句
   )
 
   func main() {
-	ticker := time.Tick(500 * time.Millisecond)           //现在先理解为对于Tick()和After()方法,谁先执行就谁先计时,所以会输出两个Tick和一个Stopping ticker, 拆开来看, 第一个500ms时,After()方法还没向通道输入内容,所以select输出一个Tick, 1000ms即1s时,虽然两个函数都满足条件了, 但因为ticker是先执行的语句所以先计时,所以ticker()先向通道输入内容,因此select输出了第二个Tick.此时离第三次Tick()方法向通道输入内容还差500ms,但此时After()的1秒倒时时间到了, 所以After()向通道输入内容,此时输出Stopping ticker,并且将整个函数返回.
+	ticker := time.Tick(500 * time.Millisecond)           //现在先理解为对于Tick()和After()方法,谁先执行就谁先计时(通过测试确实是这样,把stop放到ticker上面后,每次只输出1个Tick和一个Stopping ticker,也就是说把stop放到ticker前导致stop先计时到1秒,ticker后计时到1秒),所以会输出两个Tick和一个Stopping ticker, 拆开来看, 第一个500ms时,After()方法还没向通道输入内容,所以select输出一个Tick, 1000ms即1s时,虽然两个函数都满足条件了, 但因为ticker是先执行的语句所以先计时,所以ticker()先向通道输入内容,因此select输出了第二个Tick.此时离第三次Tick()方法向通道输入内容还差500ms,但此时After()的1秒倒时时间到了, 所以After()向通道输入内容,此时输出Stopping ticker,并且将整个函数返回.
 	stop := time.After(1 * time.Second) // Stop after 5 seconds
 
 	for {
