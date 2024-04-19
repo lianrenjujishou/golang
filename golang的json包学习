@@ -39,7 +39,7 @@ json package
                err := dec.Decode(&结构体变量)     //填充结构体变量
 
 **.看一下官方实现的io.Reader和io.Writer接口,这是基石.
-------上面内容总结自https://golang.org/doc/articles/json_and_go.html-----
+------上面内容总结自https://golang.org/doc/articles/json_and_go.html-----   //所以https://go.dev/blog/里面有好多实用的干货文章,没事可以看看,再就是官文中除了教程还有一些how to的文章
 
 func Compact(dst *bytes.Buffer, src []byte) error
 将json编码的src(忽略不重要的空格)追加到dst中.
