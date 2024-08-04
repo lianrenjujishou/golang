@@ -7,7 +7,7 @@
                                                               //alter user 'root'@'{localhost|%}' identified [with mysql_native_password|caching_sha2_password] by '密码'; 其实修改密码的同时也可以修改密码授权插件                                                            
                                                               //GRANT ALL PRIVILEGES ON *.* TO 'root'@'your_server_ip'  //https://dev.mysql.com/doc/refman/8.4/en/grant.html
 -----
-连接数据库: mysql -h host -u user -p
+连接数据库: mysql -h host -u user -p    //-p后面没有空格则后面表示的是密码; 如果-p先加个空格则后面的内容表示是指定的库,即你进去后就不用再使用use X切换到数据库X了.但一般不推荐直接将密码放在-p后面,因为使用history等命令可以直接看到明文密码,太不安全了
 几个内置变量和函数: version(), current_date, now()
 可以将多条语句写在一行,用分号隔开
 可写跨越多行的语句;
