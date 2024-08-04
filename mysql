@@ -124,7 +124,7 @@
    例: SELECT TIMESTAMP(year,'1990-10-20',curdate()) as time;该例中,as time表示用time作为列名,否则就是那一整串表达式作为列名了.
   空值NULL的检测是用is null或is not null
   分别提取给定日期的年月日: year(date) month(date) dayofmonth(date)
-  在某个日期的基础上构建日期: date|year|month|dayofmonth(date_add(curdate(), interval n year|month|day))
+  在某个日期的基础上构建日期: date|year|month|{dayofmonth|day}(date_add(curdate(), interval n year|month|day))
   还可以利用取模函数来获取下个月是几月: mod(month(curdate()),12)+1, 因为月份%12的模为0-11,所以后面加上个1就是下个月,可以找个实际的日期套一下就好理解了.
   可以直接在时间字符串后使用interval n year|month|day来得到新日期; select '2018-10-31'+interval 1 day; 如果时间字符串不正确,如'2018-11-32',则得到的结果是NULL,并会得到一条警告,该警告可以使用show warnings;查看.
 -----
