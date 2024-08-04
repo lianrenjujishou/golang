@@ -129,7 +129,7 @@
   可以直接在时间字符串后使用interval n year|month|day来得到新日期; select '2018-10-31'+interval 1 day; 如果时间字符串不正确,如'2018-11-32',则得到的结果是NULL,并会得到一条警告,该警告可以使用show warnings;查看.
 -----
 关联表:
-  select * from pet,event where pet.name=event.name;
+  select * from pet,event where pet.name=event.name;     //感觉多表联查之所以有意义主要是foreign key在中间搭的桥
 -----
 分组: having
   group by 
