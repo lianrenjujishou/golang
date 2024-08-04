@@ -1,7 +1,11 @@
 以下为mysql8.0文档中tutorial部分内容, 安装部分直接使用包管理器pacman装的
 -----
 如何更新用户密码:https://dev.mysql.com/doc/refman/8.0/en/resetting-permissions.html
-:: alter user 'root@localhost' identified by 'newPasswd';   //这句经常出现的问题就是执行后报语法错误, 而所谓的语法错误其实是密码的组成不正确,如必须是大小写数字及符号都有才行,但你不知道这个限制,会导致你会觉得明明整个语句都是正确的,为啥会报语法错误.
+:: alter user 'root'@'localhost' identified by 'newPasswd';   //这句经常出现的问题就是执行后报语法错误, 而所谓的语法错误其实是密码的组成不正确,如必须是大小写数字及符号都有才行,但你不知道这个限制,会导致你会觉得明明整个语句都是正确的,为啥会报语法错误.
+                                                              //一定要注意,用户名和主机名是两个分别由单引号括起来的字符串,中间使用@隔开,之前写成了'root@localhost'.这次没有发现上面注释说的问题,应该是没有加载validate_password插件吧,这次是随便用个123作为密码就可以
+                                                              //select User,Host,Plugin from user where user='root'; 可以查看root用户的用户名,主机名,使用的密码插件信息
+                                                              //alter user 'root'@'{localhost|%}' identified [with mysql_native_password|caching_sha2_password] by '密码'; 其实修改密码的同时也可以修改密码授权插件                                                            
+                                                              //GRANT ALL PRIVILEGES ON *.* TO 'root'@'your_server_ip'  //https://dev.mysql.com/doc/refman/8.4/en/grant.html
 -----
 连接数据库: mysql -h host -u user -p
 几个内置变量和函数: version(), current_date, now()
