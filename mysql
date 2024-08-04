@@ -150,6 +150,8 @@
 行列转置:
 https://www.2cto.com/database/201708/664695.html#  //博客园也留了一份,哪天该站再挂掉了再想看就找不到了: https://www.cnblogs.com/lianrenjujishou/p/17460140.html
 在练习上面链接中的例子时,将sum()函数和group by name去掉后看一下结果,然后再看给的sql语句,应该会有帮助一些. *.如果用了group by,但选择列没有使用聚合函数,则每组只显示第一条记录.
+*.2cto网站已经挂掉了,还好有备份,从该行列转置的例子看,sum()等聚合函数通常与group by连用,group by负责将记录分成一个个独立的组, 而这些聚合函数又分别操作在这些单独的组上.
+*.https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html 第一句话就讲到了上个星号的结论.
 
 
 ======w3school上的教程=====
