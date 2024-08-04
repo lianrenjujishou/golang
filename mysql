@@ -148,9 +148,9 @@
    //上面这个结构其实就是select 字段 from 表 where 条件;这个最简单语句的变体.即 from pet inner join event这是一张很大的表, 根据on pet.name = event.name将这张大表缩小了一些. 最后在上面所说的这个缩小的临时表中根据where部分的条件记录的相应字段取出来; select部分用了"pet.name,remark",为什么一个有表前缀一个没有呢,因为得到的临时表有两个name字段,要限制一下取哪个表中的name字段,而remark只有一个表中有. 相明白了这一点,逻辑就捋顺了,因为设计者设计的时候肯定也是有逻辑在里的.
 -----
 行列转置:
-https://www.2cto.com/database/201708/664695.html#  //博客园也留了一份,哪天该站再挂掉了再想看就找不到了: https://www.cnblogs.com/lianrenjujishou/p/17460140.html
+https://www.2cto.com/database/201708/664695.html#  //博客园也留了一份,哪天该站再挂掉了再想看就找不到了: https://www.cnblogs.com/lianrenjujishou/p/17460140.html  //注意博文最后一段有总结,对理解sum(if)和sum(case when)有帮助
 在练习上面链接中的例子时,将sum()函数和group by name去掉后看一下结果,然后再看给的sql语句,应该会有帮助一些. *.如果用了group by,但选择列没有使用聚合函数,则每组只显示第一条记录.
-*.2cto网站已经挂掉了,还好有备份,从该行列转置的例子看,sum()等聚合函数通常与group by连用,group by负责将记录分成一个个独立的组, 而这些聚合函数又分别操作在这些单独的组上.
+*.2cto网站已经挂掉了,还好有备份,从该行列转置的例子看,sum()等聚合函数通常与group by连用,group by负责将记录分成一个个独立的组, 而这些聚合函数又分别操作在这些单独的组上. 
 *.https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html 第一句话就讲到了上个星号的结论.
 
 
