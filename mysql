@@ -21,7 +21,7 @@
 建库:
  创建只有你有权限访问的数据库: grant all on database_name.* to 'mysqlUserName'@'clientHost';
  *nix下,数据库名和表名是大小写敏感的;
- 指定数据库的两种常用方式: a.进入交互式mysql后用use命令;b.在linux shell中运行mysql指令最后加上库名(如,mysql -h host -u root -p databaseName), 需要注意的是-p参数的作用虽是指定密码,但-p参数和密码之间不能有空格,如果有空格,则空格后的内容不会被认为是密码.
+ 指定数据库的两种常用方式: a.进入交互式mysql后用use命令;b.在linux shell中运行mysql指令最后加上库名(如,mysql -h host -u root -p databaseName), 需要注意的是-p参数的作用虽是指定密码,但-p参数和密码之间不能有空格,如果有空格,则空格后的内容不会被认为是密码,而认为是指定的数据库名称.
   查看当前使用的数据库: select database();
 -----
 建表:
