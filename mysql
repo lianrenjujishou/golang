@@ -133,7 +133,8 @@
 -----
 分组: having
   group by 
-  因为where后面的条件是列表中的字段+运算符号+值构成的表达式,而如果选择的字段是一个函数而不是表达式,如sum(),而我们还想根据该函数的值进行结果的筛选,此时就不能写 where sum()...了,只能写having sum()... ,也就是说having是为了解决利用聚合函数作为筛选条件而存在的
+  因为where后面的条件是列表中的字段+运算符号+值构成的表达式,而如果选择的字段是一个函数而不是表达式,如sum(),而我们还想根据该函数的值进行结果的筛选,此时就不能写 where sum()...了,只能写having sum()... ,也就是说having是为了解决利用聚合函数作为筛选条件而存在的,并且一般group by X having Y order by Z这三个是一组,并且顺序不能变
+  *.https://dev.mysql.com/doc/refman/8.4/en/select.html  以having作为关键字进行搜索,第2和第4个结果讲的就是上面这句话描述的这两点
 -----
 联合:
   主要用到的就是inner|left|right|cross join. 其中left和right必须和on连用,否则有语法错误, 也就是说left和right必须要有关联条件才行. inner其实就是一个双层for循环后得到的一张大表;left就是拿左边当第一层循环, 然后去右表中找匹配条件的,特点是右表匹配到则显示,匹配不到左表数据全显示,右表数据显示都是NULL;right和left相反,而cross说白了只显示匹配上的.
