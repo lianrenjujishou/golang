@@ -175,7 +175,7 @@ avg()函数:返回指定数字列的平均数;  //数字列是NULL值的,忽略;
 sum()函数:返回指定数字列的和;     //数字列是NULL值的,忽略;
 like: 用于where语句中, 对字段值进行模式匹配;最常和like配合使用的两个操作符一个是百分号%,表示匹配0个或我个任意字符,一个是下划线_,用来匹配任意单个字符;可以和关键字AND,OR连用;
 in:在where语句中为字段指定多个值,它是多个关键字or的简要表达方式;常用两种方式,一种是直接给值,如where column_name in (val1,val2,...),一种是使用select语句间接给值,where column_name in (select statement);可以和not连用,即not in;
-between:一般也是用在where语句中和关键字AND连用表示范围;范围值类型可以是字符串,数值或是日期;NOT BETWEEN可以连用;当值是字符串时,表示该字段值为这指定的字符串中间的这部分记录,包括这两个字符串本身所在的记录;
+between:一般也是用在where语句中和关键字AND连用表示范围;范围值类型可以是字符串,数值或是日期;NOT BETWEEN可以连用;当值是字符串时不是太明白(提供两个参考思路:SHOW VARIABLES LIKE 'character_set_%';和SHOW VARIABLES LIKE 'collation_%';);
 alias:作用是在查询期间临时为某个表或某个列创建别名,主要目的是可增加可读性,关键字为AS;之前遇到的比较常用的是在选择的字段为某个函数时,在显示结果时使用一个可读性更高的别名; 还有在多表查询时,给表名赋个简单一点的别名,在之后的书写时省力一些//concat_ws(',',field1,...)用来连接字符串,第一个参数为分隔符(这里用的是逗号",")
 join:它是结合多个表,然后将符合ON条件的记录的相应字段打印出来.它的原理是笛卡尔乘积,其实照我理解的话就是双层for循环嵌套.举例来说:
     SELECT Orders.OrderID, Customers.CustomerName, Shippers.ShipperName
