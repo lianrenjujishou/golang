@@ -224,7 +224,7 @@ any操作符: 一般用在where语句中,位置在逻辑操作符后,其后跟�
       FROM OrderDetails
       WHERE Quantity > 99);
 我们可以将"ProductID = ANY 子句"换个写法:
-  select productname from products where productid in (子句结果集);
+  select productname from products where productid in (子句结果集);       //这种想法是错误的!
 all操作符:可用在select后面,select all感觉和不加all的结果一致; 还可用在where,having后,用来决定where,having部分的结果是TRUE或是FALSE.
 总结any,all,拿例子来说: select name from A where id = ANY/ALL (select id from B); 首先子句会得到一个结果集,然后,比如说1,2,3,即 select name from A where id = ANY/ALL (1,2,3), 此时拿A表的第一条记录中的字段id,假设是1,如果是ANY的话,因为1,2,3中包含1,则会将该条记录的name选出来,如果是ALL,则必须要满足1=1,1=2,1=3这三个条件,才会将name从该条记录中选出来.所以ALL关键字的话,一般不和=连用,和大于小于这些不等关系连用的多一些.
 insert into select:从A表中select数据插入到B表;要求是从A表中选择的字段数据类型和要插入的B表中相应位置字段的数据类型要相匹配;语法其实就是insert into语句的变体,只不过将插入值由values()改为了select语句:
