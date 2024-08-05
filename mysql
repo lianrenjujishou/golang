@@ -159,7 +159,7 @@ mysql sql: 关键字大小写不敏感;用来对关系型数据库进行增删�
 select: 选择要检索的表中字段,不同字段间使用逗号分隔, *号表示检索表中所有字段;select distinct用于返回不重复的数据; 被选取的字段和条件部分都可以使用聚合函数,但条件部分使用聚合函数时,要使用关键字having,而不是where;
 where: 筛选满足条件的记录, 不仅可用于select,还可用于update,delete等一般表动作的关键drop字都可以和where联用;记录中字段值如果是字符串则要用引号引起来,如果是数值则不需要引号;条件部分的操作符可以是:=,>,<,>=,<=,<>|!=,between,like,in;条件部分还支持and,or,not操作符,其中and,or可以连接多个条件,not则是条件结果为flase时,才会显示记录(关于not的解释其实不太好,如条件部分为c=3,则not c=3表示c这个字段不是3时才满足,其实从表面去看更好理解);条件部分有and,or,not参与时,还可以使用括号()将表达式括起来作为一个整体;条件部分,and,or可以直接与not连接,从逻辑上来看也是好理解的;
 order by: 对选择的结果进行排序,默认是升序, 如果想降输出,则在依据的字段后加上关键字desc; 可以对多个字段进行排序,文字描述不好,但意思明白(文中举的例子说的很清楚);在按多字段排时,不同字段的排序可以不同,如第一个字段asc,第2个字段desc;
-insert into: 作用是向表中插入新的记录;一般有两种用法,一种是对所有字段都赋值,语法为: insert into table values(field1_val,field2_val,...), 还一种是对部分字段赋值,此时要在表名后面使用()将赋值的这部分字段名引起来, values()中的参数和字段数相等,insert into table(fieldx,fieldy) values(fileldx_val, fieldy_val);如果表中的某个字段有auto-increment属性,则在使用insert into插入记录时,不必为其赋值,插入时会根据上下文自动填充的;
+insert into: 作用是向表中插入新的记录;一般有两种用法,一种是对所有字段都赋值,语法为: insert into table values(field1_val,field2_val,...), 还一种是对部分字段赋值,此时要在表名后面使用()将赋值的这部分字段名引起来, values()中的参数和字段数相等,insert into table(fieldx,fieldy) values(fileldx_val, fieldy_val);如果表中的某个字段有auto-increment属性,则在使用insert into插入记录时,不必为其赋值,插入时会根据上下文自动填充的(这句话说的不明确,auto_increment字段可赋值也可不赋值,但如果想让相应字段自动填充的话,你必须在表名后的括号内明确指明其它的字段,如果你不指定要赋值的字段,values后面又没有给auto_increment字段赋值,会报错说你赋值的字段数不正确的错误);
 NULL values:当插入记录,但没有给某个或某些可选字段赋值时,这些字段的值即为NULL,也就是所谓的空值;测试某个字段是否为NULL,方法是使用关键字is null或is not null;
 update:修改表中记录的字段信息; 特别要注意的是update与where关键字的联用,如果没有使用where关键字,则你修改的是整个表中所有记录中字段的信息;
 delete:删除表中的记录;同样特别需要注意与where的联用,当不加where时,表示的是清空表!,但表的结构属性,索引啥的都会保留;
