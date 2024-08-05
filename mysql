@@ -167,6 +167,7 @@ limit:限制返回的记录数;  //limit 3返回前三条, limit 3,5从第4条�
 min()函数: 返回指定数字列的最小值;
 max()函数: 返回指定数字列的最大值;
 count()函数:返回指定列的记录数;count(1) ; count(*);count(列名);count(distinct 列名); //列是NULL值的,不计; //count(1)和count(*)是完全相同的,没有任何区别甚至同count('hello')的返回值都是相同的, 即此时括号中的内容只是给每一条记录赋值,而count()则是看看赋了多少次,此时所有行都会被数到,包括都是NULL的行; 而count(1/*/xxx)和count(列名)的区别就是count(列名)不记数列值为NULL的行;而count(列名)和count(distinct 列名)就显而易见了,都是不记数NULL值,无distinct的的值要>=有distinct的值;
+*.https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_count
 avg()函数:返回指定数字列的平均数;  //数字列是NULL值的,忽略;
 sum()函数:返回指定数字列的和;     //数字列是NULL值的,忽略;
 like: 用于where语句中, 对字段值进行模式匹配;最常和like配合使用的两个操作符一个是百分号%,表示匹配0个或我个任意字符,一个是下划线_,用来匹配任意单个字符;可以和关键字AND,OR连用;
