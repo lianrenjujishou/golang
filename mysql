@@ -271,7 +271,7 @@ case: if...else的变体,从上到下评估条件,某个条件满足则返回其
   一开始弄不懂为什么case中可能既要根据orderid排又要根据customerid排,这和order by orderid,customerid两个字段排还不一样,case中的例子实际排序的是一(二声)列值,最后弄明白了,你可以这样理解,在orders表中新增一列,这一列key,这例中的值根据每个记录的orderid去填,如果orderid不为空,则值为orderid,如果某一条记录orderid为NULL,则用该条记录的customerid去填充,最终根据key列进行一个排序.即将原语句改为select * from orders order by key. 
 ifnull()函数: ifnull(表达式,val),如果表达式不为NULL,则返回表达式的值,如果表达式为NULL则返回val; 一个常用场景是在select字段中有运算操作,当某个字段充当操作数时,如果值为NULL可能会报错,此时使用ifnull()函数将该字段封装起来,如:
     SELECT ProductName, UnitPrice * (UnitsInStock + IFNULL(UnitsOnOrder, 0)) FROM Products;
-coalesce()函数:coalesce(val1,val2,...),作用是返回参数中第一个不为NULL的值,就上面这句来说ifnull(unitsonorder,0)可以替换为coalescs(unitsonorder,0),即如果遍历记录时相应字段值为NULL,则取0,因为0是参数列表中第一个非NULL值.
+coalesce()函数:coalesce(val1,val2,...),作用是返回参数中第一个不为NULL的值,就上面这句来说ifnull(unitsonorder,0)可以替换为coalesce(unitsonorder,0),这么替换没问题,但要注意,coalesce可以有多个参数,这里只写了两个是为了适配ifnull()函数的情况,即如果遍历记录时相应字段值为NULL,则取0,因为0是参数列表中第一个非NULL值.
 single line comments: 单行注释以双中横线为起始标记; 从双中横线开始到本行结尾都会被作为注释;单行注释可以单独一行,也可位于被执行语句后面;
 multiple lines comments: 多行注释以/*开头以*/结尾,可以跨越多行;除了常见的多行注释用法外,多行注释还可位于被执行语句中,如:
     select customername, /*city*,/country from customers; 这种写法在调试的时候应该有用,因为不用显式的删掉暂时不需要的部分.
