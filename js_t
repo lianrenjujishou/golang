@@ -2787,6 +2787,7 @@ Taskqueue
 MicoTaskQueue()
 事件循环: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop
 任务(队列)和微任务(队列):https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide
+2025-10-31号新加的链接:https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide/In_depth
 *.大概回忆一下上面这三个概念: 事件循环说的是一个运行时, 当栈里为空(函数执行完了)时,先去任务队列中执行任务, 有意思的是它每执行完任务队列中的一个任务就要去遍历执行微任务队列中的所有任务,注意是所有任务,然后再看栈里有没有函数,没有的话再去任务队列中执行一个任务>所有微任务>栈, 就一直这么循环. 大概意思是这样具体的再看
 
 -----
