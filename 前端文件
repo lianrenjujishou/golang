@@ -169,6 +169,7 @@ obj.onclick=function(){} //是否能移除这种方法添加的事件
 </body>
 bubbling phrase    child触发了事件,则子方法先执行, 然后传播到父标签;前提是父子事件要一致
 capturing phrase   与bubbling phrasae相反
+*.https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Event_bubbling
 
 <body>
 <h1 id="parent"> 111111<p id="child">000000</p> </h1>
